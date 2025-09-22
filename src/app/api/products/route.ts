@@ -2,9 +2,10 @@
 import { NextResponse } from "next/server";
 import { shopify } from "@/lib/shopify";
 
+export const runtime = "nodejs"; // ✅ Node.js ランタイムを指定
+
 export async function GET() {
   try {
-    // 仮セッション（OAuth導入前）
     const session = {
       shop: process.env.SHOPIFY_STORE_DOMAIN!,
       accessToken: process.env.SHOPIFY_API_SECRET!,
@@ -38,7 +39,7 @@ export async function GET() {
     const response: any = await client.query({ data: query });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const products = response.body?.data?.products?.edges?.map((e: any) => ({
+    const products = response?.body?.data?.products?.edges?.map((e: any) => ({
       id: e.node.id,
       title: e.node.title,
       handle: e.node.handle,
