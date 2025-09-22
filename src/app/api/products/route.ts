@@ -2,7 +2,8 @@
 import { NextResponse } from "next/server";
 import { shopify } from "@/lib/shopify";
 
-export const runtime = "nodejs"; // ✅ Node.js ランタイムを指定
+export const runtime = "nodejs";          // ✅ Node.js ランタイム指定
+export const dynamic = "force-dynamic";  // ✅ 静的最適化を無効化
 
 export async function GET() {
   try {
