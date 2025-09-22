@@ -1,6 +1,6 @@
 // src/pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { shopify, fetchProducts } from "@/lib/shopify";
+import { shopify, sessionStorage, fetchProducts } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // ✅ 現在のセッションIDを取得
+    // ✅ セッションIDを取得
     const sessionId = await shopify.session.getCurrentId({
       isOnline: false,
       rawRequest: req,
@@ -19,13 +19,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("セッションが見つかりません。OAuth 認証が必要です。");
     }
 
-    // ✅ セッションをロード
-    const session = await shopify.sessionStorage.loadSession(sessionId);
+    // ✅ セッションをロード（libからexportした sessionStorage を利用）
+    const session = await sessionStorage.loadSession(sessionId);
     if (!session) {
       throw new Error("セッションのロードに失敗しました。");
     }
 
-    // ✅ fetchProducts を利用して商品取得
+    // ✅ fetchProducts で商品取得
     const products = await fetchProducts(session);
 
     return res.status(200).json(products);

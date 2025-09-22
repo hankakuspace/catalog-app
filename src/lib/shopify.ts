@@ -8,6 +8,9 @@ const appUrl = process.env.SHOPIFY_APP_URL!;
 const scopes = process.env.SHOPIFY_SCOPES?.split(",") || [];
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN || "";
 
+// ✅ セッションストレージをインスタンス化
+export const sessionStorage = new MemorySessionStorage();
+
 export const shopify = shopifyApi({
   apiKey,
   apiSecretKey,
@@ -15,7 +18,7 @@ export const shopify = shopifyApi({
   hostName: appUrl.replace(/^https?:\/\//, ""),
   apiVersion: ApiVersion.July25,
   isEmbeddedApp: true,
-  sessionStorage: new MemorySessionStorage(),
+  sessionStorage, // ← ここで渡す
 });
 
 export function getStoreDomain(): string {
