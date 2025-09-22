@@ -1,4 +1,5 @@
 // src/lib/shopify.ts
+import "@shopify/shopify-api/adapters/node"; // ✅ Node.jsアダプターを追加
 import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
 import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
 
@@ -18,7 +19,7 @@ export const shopify = shopifyApi({
   hostName: appUrl.replace(/^https?:\/\//, ""),
   apiVersion: ApiVersion.July25,
   isEmbeddedApp: true,
-  sessionStorage, // ← ここで渡す
+  sessionStorage,
 });
 
 export function getStoreDomain(): string {
