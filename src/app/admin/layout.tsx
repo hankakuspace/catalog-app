@@ -15,17 +15,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-white font-sans">
       {/* ✅ サイドメニュー */}
-      <aside className="w-60 bg-gray-100 border-r p-4">
-        <h2 className="text-lg font-bold mb-6">カタログアプリ</h2>
-        <nav className="flex flex-col gap-2">
+      <aside className="w-64 border-r border-gray-200 bg-white p-6">
+        <h2 className="text-xl font-bold tracking-wide mb-10">カタログアプリ</h2>
+        <nav className="flex flex-col gap-3">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`px-3 py-2 rounded ${
-                pathname === item.href ? "bg-blue-500 text-white" : "hover:bg-gray-200"
+              className={`px-4 py-2 rounded-lg transition ${
+                pathname === item.href
+                  ? "bg-black text-white font-semibold"
+                  : "text-gray-600 hover:bg-gray-100"
               }`}
             >
               {item.name}
@@ -35,7 +37,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* ✅ メインコンテンツ */}
-      <main className="flex-1 p-8">{children}</main>
+      <main className="flex-1 p-10 bg-gray-50">
+        <div className="max-w-6xl mx-auto bg-white shadow-md rounded-xl p-8">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
