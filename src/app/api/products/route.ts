@@ -4,12 +4,14 @@ import { shopify } from "@/lib/shopify";
 
 export async function GET() {
   try {
+    // 仮セッション（OAuth導入前）
     const session = {
       shop: process.env.SHOPIFY_STORE_DOMAIN!,
       accessToken: process.env.SHOPIFY_API_SECRET!,
     };
 
-    const client = new shopify.clients.Graphql({ session });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client = new shopify.clients.Graphql({ session: session as any });
 
     const query = `
       {
