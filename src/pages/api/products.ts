@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const query = `
       {
-        products(first: 20) {
+        products(first: 10) {
           edges {
             node {
               id
@@ -30,10 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 edges {
                   node {
                     price
-                    priceV2 {
-                      amount
-                      currencyCode
-                    }
                   }
                 }
               }
@@ -54,25 +50,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const text = await response.text();
 
+    console.log("🔥 Shopify API raw response:", text);
+
     if (!response.ok) {
       throw new Error(`Shopify API error: ${response.status} - ${text}`);
     }
 
     const data = JSON.parse(text);
 
+    if (data.errors) {
+      console.error("❌ GraphQL errors:", data.errors);
+      throw new Error(`GraphQLエラー: ${JSON.stringify(data.errors)}`);
+    }
+
     const products = data.data.products.edges.map((edge: any) => {
       const variant = edge.node.variants.edges[0]?.node;
-      const price =
-        variant?.priceV2?.amount && variant?.priceV2?.currencyCode
-          ? `${variant.priceV2.amount} ${variant.priceV2.currencyCode}`
-          : variant?.price || null;
-
       return {
         id: edge.node.id,
         title: edge.node.title,
         imageUrl: edge.node.featuredImage?.url || null,
         altText: edge.node.featuredImage?.altText || "",
-        price,
+        price: variant?.price || null,
         inventory: edge.node.totalInventory ?? null,
       };
     });
