@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AppBridgeContext } from "@shopify/app-bridge-react";
+import { Provider } from "@shopify/app-bridge-react";
 import { createApp } from "@shopify/app-bridge";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -22,14 +22,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ? new URLSearchParams(window.location.search).get("host") || ""
       : "";
 
-  const app = createApp({
+  const config = {
     apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
     host,
     forceRedirect: true,
-  });
+  };
 
   return (
-    <AppBridgeContext.Provider value={app}>
+    <Provider config={config}>
       <div className="flex min-h-screen bg-white font-sans">
         {/* ✅ サイドメニュー */}
         <aside className="w-64 border-r border-gray-200 bg-white p-6">
@@ -58,6 +58,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </main>
       </div>
-    </AppBridgeContext.Provider>
+    </Provider>
   );
 }
