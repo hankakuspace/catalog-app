@@ -3,8 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createApp } from "@shopify/app-bridge";
-import { AppBridgeContext } from "@shopify/app-bridge-react";
+import { AppBridgeProvider } from "@/lib/AppBridgeProvider";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,20 +15,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "カタログ一覧", href: "/admin/catalogs" },
   ];
 
-  // ✅ App Bridge の設定
-  const host =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("host") || ""
-      : "";
-
-  const app = createApp({
-    apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
-    host,
-    forceRedirect: true,
-  });
-
   return (
-    <AppBridgeContext.Provider value={app}>
+    <AppBridgeProvider>
       <div className="flex min-h-screen bg-white font-sans">
         {/* ✅ サイドメニュー */}
         <aside className="w-64 border-r border-gray-200 bg-white p-6">
@@ -58,6 +45,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </main>
       </div>
-    </AppBridgeContext.Provider>
+    </AppBridgeProvider>
   );
 }
