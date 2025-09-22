@@ -1,34 +1,6 @@
 // src/pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-
-interface ShopifyVariant {
-  node: {
-    price: string;
-  };
-}
-
-interface ShopifyProductNode {
-  id: string;
-  title: string;
-  featuredImage?: {
-    url: string;
-    altText?: string;
-  } | null;
-  totalInventory?: number | null;
-  variants: {
-    edges: ShopifyVariant[];
-  };
-}
-
-interface ShopifyResponse {
-  data: {
-    products: {
-      edges: {
-        node: ShopifyProductNode;
-      }[];
-    };
-  };
-}
+import shopify from "@/lib/shopify"; // ← 初期化済みのShopifyオブジェクトをインポート
 
 interface ProductResponse {
   id: string;
@@ -45,13 +17,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const shop = process.env.SHOPIFY_SHOP!;
-    const token = process.env.SHOPIFY_ACCESS_TOKEN!;
+    // リクエストのセッションを取得
+    const sessionId = await shopify.session.getCurrentId({
+      isOnline: false,
+      rawRequest: req,
+      rawResponse: res,
+    });
 
-    if (!shop || !token) {
-      throw new Error("環境変数 SHOPIFY_SHOP / SHOPIFY_ACCESS_TOKEN が未設定です");
+    if (!sessionId) {
+      throw new Error("セッションが見つかりません。OAuth 認証が必要です。");
     }
 
+    const session = await shopify.sessionStorage.loadSession(sessionId);
+
+    if (!session?.accessToken || !session.shop) {
+      throw new Error("アクセストークンまたはショップ情報が取得できません。");
+    }
+
+    // GraphQL クエリ
     const query = `
       {
         products(first: 10) {
@@ -77,11 +60,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     `;
 
-    const response = await fetch(`https://${shop}/admin/api/2025-01/graphql.json`, {
+    // Shopify GraphQL API を呼び出す
+    const response = await fetch(`https://${session.shop}/admin/api/2025-01/graphql.json`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Shopify-Access-Token": token,
+        "X-Shopify-Access-Token": session.accessToken,
       },
       body: JSON.stringify({ query }),
     });
@@ -91,9 +75,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(`Shopify API error: ${response.status} - ${text}`);
     }
 
-    const data: ShopifyResponse = JSON.parse(text);
+    const data = JSON.parse(text);
 
-    const products: ProductResponse[] = data.data.products.edges.map((edge) => {
+    const products: ProductResponse[] = data.data.products.edges.map((edge: any) => {
       const variant = edge.node.variants.edges[0]?.node;
       return {
         id: edge.node.id,
