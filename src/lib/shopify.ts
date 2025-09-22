@@ -1,6 +1,5 @@
 // src/lib/shopify.ts
-import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
-import { MemorySessionStorage } from "@shopify/shopify-api/dist/session-storage/memory";
+import { shopifyApi, ApiVersion, MemorySessionStorage } from "@shopify/shopify-api";
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -8,7 +7,7 @@ const appUrl = process.env.SHOPIFY_APP_URL!;
 const scopes = process.env.SHOPIFY_SCOPES?.split(",") || [];
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN || "";
 
-// ✅ セッションストレージを追加
+// ✅ セッションストレージを MemorySessionStorage に修正
 export const shopify = shopifyApi({
   apiKey,
   apiSecretKey,
