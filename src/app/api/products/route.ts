@@ -2,9 +2,9 @@
 import { NextResponse } from "next/server";
 import { shopify } from "@/lib/shopify";
 
-export const runtime = "nodejs";          // ✅ Node.jsランタイムでのみ動作
-export const dynamic = "force-dynamic";   // ✅ 静的最適化を無効化
-export const revalidate = 0;              // ✅ ISR無効化（完全動的）
+export const runtime = "nodejs";             // ✅ Node.jsランタイム専用
+export const dynamic = "force-dynamic";      // ✅ 静的最適化を禁止
+export const fetchCache = "force-no-store";  // ✅ キャッシュ無効化
 
 export async function GET() {
   try {
