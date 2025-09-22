@@ -5,7 +5,6 @@ import { shopify } from "@/lib/shopify";
 export async function GET() {
   try {
     const session = {
-      // 🔹 dev段階なので仮のセッション扱い（本来はOAuthで取得）
       shop: process.env.SHOPIFY_STORE_DOMAIN!,
       accessToken: process.env.SHOPIFY_API_SECRET!,
     };
@@ -34,6 +33,8 @@ export async function GET() {
     `;
 
     const response = await client.query({ data: query });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const products = response.body.data.products.edges.map((e: any) => ({
       id: e.node.id,
       title: e.node.title,
