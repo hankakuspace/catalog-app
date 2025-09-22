@@ -31,31 +31,33 @@ export default function ProductsPage() {
   }, []);
 
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold mb-6">商品一覧</h1>
+    <main>
+      <h1 className="text-2xl font-bold mb-8">商品一覧</h1>
       {loading ? (
         <p>読み込み中...</p>
+      ) : products.length === 0 ? (
+        <p className="text-gray-500">商品が登録されていません。</p>
       ) : (
-        <table className="w-full border border-gray-300 bg-white">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2 text-left">ID</th>
-              <th className="border p-2 text-left">タイトル</th>
-              <th className="border p-2 text-left">ハンドル</th>
-              <th className="border p-2 text-left">価格</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id}>
-                <td className="border p-2">{p.id}</td>
-                <td className="border p-2">{p.title}</td>
-                <td className="border p-2">{p.handle}</td>
-                <td className="border p-2">{p.price ?? "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((p) => (
+            <div
+              key={p.id}
+              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition"
+            >
+              {/* ダミー画像: 実際は Shopify API から image を取る */}
+              <div className="bg-gray-100 h-48 flex items-center justify-center text-gray-400">
+                No Image
+              </div>
+              <div className="p-4">
+                <h2 className="font-semibold text-lg mb-1">{p.title}</h2>
+                <p className="text-sm text-gray-500 mb-2">@{p.handle}</p>
+                <p className="text-base font-bold">
+                  {p.price ? `¥${p.price}` : "価格未設定"}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </main>
   );
