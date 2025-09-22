@@ -23,7 +23,7 @@ export function getStoreDomain(): string {
   return storeDomain;
 }
 
-// ✅ session を unknown に変更
+// ✅ 型エラー回避
 export async function fetchProducts(session: unknown) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,9 +52,10 @@ export async function fetchProducts(session: unknown) {
     `;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await client.query({ data: query });
+    const response: any = await client.query({ data: query });
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return response.body.data.products.edges.map((edge: any) => edge.node);
+    return response?.body?.data?.products?.edges?.map((edge: any) => edge.node) ?? [];
   } catch (error) {
     console.error("❌ fetchProducts error:", error);
     throw error;
