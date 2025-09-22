@@ -1,6 +1,44 @@
 // src/pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 
+interface ShopifyVariant {
+  node: {
+    price: string;
+  };
+}
+
+interface ShopifyProductNode {
+  id: string;
+  title: string;
+  featuredImage?: {
+    url: string;
+    altText?: string;
+  } | null;
+  totalInventory?: number | null;
+  variants: {
+    edges: ShopifyVariant[];
+  };
+}
+
+interface ShopifyResponse {
+  data: {
+    products: {
+      edges: {
+        node: ShopifyProductNode;
+      }[];
+    };
+  };
+}
+
+interface ProductResponse {
+  id: string;
+  title: string;
+  imageUrl: string | null;
+  altText: string;
+  price: string | null;
+  inventory: number | null;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -49,21 +87,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const text = await response.text();
-
-    console.log("🔥 Shopify API raw response:", text);
-
     if (!response.ok) {
       throw new Error(`Shopify API error: ${response.status} - ${text}`);
     }
 
-    const data = JSON.parse(text);
+    const data: ShopifyResponse = JSON.parse(text);
 
-    if (data.errors) {
-      console.error("❌ GraphQL errors:", data.errors);
-      throw new Error(`GraphQLエラー: ${JSON.stringify(data.errors)}`);
-    }
-
-    const products = data.data.products.edges.map((edge: any) => {
+    const products: ProductResponse[] = data.data.products.edges.map((edge) => {
       const variant = edge.node.variants.edges[0]?.node;
       return {
         id: edge.node.id,
@@ -76,8 +106,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     return res.status(200).json(products);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("API /products error:", err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: (err as Error).message });
   }
 }
