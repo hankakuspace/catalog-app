@@ -1,30 +1,27 @@
 // src/pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { shopify } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const session = {
-      shop: process.env.SHOPIFY_STORE_DOMAIN!,
-      accessToken: process.env.SHOPIFY_API_SECRET!,
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const client = new shopify.clients.Graphql({ session: session as any });
+    const shop = process.env.SHOPIFY_SHOP!;
+    const token = process.env.SHOPIFY_ACCESS_TOKEN!;
 
     const query = `
       {
-        products(first: 10) {
+        products(first: 20) {
           edges {
             node {
               id
               title
-              handle
+              featuredImage {
+                url
+                altText
+              }
+              totalInventory
               variants(first: 1) {
                 edges {
                   node {
@@ -38,20 +35,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     `;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response: any = await client.query({ data: query });
+    const response = await fetch(`https://${shop}/admin/api/2025-01/graphql.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": token,
+      },
+      body: JSON.stringify({ query }),
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const products = response?.body?.data?.products?.edges?.map((e: any) => ({
-      id: e.node.id,
-      title: e.node.title,
-      handle: e.node.handle,
-      price: e.node.variants.edges[0]?.node?.price || null,
-    })) ?? [];
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Shopify API error: ${text}`);
+    }
 
-    res.status(200).json(products);
-  } catch (error) {
-    console.error("❌ Products API error:", error);
-    res.status(500).json({ error: "商品取得に失敗しました" });
+    const data = await response.json();
+
+    const products = data.data.products.edges.map((edge: any) => {
+      const variant = edge.node.variants.edges[0]?.node;
+      return {
+        id: edge.node.id,
+        title: edge.node.title,
+        imageUrl: edge.node.featuredImage?.url || null,
+        altText: edge.node.featuredImage?.altText || "",
+        price: variant?.price || null,
+        inventory: edge.node.totalInventory ?? null,
+      };
+    });
+
+    return res.status(200).json(products);
+  } catch (err: any) {
+    console.error("API /products error:", err);
+    return res.status(500).json({ error: err.message });
   }
 }
