@@ -2,9 +2,10 @@
 import { NextResponse } from "next/server";
 import { shopify } from "@/lib/shopify";
 
-export const runtime = "nodejs";             // ✅ Node.jsランタイム専用
-export const dynamic = "force-dynamic";      // ✅ 静的最適化を禁止
-export const fetchCache = "force-no-store";  // ✅ キャッシュ無効化
+export const runtime = "nodejs";             // ✅ Node.jsランタイム
+export const dynamic = "force-dynamic";      // ✅ 静的最適化禁止
+export const revalidate = 0;                 // ✅ キャッシュ完全禁止
+export const fetchCache = "force-no-store";  // ✅ fetchキャッシュ禁止
 
 export async function GET() {
   try {
@@ -48,7 +49,7 @@ export async function GET() {
       price: e.node.variants.edges[0]?.node?.price || null,
     })) ?? [];
 
-    return NextResponse.json(products);
+    return NextResponse.json(products, { status: 200 });
   } catch (error) {
     console.error("❌ Products API error:", error);
     return NextResponse.json({ error: "商品取得に失敗しました" }, { status: 500 });
