@@ -19,6 +19,14 @@ export async function GET() {
                 url
                 altText
               }
+              totalInventory
+              variants(first: 1) {
+                edges {
+                  node {
+                    price
+                  }
+                }
+              }
             }
           }
         }
@@ -35,12 +43,17 @@ export async function GET() {
     });
 
     const data = await response.json();
-    const products = data.data.products.edges.map((edge: any) => ({
-      id: edge.node.id,
-      title: edge.node.title,
-      imageUrl: edge.node.featuredImage?.url || null,
-      altText: edge.node.featuredImage?.altText || "",
-    }));
+    const products = data.data.products.edges.map((edge: any) => {
+      const variant = edge.node.variants.edges[0]?.node;
+      return {
+        id: edge.node.id,
+        title: edge.node.title,
+        imageUrl: edge.node.featuredImage?.url || null,
+        altText: edge.node.featuredImage?.altText || "",
+        price: variant?.price || "不明",
+        inventory: edge.node.totalInventory ?? null,
+      };
+    });
 
     return NextResponse.json(products);
   } catch (err: any) {

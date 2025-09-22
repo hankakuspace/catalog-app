@@ -8,6 +8,8 @@ interface Product {
   title: string;
   imageUrl?: string | null;
   altText?: string | null;
+  price?: string;
+  inventory?: number | null;
 }
 
 export default function ProductsPage() {
@@ -51,8 +53,20 @@ export default function ProductsPage() {
               </div>
             )}
           </div>
-          <div className="p-4">
+          <div className="p-4 space-y-1">
             <h2 className="text-sm font-semibold text-gray-800">{p.title}</h2>
+            <p className="text-sm text-gray-600">価格: ¥{p.price}</p>
+            <p
+              className={`text-xs font-medium ${
+                p.inventory && p.inventory > 0
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {p.inventory && p.inventory > 0
+                ? `在庫あり (${p.inventory})`
+                : "在庫なし"}
+            </p>
           </div>
         </div>
       ))}
