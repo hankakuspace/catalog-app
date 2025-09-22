@@ -1,6 +1,6 @@
 // src/pages/api/auth/[...shopify].ts
-import { shopify } from "@/lib/shopify";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { shopify, sessionStorage } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.query.shop && !req.query.code) {
       const redirectUrl = await shopify.auth.begin({
         shop: req.query.shop as string,
-        callbackPath: "/api/auth/callback",
+        callbackPath: "/api/auth/[...shopify]", // ✅ コールバック先をこのルートに
         isOnline: false,
         rawRequest: req,
         rawResponse: res,
@@ -23,7 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         rawResponse: res,
       });
 
-      await shopify.sessionStorage.storeSession(session);
+      // ✅ 修正: shopify.sessionStorage ではなく sessionStorage を利用
+      await sessionStorage.storeSession(session);
 
       console.log("✅ OAuth success, session stored:", {
         shop: session.shop,
