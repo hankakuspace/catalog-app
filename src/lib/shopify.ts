@@ -1,5 +1,6 @@
 // src/lib/shopify.ts
 import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
+import { MemorySessionStorage } from "@shopify/shopify-api/dist/session-storage/memory";
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -7,6 +8,7 @@ const appUrl = process.env.SHOPIFY_APP_URL!;
 const scopes = process.env.SHOPIFY_SCOPES?.split(",") || [];
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN || "";
 
+// ✅ セッションストレージを追加
 export const shopify = shopifyApi({
   apiKey,
   apiSecretKey,
@@ -14,6 +16,7 @@ export const shopify = shopifyApi({
   hostName: appUrl.replace(/^https?:\/\//, ""),
   apiVersion: ApiVersion.July25,
   isEmbeddedApp: true,
+  sessionStorage: new MemorySessionStorage(),
 });
 
 export function getStoreDomain(): string {
@@ -23,7 +26,7 @@ export function getStoreDomain(): string {
   return storeDomain;
 }
 
-// ✅ 型エラー回避
+// ✅ 型エラー回避しつつ商品取得
 export async function fetchProducts(session: unknown) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
