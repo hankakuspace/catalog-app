@@ -23,10 +23,11 @@ export function getStoreDomain(): string {
   return storeDomain;
 }
 
-// ✅ any を許容（ESLint抑制）
-export async function fetchProducts(session: any) {
+// ✅ session を unknown に変更
+export async function fetchProducts(session: unknown) {
   try {
-    const client = new shopify.clients.Graphql({ session });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client = new shopify.clients.Graphql({ session: session as any });
 
     const query = `
       {
