@@ -34,7 +34,8 @@ export async function GET() {
       }
     `;
 
-    const response = await client.query({ data: query });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response: any = await client.query({ data: query });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const products = response.body?.data?.products?.edges?.map((e: any) => ({
