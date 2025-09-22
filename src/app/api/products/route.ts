@@ -37,12 +37,12 @@ export async function GET() {
     const response = await client.query({ data: query });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const products = response.body.data.products.edges.map((e: any) => ({
+    const products = response.body?.data?.products?.edges?.map((e: any) => ({
       id: e.node.id,
       title: e.node.title,
       handle: e.node.handle,
       price: e.node.variants.edges[0]?.node?.price || null,
-    }));
+    })) ?? [];
 
     return NextResponse.json(products);
   } catch (error) {
