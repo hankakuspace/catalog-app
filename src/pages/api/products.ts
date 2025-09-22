@@ -8,7 +8,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // ✅ セッションIDを取得
     const sessionId = await shopify.session.getCurrentId({
       isOnline: false,
       rawRequest: req,
@@ -16,21 +15,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!sessionId) {
-      throw new Error("セッションが見つかりません。OAuth 認証が必要です。");
+      throw new Error("セッションが見つかりません。OAuth 認証を実行してください。");
     }
 
-    // ✅ セッションをロード（libからexportした sessionStorage を利用）
     const session = await sessionStorage.loadSession(sessionId);
     if (!session) {
       throw new Error("セッションのロードに失敗しました。");
     }
 
-    // ✅ fetchProducts で商品取得
+    console.log("🔥 Debug session:", {
+      shop: session.shop,
+      accessToken: session.accessToken ? "exists" : "missing",
+    });
+
     const products = await fetchProducts(session);
 
     return res.status(200).json(products);
   } catch (err: unknown) {
-    console.error("API /products error:", err);
-    return res.status(500).json({ error: (err as Error).message });
+    console.error("❌ API /products error:", err);
+    return res.status(500).json({
+      error: (err as Error).message,
+      stack: (err as Error).stack,
+    });
   }
 }
