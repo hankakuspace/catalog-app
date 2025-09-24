@@ -9,14 +9,17 @@ export default function Home() {
     const shop = params.get("shop");
     const host = params.get("host");
 
-    if (shop && host) {
-      window.location.href = `/api/auth?shop=${shop}&host=${host}`;
-    } else if (shop) {
-      window.location.href = `/api/auth?shop=${shop}`;
-    } else if (host) {
-      window.location.href = `/api/auth?host=${host}`;
-    } else {
-      window.location.href = `/api/auth`;
+    if (shop || host) {
+      const query = new URLSearchParams();
+      if (shop) query.set("shop", shop);
+      if (host) query.set("host", host);
+
+      // ✅ iframe 内でなくトップウィンドウでリダイレクト
+      if (window.top) {
+        (window.top as Window).location.href = `/api/auth?${query.toString()}`;
+      } else {
+        window.location.href = `/api/auth?${query.toString()}`;
+      }
     }
   }, []);
 
