@@ -1,22 +1,21 @@
 // src/pages/api/auth.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { parse } from "cookie";
+import { URL } from "url";
 import { sessionStorage } from "@/lib/shopify";
 import type { Session } from "@shopify/shopify-api";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    console.warn("🔥 DEBUG req.query:", req.query);
-    console.warn("🔥 DEBUG req.headers:", req.headers);
+    console.warn("🔥 DEBUG req.url:", req.url);
 
-    let shop: string | undefined;
+    // ✅ req.url を直接パースしてクエリを取得
+    const fullUrl = new URL(req.url || "", `https://${req.headers.host}`);
+    const params = fullUrl.searchParams;
 
-    // 1. クエリから取得
-    if (typeof req.query.shop === "string") {
-      shop = req.query.shop;
-    } else if (Array.isArray(req.query.shop)) {
-      shop = req.query.shop[0];
-    }
+    let shop: string | undefined = params.get("shop") || undefined;
+    const hostParam = params.get("host") || undefined;
+    const code = params.get("code") || undefined;
 
     // 2. ヘッダから取得
     if (!shop && req.headers["x-shopify-shop-domain"]) {
@@ -29,31 +28,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (cookies["shop"]) shop = cookies["shop"];
     }
 
-    // 4. host パラメータを decode して取得
-    if (!shop && typeof req.query.host === "string") {
+    // 4. host パラメータを decode
+    if (!shop && hostParam) {
       try {
-        const decoded = Buffer.from(req.query.host, "base64").toString("utf-8");
-        // 例: "catalog-app-dev-2.myshopify.com/admin"
+        const decoded = Buffer.from(hostParam, "base64").toString("utf-8");
         shop = decoded.split("/")[0];
         console.log("🔥 Decoded shop from host:", shop);
       } catch (e) {
-        console.error("❌ Failed to decode host:", req.query.host, e);
+        console.error("❌ Failed to decode host:", hostParam, e);
       }
     }
 
-    const code = Array.isArray(req.query.code)
-      ? req.query.code[0]
-      : (req.query.code as string | undefined);
-
-    // ✅ 最後のチェック（host decodeで復元できていればここで判定OK）
     if (!shop) {
-      console.error("❌ Still missing shop parameter. req.query:", req.query);
+      console.error("❌ Missing shop parameter. raw params:", Object.fromEntries(params));
       return res.status(400).send("Missing shop parameter");
     }
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // ✅ コードがまだない場合（認証前）
+    // ✅ 認証前（codeなし）
     if (!code) {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
@@ -65,44 +58,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .send("");
     }
 
-    // ✅ 認証コールバック（code がある場合）
-    if (code) {
-      const tokenUrl = `https://${shop}/admin/oauth/access_token`;
-      const response = await fetch(tokenUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          client_id: process.env.SHOPIFY_API_KEY,
-          client_secret: process.env.SHOPIFY_API_SECRET,
-          code,
-        }),
-      });
+    // ✅ 認証コールバック
+    const tokenUrl = `https://${shop}/admin/oauth/access_token`;
+    const response = await fetch(tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: process.env.SHOPIFY_API_KEY,
+        client_secret: process.env.SHOPIFY_API_SECRET,
+        code,
+      }),
+    });
 
-      if (!response.ok) {
-        throw new Error(`Token exchange failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      const session = {
-        id: `${shop}_${Date.now()}`,
-        shop,
-        state: "nonce",
-        isOnline: false,
-        scope: process.env.SHOPIFY_SCOPES || "",
-        accessToken: data.access_token,
-        expires: null,
-        onlineAccessInfo: null,
-      };
-
-      await sessionStorage.storeSession(session as unknown as Session);
-
-      console.log("✅ OAuth success (manual)", { shop });
-
-      return res.redirect("/admin/dashboard");
+    if (!response.ok) {
+      throw new Error(`Token exchange failed: ${response.status}`);
     }
 
-    return res.status(400).send("Invalid auth request");
+    const data = await response.json();
+
+    const session = {
+      id: `${shop}_${Date.now()}`,
+      shop,
+      state: "nonce",
+      isOnline: false,
+      scope: process.env.SHOPIFY_SCOPES || "",
+      accessToken: data.access_token,
+      expires: null,
+      onlineAccessInfo: null,
+    };
+
+    await sessionStorage.storeSession(session as unknown as Session);
+
+    console.log("✅ OAuth success (manual)", { shop });
+
+    return res.redirect("/admin/dashboard");
   } catch (err) {
     const error = err as Error;
     console.error("❌ Auth error:", error);
