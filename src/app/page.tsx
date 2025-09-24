@@ -1,18 +1,24 @@
 // src/app/page.tsx
-import { redirect } from "next/navigation";
+"use client";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function Home({ searchParams }: any) {
-  const shop = searchParams?.shop as string | undefined;
-  const host = searchParams?.host as string | undefined;
+import { useEffect } from "react";
 
-  if (shop && host) {
-    redirect(`/api/auth?shop=${shop}&host=${host}`);
-  } else if (shop) {
-    redirect(`/api/auth?shop=${shop}`);
-  } else if (host) {
-    redirect(`/api/auth?host=${host}`);
-  } else {
-    redirect(`/api/auth`);
-  }
+export default function Home() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+    const host = params.get("host");
+
+    if (shop && host) {
+      window.location.href = `/api/auth?shop=${shop}&host=${host}`;
+    } else if (shop) {
+      window.location.href = `/api/auth?shop=${shop}`;
+    } else if (host) {
+      window.location.href = `/api/auth?host=${host}`;
+    } else {
+      window.location.href = `/api/auth`;
+    }
+  }, []);
+
+  return <p>Redirecting to authentication...</p>;
 }
