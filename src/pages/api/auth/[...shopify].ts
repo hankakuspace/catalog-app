@@ -12,7 +12,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
 
-      console.log("🔥 embedded reauth handler triggered", { shop, redirectUrl });
+      // 🔥 デバッグログを追加
+      console.log("🔥 embedded reauth handler triggered", {
+        shop,
+        baseUrl,
+        redirectUrl,
+      });
 
       res
         .status(401)
