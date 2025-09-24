@@ -11,9 +11,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // ✅ iframeから来た場合はトップレベル認証URLを返す
+    // ✅ iframe 内から来た場合は Reauthorize ヘッダを返す
     if (req.query.embedded === "1") {
-      const redirectUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=read_products,read_customers&redirect_uri=${process.env.HOST}/api/auth/callback`;
+      const host = process.env.HOST || "https://catalog-app-swart.vercel.app";
+      const redirectUrl = `${host}/api/auth?shop=${shop}`;
 
       res
         .status(401)
