@@ -19,10 +19,11 @@ export default function Home() {
       if (host) query.set("host", host);
 
       const redirect = Redirect.create(app);
-      redirect.dispatch(
-        Redirect.Action.REMOTE,
-        `/api/auth?${query.toString()}`
-      );
+      // ✅ 相対ではなく絶対URLで指定
+      const targetUrl = `${process.env.NEXT_PUBLIC_SHOPIFY_APP_URL}/api/auth?${query.toString()}`;
+      console.log("🔄 Redirecting to", targetUrl);
+
+      redirect.dispatch(Redirect.Action.REMOTE, targetUrl);
     }
   }, [app]);
 
