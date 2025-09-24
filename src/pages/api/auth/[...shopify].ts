@@ -7,11 +7,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = req.query.shop as string | undefined;
     const code = req.query.code as string | undefined;
 
-    // ✅ iframe から来た場合 → Reauthorize 強制
-    if (!code && shop) {
-      const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
-      const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
+    if (!shop) {
+      return res.status(400).send("Missing shop parameter");
+    }
 
+    const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
+
+    // ✅ iframe から最初に来た場合 → 必ず401でフルURLを返す
+    if (!code) {
+      const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize triggered", { shop, redirectUrl });
 
       res.status(401)
@@ -21,23 +25,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // ✅ 認証コールバック
-    if (code && shop) {
-      const callbackResponse = await shopify.auth.callback({
-        rawRequest: req,
-        rawResponse: res,
-      });
+    // ✅ 認証コールバック処理
+    const callbackResponse = await shopify.auth.callback({
+      rawRequest: req,
+      rawResponse: res,
+    });
 
-      await sessionStorage.storeSession(callbackResponse.session);
+    // セッション保存
+    await sessionStorage.storeSession(callbackResponse.session);
 
-      console.log("✅ OAuth success (manual flow)", {
-        shop: callbackResponse.session.shop,
-      });
+    console.log("✅ OAuth success (manual)", {
+      shop: callbackResponse.session.shop,
+    });
 
-      return res.redirect("/admin/dashboard");
-    }
-
-    return res.status(400).send("Invalid auth request");
+    // 認証後は必ずダッシュボードへ
+    return res.redirect("/admin/dashboard");
   } catch (err) {
     const error = err as Error;
     console.error("❌ Auth error:", error);
