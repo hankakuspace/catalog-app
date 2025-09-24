@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ iframe 内から呼ばれた場合
     if (req.query.embedded === "1") {
-      const redirectUrl = `${process.env.SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
+      const redirectUrl = `${process.env.SHOPIFY_APP_URL}`; // ← ?shop は付けない
       console.log("🔄 Sending Reauthorize headers:", redirectUrl);
 
       res.setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1");
