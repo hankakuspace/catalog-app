@@ -7,9 +7,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = req.query.shop as string | undefined;
     const embedded = req.query.embedded;
 
-    // ✅ 埋め込み (iframe) からアクセスされた場合 → 401 + Reauthorize (フルURLで返す)
+    // ✅ 埋め込み (iframe) からアクセスされた場合 → 401 + Reauthorize (フルURL必須)
     if (embedded === "1" && shop) {
-      const redirectUrl = `${process.env.SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
+      const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
+      const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
+
       console.log("🔥 embedded reauth handler triggered", { shop, redirectUrl });
 
       res
