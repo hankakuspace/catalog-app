@@ -6,8 +6,10 @@ export default function Home({ searchParams }: any) {
   const shop = searchParams?.shop as string | undefined;
   const host = searchParams?.host as string | undefined;
 
-  if (shop) {
-    redirect(`/api/auth?shop=${shop}${host ? `&host=${host}` : ""}`);
+  if (shop && host) {
+    redirect(`/api/auth?shop=${shop}&host=${host}`);
+  } else if (shop) {
+    redirect(`/api/auth?shop=${shop}`);
   } else if (host) {
     redirect(`/api/auth?host=${host}`);
   } else {
