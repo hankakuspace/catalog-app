@@ -12,7 +12,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res
         .status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
-        .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", `/api/auth?shop=${shop}`)
+        .setHeader(
+          "X-Shopify-API-Request-Failure-Reauthorize-Url",
+          `/api/auth?shop=${shop}` // ✅ 修正: 正しいリダイレクト先
+        )
         .end();
       return;
     }
