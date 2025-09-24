@@ -7,12 +7,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = req.query.shop as string | undefined;
     const code = req.query.code as string | undefined;
 
-    // ✅ iframe (埋め込み) からの最初のアクセス → 必ず401で返す
+    // ✅ iframe から来た場合 → Reauthorize 強制
     if (!code && shop) {
       const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
 
-      console.log("🔥 Force Reauthorize (iframe)", { shop, redirectUrl });
+      console.log("🔥 Custom Reauthorize triggered", { shop, redirectUrl });
 
       res.status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
@@ -21,21 +21,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // ✅ 認証コールバック処理
+    // ✅ 認証コールバック
     if (code && shop) {
       const callbackResponse = await shopify.auth.callback({
         rawRequest: req,
         rawResponse: res,
       });
 
-      // セッション保存
       await sessionStorage.storeSession(callbackResponse.session);
 
-      console.log("✅ OAuth success", {
+      console.log("✅ OAuth success (manual flow)", {
         shop: callbackResponse.session.shop,
       });
 
-      // 認証後はダッシュボードへ
       return res.redirect("/admin/dashboard");
     }
 
