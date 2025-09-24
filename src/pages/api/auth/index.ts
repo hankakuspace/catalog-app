@@ -12,22 +12,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // ✅ 既存セッションがあるか確認
-    const session = await shopify.session.getCurrentSession(
-      req,
-      res,
-      false // isOnline = false
-    );
+    const session = await shopify.session.loadCurrentSession(req, res, false);
 
-    // ✅ iframe 内から呼ばれた場合（埋め込みアプリの初回リクエストなど）
+    // ✅ iframe 内から呼ばれた場合
     if (req.query.embedded === "1") {
       if (session && session.accessToken) {
-        // セッションが有効ならアプリ本体へ
         console.log("✅ Existing session found, redirecting to /admin");
         res.redirect("/admin");
         return;
       }
 
-      // セッションがなければ再認証を要求
       const redirectUrl = `${process.env.SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
       console.log("🔄 Sending Reauthorize headers:", redirectUrl);
 
