@@ -1,24 +1,32 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { parse } from "cookie";
 import { sessionStorage } from "@/lib/shopify";
-import type { Session } from "@shopify/shopify-api"; // 型だけ利用
+import type { Session } from "@shopify/shopify-api";
+import { parse } from "cookie";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // ✅ shop をあらゆる場所から探す（query → header → cookie）
-    let shop: string | undefined =
-      (req.query.shop as string | undefined) ||
-      (req.headers["x-shopify-shop-domain"] as string | undefined);
+    // ✅ shop を必ず取得（query → headers → cookies）
+    let shop: string | undefined;
+
+    if (typeof req.query.shop === "string") {
+      shop = req.query.shop;
+    } else if (Array.isArray(req.query.shop)) {
+      shop = req.query.shop[0];
+    }
+
+    if (!shop && req.headers["x-shopify-shop-domain"]) {
+      shop = req.headers["x-shopify-shop-domain"] as string;
+    }
 
     if (!shop && req.headers.cookie) {
       const cookies = parse(req.headers.cookie);
-      if (cookies["shop"]) {
-        shop = cookies["shop"];
-      }
+      if (cookies["shop"]) shop = cookies["shop"];
     }
 
-    const code = req.query.code as string | undefined;
+    const code = Array.isArray(req.query.code)
+      ? req.query.code[0]
+      : (req.query.code as string | undefined);
 
     if (!shop) {
       return res.status(400).send("Missing shop parameter");
@@ -26,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // ✅ iframe アクセス時は必ず401返却 (Reauthorize ヘッダ付き)
+    // ✅ iframe アクセス時は必ず401返却
     if (!code) {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
@@ -75,7 +83,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         onlineAccessInfo: null,
       };
 
-      // ✅ 型エラー回避（Session 型としてキャスト）
       await sessionStorage.storeSession(session as unknown as Session);
 
       console.log("✅ OAuth success (manual)", { shop });
