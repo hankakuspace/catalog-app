@@ -1,6 +1,11 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { shopify, sessionStorage } from "@/lib/shopify";
+import { sessionStorage } from "@/lib/shopify"; // ✅ shopify 削除
+
+interface ShopifySession {
+  shop: string;
+  accessToken: string;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -32,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.redirect(authUrl);
     }
 
-    // ✅ 認証コールバック (標準 fetch を使用)
+    // ✅ 認証コールバック
     if (code) {
       const tokenUrl = `https://${shop}/admin/oauth/access_token`;
       const response = await fetch(tokenUrl, {
@@ -50,12 +55,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const data = await response.json();
-      const session = {
+      const session: ShopifySession = {
         shop,
         accessToken: data.access_token,
       };
 
-      await sessionStorage.storeSession(session as any);
+      await sessionStorage.storeSession(session);
 
       console.log("✅ OAuth success (manual)", { shop });
 
