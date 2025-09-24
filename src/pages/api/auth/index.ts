@@ -11,6 +11,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
+    // ✅ Shopify 管理画面の iframe 内で開かれても、認証画面はトップレベルで開けるようにする
+    res.setHeader(
+      "Content-Security-Policy",
+      "frame-ancestors https://admin.shopify.com https://*.myshopify.com"
+    );
+
     // ✅ OAuth開始
     const redirectUrl = await shopify.auth.begin({
       shop,
@@ -20,9 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       rawResponse: res,
     });
 
-    // ✅ redirect 後は return で終了
     res.redirect(redirectUrl);
-    return;
+    return; // ✅ ここで処理を終了
   } catch (err: unknown) {
     console.error("❌ /api/auth error:", err);
     res.status(500).json({ error: (err as Error).message });
