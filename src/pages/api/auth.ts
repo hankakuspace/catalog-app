@@ -15,6 +15,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let shop: string | undefined = params.get("shop") || undefined;
     const hostParam = params.get("host") || undefined;
     const code = params.get("code") || undefined;
+    const embedded = params.get("embedded");
+
+    // ✅ iframe 内からのアクセスならトップレベルにリダイレクト
+    if (embedded === "1" && shop) {
+      const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
+      const redirectUrl = `${baseUrl}/api/auth?shop=${shop}&host=${hostParam}`;
+      console.log("🔄 Force top-level redirect:", redirectUrl);
+
+      return res.send(`
+        <script>
+          window.top.location.href = "${redirectUrl}";
+        </script>
+      `);
+    }
 
     // 1. ヘッダから取得
     if (!shop && req.headers["x-shopify-shop-domain"]) {
