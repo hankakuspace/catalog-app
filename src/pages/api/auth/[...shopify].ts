@@ -1,14 +1,22 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import { parse } from "cookie";
 import { sessionStorage } from "@/lib/shopify";
 import type { Session } from "@shopify/shopify-api"; // 型だけ利用
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // ✅ shop パラメータを query かヘッダから必ず取得
-    const shop =
+    // ✅ shop をあらゆる場所から探す（query → header → cookie）
+    let shop: string | undefined =
       (req.query.shop as string | undefined) ||
       (req.headers["x-shopify-shop-domain"] as string | undefined);
+
+    if (!shop && req.headers.cookie) {
+      const cookies = parse(req.headers.cookie);
+      if (cookies["shop"]) {
+        shop = cookies["shop"];
+      }
+    }
 
     const code = req.query.code as string | undefined;
 
