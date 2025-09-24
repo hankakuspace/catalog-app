@@ -40,8 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(400).send("Invalid auth request");
-  } catch (err: any) {
-    console.error("❌ Auth error:", err);
-    return res.status(500).send("OAuth Callback Error: " + err.message);
+  } catch (err) {
+    const error = err as Error;
+    console.error("❌ Auth error:", error);
+    return res.status(500).send("OAuth Callback Error: " + error.message);
   }
 }
