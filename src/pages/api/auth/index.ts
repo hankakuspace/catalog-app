@@ -11,15 +11,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // ✅ iframe 内から来た場合はトップレベルで開くよう指示
+    // ✅ iframe (embedded=1) から来た場合はトップレベル再認証を指示
     if (req.query.embedded === "1") {
-      const redirectUrl = `/api/auth?shop=${shop}`;
+      const redirectUrl = `https://${req.headers.host}/api/auth?shop=${shop}`;
       res.setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1");
       res.setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl);
       res.status(401).end();
       return;
     }
 
+    // ✅ OAuth開始
     const redirectUrl = await shopify.auth.begin({
       shop,
       callbackPath: "/api/auth/callback",
