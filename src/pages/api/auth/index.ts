@@ -11,8 +11,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // ✅ 既存セッションがあるか確認
-    const session = await shopify.auth.loadSession(req, res, false);
+    // ✅ 既存セッションの確認
+    const sessionId = await shopify.session.getCurrentId({ isOnline: false, rawRequest: req, rawResponse: res });
+    const session = sessionId ? await shopify.sessionStorage.loadSession(sessionId) : null;
 
     // ✅ iframe 内から呼ばれた場合
     if (req.query.embedded === "1") {
