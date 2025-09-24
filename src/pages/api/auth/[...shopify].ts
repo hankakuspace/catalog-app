@@ -6,10 +6,9 @@ import type { Session } from "@shopify/shopify-api";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // 🔥 デバッグログ（原因追求用）
-    console.log("🔥 DEBUG req.query:", req.query);
-    console.log("🔥 DEBUG req.headers:", req.headers);
-    console.log("🔥 DEBUG req.url:", req.url);
+    // 🔥 デバッグログ
+    console.warn("🔥 DEBUG req.query:", req.query);
+    console.warn("🔥 DEBUG req.headers:", req.headers);
 
     // shop をあらゆる場所から探す
     let shop: string | undefined;
@@ -40,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // iframe アクセス時は必ず401返却
+    // ✅ iframe アクセス時は必ず401返却 (本文なし)
     if (!code) {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
@@ -49,17 +48,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
-        .end("Reauthorize required");
+        .send(""); // ← 本文は空
     }
 
-    // 認証開始
+    // ✅ 認証開始
     if (!code) {
       const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${baseUrl}/api/auth&state=nonce`;
       console.log("🔗 Redirecting to", authUrl);
       return res.redirect(authUrl);
     }
 
-    // 認証コールバック
+    // ✅ 認証コールバック
     if (code) {
       const tokenUrl = `https://${shop}/admin/oauth/access_token`;
       const response = await fetch(tokenUrl, {
