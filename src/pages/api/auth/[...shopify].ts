@@ -9,12 +9,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ 埋め込み (iframe) からアクセスされた場合 → 401 + Reauthorize
     if (embedded === "1" && shop) {
+      console.log("🔥 embedded reauth handler triggered", { shop });
       res
         .status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
         .setHeader(
           "X-Shopify-API-Request-Failure-Reauthorize-Url",
-          `/api/auth?shop=${shop}` // ✅ 修正: 正しいリダイレクト先
+          `/api/auth?shop=${shop}` // ✅ 正しいリダイレクト先を明示
         )
         .end();
       return;
