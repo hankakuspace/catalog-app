@@ -7,7 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = req.query.shop as string;
 
     if (!shop) {
-      return res.status(400).send("Missing shop parameter");
+      res.status(400).send("Missing shop parameter");
+      return;
     }
 
     // ✅ OAuth開始
@@ -19,9 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       rawResponse: res,
     });
 
-    return res.redirect(redirectUrl);
+    // ✅ redirect 後は return で終了
+    res.redirect(redirectUrl);
+    return;
   } catch (err: unknown) {
     console.error("❌ /api/auth error:", err);
-    return res.status(500).json({ error: (err as Error).message });
+    res.status(500).json({ error: (err as Error).message });
   }
 }
