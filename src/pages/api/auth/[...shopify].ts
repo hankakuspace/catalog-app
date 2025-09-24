@@ -12,11 +12,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
-    const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
 
-    // ✅ iframe からの最初のアクセス → 必ず401で Reauthorize ヘッダを返す
-    if (!code) {
-      console.log("🔥 Returning Reauthorize headers", { shop, redirectUrl });
+    // ✅ iFrame からの最初のアクセス → 401 強制
+    if (!code && req.headers["x-shopify-api-request-failure-reauthorize"] === undefined) {
+      const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
+      console.log("🔥 Force Reauthorize", { shop, redirectUrl });
 
       res.status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
@@ -25,17 +25,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
+    // ✅ 認証開始 (手動でOAuth URLへ302リダイレクト)
+    if (!code) {
+      const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${baseUrl}/api/auth&state=nonce`;
+      console.log("🔗 Redirecting to OAuth", authUrl);
+      return res.redirect(authUrl);
+    }
+
     // ✅ 認証コールバック
-    const callbackResponse = await shopify.auth.callback({
-      rawRequest: req,
-      rawResponse: res,
-    });
+    if (code) {
+      const callbackResponse = await shopify.auth.callback({
+        rawRequest: req,
+        rawResponse: res,
+      });
 
-    await sessionStorage.storeSession(callbackResponse.session);
+      await sessionStorage.storeSession(callbackResponse.session);
 
-    console.log("✅ OAuth success", { shop: callbackResponse.session.shop });
+      console.log("✅ OAuth success", { shop: callbackResponse.session.shop });
 
-    return res.redirect("/admin/dashboard");
+      return res.redirect("/admin/dashboard");
+    }
+
+    return res.status(400).send("Invalid auth request");
   } catch (err) {
     const error = err as Error;
     console.error("❌ Auth error:", error);
