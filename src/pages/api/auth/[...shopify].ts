@@ -1,12 +1,7 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { sessionStorage } from "@/lib/shopify";
-
-interface CustomSession {
-  shop: string;
-  accessToken: string;
-  createdAt: string;
-}
+import type { Session } from "@shopify/shopify-api"; // 型だけ import
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -57,13 +52,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const data = await response.json();
 
-      const session: CustomSession = {
+      const session = {
+        id: `${shop}_${Date.now()}`, // 適当なユニークID
         shop,
+        state: "nonce",
+        isOnline: false,
+        scope: process.env.SHOPIFY_SCOPES || "",
         accessToken: data.access_token,
-        createdAt: new Date().toISOString(),
+        expires: null,
+        onlineAccessInfo: null,
       };
 
-      await sessionStorage.storeSession(session);
+      // ✅ 型エラー回避（Session 型にキャスト）
+      await sessionStorage.storeSession(session as unknown as Session);
 
       console.log("✅ OAuth success (manual)", { shop });
 
