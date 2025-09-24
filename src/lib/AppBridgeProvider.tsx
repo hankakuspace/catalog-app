@@ -46,10 +46,9 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
       // iframe 内 → トップレベルに強制リダイレクト
       const shop = new URLSearchParams(window.location.search).get("shop");
       if (shop) {
-        redirect.dispatch(
-          Redirect.Action.REMOTE,
-          `${window.location.origin}/api/auth?shop=${shop}`
-        );
+        const redirectUrl = `${process.env.NEXT_PUBLIC_SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
+        console.log("🔄 AppBridge redirect to:", redirectUrl);
+        redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
       }
     }
   }, [app]);
