@@ -1,6 +1,6 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { sessionStorage } from "@/lib/shopify"; // ✅ shopify削除
+import { sessionStorage } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // ✅ iframe から来た場合は必ず401返却
+    // ✅ iframe アクセス時は必ず401返却
     if (!code && req.headers["sec-fetch-dest"] === "iframe") {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
@@ -51,11 +51,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const data = await response.json();
       const session = {
+        id: `${shop}_${Date.now()}`, // 必須フィールドを埋める
         shop,
+        state: "nonce",
+        isOnline: false,
+        scope: process.env.SHOPIFY_SCOPES || "",
         accessToken: data.access_token,
       };
 
-      // ✅ 型チェックを無理に通そうとせず any キャストで保存
+      // ✅ 型エラー回避のため any キャスト
       await sessionStorage.storeSession(session as any);
 
       console.log("✅ OAuth success (manual)", { shop });
