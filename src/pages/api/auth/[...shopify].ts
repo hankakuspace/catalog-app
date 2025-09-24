@@ -5,20 +5,19 @@ import { shopify, sessionStorage } from "@/lib/shopify";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const shop = req.query.shop as string | undefined;
-    const embedded = req.query.embedded;
 
-    // ✅ iframe から呼ばれたときは必ずここで処理を止める
-    if (embedded === "1" && shop) {
+    // ✅ iframe からのリクエストは必ず 401 にする（embedded=1 がなくても対応）
+    if (req.headers["x-shopify-api-request-failure-reauthorize"] !== undefined || (shop && !req.query.code)) {
       const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
 
-      console.log("🔥 Forced embedded reauth", { shop, redirectUrl });
+      console.log("🔥 Force reauth for embedded request", { shop, redirectUrl });
 
       res.status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
         .end();
-      return; // ✅ ここで終了。SDK に渡さない。
+      return;
     }
 
     // Step 1: 認証開始
@@ -40,7 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         rawResponse: res,
       });
 
-      // ✅ セッション保存
       await sessionStorage.storeSession(callbackResponse.session);
 
       console.log("✅ OAuth success, session stored:", {
@@ -48,7 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         accessToken: callbackResponse.session.accessToken ? "exists" : "missing",
       });
 
-      // ✅ 認証後はダッシュボードへ
       return res.redirect("/admin/dashboard");
     }
 
