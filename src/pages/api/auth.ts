@@ -54,22 +54,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ コードがまだない場合（認証前）
     if (!code) {
-      // iframe 内からのアクセスなら → 401 + Reauthorize ヘッダを返す
-      if (req.headers["sec-fetch-dest"] === "iframe") {
-        const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
-        console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
+      // 常に Reauthorize ヘッダを返す
+      const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
+      console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
 
-        return res
-          .status(401)
-          .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
-          .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
-          .send("");
-      }
-
-      // iframe 以外（通常のブラウザリダイレクト時）は OAuth 開始
-      const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${baseUrl}/api/auth&state=nonce`;
-      console.log("🔗 Redirecting to", authUrl);
-      return res.redirect(authUrl);
+      return res
+        .status(401)
+        .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
+        .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
+        .send("");
     }
 
     // ✅ 認証コールバック（code がある場合）
