@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // ✅ 既存セッションがあるか確認
-    const session = await shopify.session.loadCurrentSession(req, res, false);
+    const session = await shopify.auth.loadSession(req, res, false);
 
     // ✅ iframe 内から呼ばれた場合
     if (req.query.embedded === "1") {
