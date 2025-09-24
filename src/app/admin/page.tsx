@@ -6,13 +6,13 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import { Redirect } from "@shopify/app-bridge/actions";
 
 export default function AdminPage() {
-  const app = useAppBridge();
+  const app: any = useAppBridge(); // ✅ 型をキャストしてエラー回避
 
   useEffect(() => {
     async function checkSession() {
       try {
         const res = await fetch("/api/products");
-        if (res.status === 401) {
+        if (res.status === 401 && app) {
           // ✅ 未認証ならトップレベルにリダイレクト
           const redirect = Redirect.create(app);
           redirect.dispatch(
