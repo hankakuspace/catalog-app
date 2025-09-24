@@ -19,14 +19,12 @@ export default function Home() {
       if (host) query.set("host", host);
 
       const redirect = Redirect.create(app);
-      // ✅ NEXT_PUBLIC が undefined の場合は window.location.origin を使う
-      const baseUrl =
-        process.env.NEXT_PUBLIC_SHOPIFY_APP_URL || window.location.origin;
 
-      const targetUrl = `${baseUrl}/api/auth?${query.toString()}`;
-      console.log("🔄 AppBridge redirect to:", targetUrl);
-
-      redirect.dispatch(Redirect.Action.REMOTE, targetUrl);
+      // ✅ 埋め込みアプリとして管理画面内に残す
+      redirect.dispatch(
+        Redirect.Action.APP,
+        `/api/auth?${query.toString()}`
+      );
     }
   }, [app]);
 
