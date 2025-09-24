@@ -15,24 +15,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!sessionId) {
-      throw new Error("セッションが見つかりません。OAuth 認証を実行してください。");
+      throw new Error("❌ セッションIDが見つかりません");
     }
 
     const session = await sessionStorage.loadSession(sessionId);
     if (!session) {
-      throw new Error("セッションのロードに失敗しました。");
+      throw new Error("❌ セッションがロードできません");
     }
 
-    console.log("🔥 Debug session:", {
+    console.log("🔥 Debug session in /api/products:", {
       shop: session.shop,
-      accessToken: session.accessToken ? "exists" : "missing",
+      accessToken: session.accessToken ? "存在する" : "なし",
     });
 
     const products = await fetchProducts(session);
 
     return res.status(200).json(products);
   } catch (err: unknown) {
-    console.error("❌ API /products error:", err);
+    console.error("❌ /api/products エラー詳細:", err);
     return res.status(500).json({
       error: (err as Error).message,
       stack: (err as Error).stack,
