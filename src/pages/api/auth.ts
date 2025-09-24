@@ -1,7 +1,6 @@
 // src/pages/api/auth.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { parse } from "cookie";
-import { URL } from "url";
 import { sessionStorage } from "@/lib/shopify";
 import type { Session } from "@shopify/shopify-api";
 
@@ -9,8 +8,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     console.warn("🔥 DEBUG req.url:", req.url);
 
-    // ✅ req.url を直接パースしてクエリを取得
-    const fullUrl = new URL(req.url || "", `https://${req.headers.host}`);
+    // ✅ req.url は "/api/auth?..." 形式なので、dummy ベースで絶対URLに変換
+    const fullUrl = new URL(req.url || "", "http://dummy");
     const params = fullUrl.searchParams;
 
     let shop: string | undefined = params.get("shop") || undefined;
