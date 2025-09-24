@@ -48,7 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       rawResponse: res,
     });
 
-    // 🔴 ここで必ず return
-    return res.redirect(redirectUrl);
+    return res.redirect(redirectUrl); // 🔴 必ず return
   } catch (err: unknown) {
-    console.error("❌ /api/auth error:", e
+    console.error("❌ /api/auth error:", err);
+    if (!res.writableEnded) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  }
+}
