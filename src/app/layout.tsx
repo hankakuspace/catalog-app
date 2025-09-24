@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import Script from "next/script"; // ✅ 追加
 import { AppBridgeProvider } from "@/lib/AppBridgeProvider";
 
 const geistSans = Geist({
@@ -28,8 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* ✅ App Bridge グローバルスクリプト */}
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        {/* ✅ Next.js の Script コンポーネントで非同期読み込み */}
+        <Script
+          src="https://unpkg.com/@shopify/app-bridge@3"
+          strategy="beforeInteractive"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
