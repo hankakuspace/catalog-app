@@ -12,10 +12,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // ✅ 既存セッションがあるか確認
-    const session = await shopify.auth.session.loadCurrentSession(
+    const session = await shopify.session.getCurrentSession(
       req,
       res,
-      false // online:false に対応
+      false // isOnline = false
     );
 
     // ✅ iframe 内から呼ばれた場合（埋め込みアプリの初回リクエストなど）
