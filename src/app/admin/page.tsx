@@ -7,7 +7,6 @@ import { Redirect } from "@shopify/app-bridge/actions";
 import type { ClientApplication } from "@shopify/app-bridge";
 
 export default function AdminPage() {
-  // ✅ unknown を挟んでから ClientApplication にキャスト
   const app = useAppBridge() as unknown as ClientApplication;
 
   useEffect(() => {
@@ -15,11 +14,11 @@ export default function AdminPage() {
       try {
         const res = await fetch("/api/products");
         if (res.status === 401 && app) {
-          // ✅ 未認証ならトップレベルにリダイレクト
+          // ✅ iframe内ではなくトップレベルでOAuthを開始
           const redirect = Redirect.create(app);
           redirect.dispatch(
             Redirect.Action.REMOTE,
-            `/api/auth?shop=catalog-app-dev-2.myshopify.com`
+            `https://catalog-app-swart.vercel.app/api/auth?shop=catalog-app-dev-2.myshopify.com`
           );
         }
       } catch (err) {
