@@ -1,6 +1,7 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { shopify, sessionStorage } from "@/lib/shopify";
+import fetch from "node-fetch";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -13,8 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // ✅ iframe 内アクセス時は必ず401を返す（SDKは通さない）
-    if (!code && req.headers["x-shopify-api-request-failure-reauthorize"] === undefined) {
+    // ✅ iframe から来た場合は必ず401返却
+    if (!code && req.headers["sec-fetch-dest"] === "iframe") {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
 
@@ -22,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
-        .send("Reauthorize required");
+        .end("Reauthorize required");
     }
 
     // ✅ 認証開始
@@ -32,18 +33,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.redirect(authUrl);
     }
 
-    // ✅ 認証コールバック
+    // ✅ 認証コールバック (手動でトークン交換)
     if (code) {
-      // ここで SDK の callback を呼ぶとまた Reauthorize ヘッダを触られるので、
-      // トークン交換処理は client を直接使う方が確実。
-      const callbackResponse = await shopify.auth.callback({
-        rawRequest: req,
-        rawResponse: res,
+      const tokenUrl = `https://${shop}/admin/oauth/access_token`;
+      const response = await fetch(tokenUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: process.env.SHOPIFY_API_KEY,
+          client_secret: process.env.SHOPIFY_API_SECRET,
+          code,
+        }),
       });
 
-      await sessionStorage.storeSession(callbackResponse.session);
+      if (!response.ok) {
+        throw new Error(`Token exchange failed: ${response.status}`);
+      }
 
-      console.log("✅ OAuth success", { shop: callbackResponse.session.shop });
+      const data = await response.json();
+      const session = {
+        shop,
+        accessToken: data.access_token,
+      };
+
+      await sessionStorage.storeSession(session as any);
+
+      console.log("✅ OAuth success (manual)", { shop });
 
       return res.redirect("/admin/dashboard");
     }
