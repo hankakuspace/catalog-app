@@ -11,16 +11,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // ✅ iframe (embedded=1) から来た場合はトップレベル再認証を指示
+    // ✅ iframeから来た場合はトップレベル認証URLを返す
     if (req.query.embedded === "1") {
-      const redirectUrl = `https://${req.headers.host}/api/auth?shop=${shop}`;
-      res.setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1");
-      res.setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl);
-      res.status(401).end();
+      const redirectUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=read_products,read_customers&redirect_uri=${process.env.HOST}/api/auth/callback`;
+
+      res
+        .status(401)
+        .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
+        .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
+        .end();
       return;
     }
 
-    // ✅ OAuth開始
+    // ✅ 通常のOAuth開始
     const redirectUrl = await shopify.auth.begin({
       shop,
       callbackPath: "/api/auth/callback",
