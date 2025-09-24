@@ -7,7 +7,8 @@ import { Redirect } from "@shopify/app-bridge/actions";
 import type { ClientApplication } from "@shopify/app-bridge";
 
 export default function AdminPage() {
-  const app = useAppBridge() as ClientApplication;
+  // ✅ unknown を挟んでから ClientApplication にキャスト
+  const app = useAppBridge() as unknown as ClientApplication;
 
   useEffect(() => {
     async function checkSession() {
