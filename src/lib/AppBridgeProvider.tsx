@@ -23,7 +23,7 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
 
   const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY;
 
-  // ✅ useMemoで AppBridge を初期化
+  // ✅ AppBridge 初期化
   const app = useMemo(() => {
     if (!host || !apiKey) {
       console.warn("⚠️ host または NEXT_PUBLIC_SHOPIFY_API_KEY が未設定");
@@ -36,20 +36,18 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
     });
   }, [host, apiKey]);
 
-  // ✅ useEffect は常に呼び出す
+  // ✅ 401 → Reauthorize のケースでリダイレクトを強制
   useEffect(() => {
     if (!app) return;
 
     const redirect = Redirect.create(app);
+    const shop = new URLSearchParams(window.location.search).get("shop");
 
-    if (window.top !== window.self) {
-      // iframe 内 → トップレベルに強制リダイレクト
-      const shop = new URLSearchParams(window.location.search).get("shop");
-      if (shop) {
-        const redirectUrl = `${process.env.NEXT_PUBLIC_SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
-        console.log("🔄 AppBridge redirect to:", redirectUrl);
-        redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
-      }
+    // iframe 内なら強制的にリダイレクト
+    if (window.top !== window.self && shop) {
+      const redirectUrl = `${process.env.NEXT_PUBLIC_SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
+      console.log("🔄 AppBridge redirect to:", redirectUrl);
+      redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
     }
   }, [app]);
 
