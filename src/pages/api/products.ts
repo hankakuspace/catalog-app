@@ -8,6 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // ✅ セッションIDを取得
     const sessionId = await shopify.session.getCurrentId({
       isOnline: false,
       rawRequest: req,
@@ -15,12 +16,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!sessionId) {
-      throw new Error("❌ セッションIDが見つかりません");
+      // 500ではなく401を返す（App Bridge RedirectでOAuth開始させる）
+      res.status(401).json({ error: "Unauthorized: セッションIDが見つかりません" });
+      return;
     }
 
+    // ✅ セッションをロード
     const session = await sessionStorage.loadSession(sessionId);
     if (!session) {
-      throw new Error("❌ セッションがロードできません");
+      res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
+      return;
     }
 
     console.log("🔥 Debug session in /api/products:", {
@@ -28,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken: session.accessToken ? "存在する" : "なし",
     });
 
+    // ✅ 商品データを取得
     const products = await fetchProducts(session);
 
     return res.status(200).json(products);
