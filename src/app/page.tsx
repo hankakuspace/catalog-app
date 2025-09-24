@@ -1,10 +1,13 @@
 // src/app/page.tsx
 import { redirect } from "next/navigation";
 
-export default function Home(props: any) {
-  const searchParams = props.searchParams || {};
-  const shop = searchParams.shop as string | undefined;
-  const host = searchParams.host as string | undefined;
+interface HomeProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+export default function Home({ searchParams }: HomeProps) {
+  const shop = (searchParams?.shop as string | undefined) || undefined;
+  const host = (searchParams?.host as string | undefined) || undefined;
 
   if (shop) {
     redirect(`/api/auth?shop=${shop}${host ? `&host=${host}` : ""}`);
