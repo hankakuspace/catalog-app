@@ -1,7 +1,6 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { shopify, sessionStorage } from "@/lib/shopify";
-import fetch from "node-fetch";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -33,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.redirect(authUrl);
     }
 
-    // ✅ 認証コールバック (手動でトークン交換)
+    // ✅ 認証コールバック (標準 fetch を使用)
     if (code) {
       const tokenUrl = `https://${shop}/admin/oauth/access_token`;
       const response = await fetch(tokenUrl, {
