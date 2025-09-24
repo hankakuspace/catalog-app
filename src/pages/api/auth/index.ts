@@ -41,7 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // ✅ 通常の OAuth 開始フロー
-    const redirectUrl = await shopify.auth.begin({
+    // Shopify SDK が自動でレスポンスを書いてくれるので、二重で redirect しない
+    await shopify.auth.begin({
       shop,
       callbackPath: "/api/auth/callback",
       isOnline: false,
@@ -49,9 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       rawResponse: res,
     });
 
-    res.writeHead(302, { Location: redirectUrl });
-    res.end();
-    return;
+    return; // 🔴 ここで終了
   } catch (err: unknown) {
     console.error("❌ /api/auth error:", err);
     if (!res.writableEnded) {
