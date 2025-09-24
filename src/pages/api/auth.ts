@@ -45,8 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? req.query.code[0]
       : (req.query.code as string | undefined);
 
+    // ✅ 最後のチェック（host decodeで復元できていればここで判定OK）
     if (!shop) {
-      console.error("❌ Missing shop parameter. req.query:", req.query);
+      console.error("❌ Still missing shop parameter. req.query:", req.query);
       return res.status(400).send("Missing shop parameter");
     }
 
@@ -54,7 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ コードがまだない場合（認証前）
     if (!code) {
-      // 常に Reauthorize ヘッダを返す
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
 
