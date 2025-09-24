@@ -13,27 +13,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // ✅ iFrame からの最初のアクセス → 401 強制
+    // ✅ iframe 内アクセス時は必ず401を返す（SDKは通さない）
     if (!code && req.headers["x-shopify-api-request-failure-reauthorize"] === undefined) {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
-      console.log("🔥 Force Reauthorize", { shop, redirectUrl });
+      console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
 
-      res.status(401)
+      return res
+        .status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
         .send("Reauthorize required");
-      return;
     }
 
-    // ✅ 認証開始 (手動でOAuth URLへ302リダイレクト)
+    // ✅ 認証開始
     if (!code) {
       const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${baseUrl}/api/auth&state=nonce`;
-      console.log("🔗 Redirecting to OAuth", authUrl);
+      console.log("🔗 Redirecting to", authUrl);
       return res.redirect(authUrl);
     }
 
     // ✅ 認証コールバック
     if (code) {
+      // ここで SDK の callback を呼ぶとまた Reauthorize ヘッダを触られるので、
+      // トークン交換処理は client を直接使う方が確実。
       const callbackResponse = await shopify.auth.callback({
         rawRequest: req,
         rawResponse: res,
