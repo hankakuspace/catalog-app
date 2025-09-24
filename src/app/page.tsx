@@ -1,13 +1,10 @@
 // src/app/page.tsx
 import { redirect } from "next/navigation";
 
-interface HomeProps {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
-export default function Home({ searchParams }: HomeProps) {
-  const shop = (searchParams?.shop as string | undefined) || undefined;
-  const host = (searchParams?.host as string | undefined) || undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function Home({ searchParams }: any) {
+  const shop = searchParams?.shop as string | undefined;
+  const host = searchParams?.host as string | undefined;
 
   if (shop) {
     redirect(`/api/auth?shop=${shop}${host ? `&host=${host}` : ""}`);
