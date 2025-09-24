@@ -11,19 +11,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let shop: string | undefined;
 
+    // 1. クエリから取得
     if (typeof req.query.shop === "string") {
       shop = req.query.shop;
     } else if (Array.isArray(req.query.shop)) {
       shop = req.query.shop[0];
     }
 
+    // 2. ヘッダから取得
     if (!shop && req.headers["x-shopify-shop-domain"]) {
       shop = req.headers["x-shopify-shop-domain"] as string;
     }
 
+    // 3. Cookie から取得
     if (!shop && req.headers.cookie) {
       const cookies = parse(req.headers.cookie);
       if (cookies["shop"]) shop = cookies["shop"];
+    }
+
+    // 4. host パラメータを decode して取得
+    if (!shop && typeof req.query.host === "string") {
+      try {
+        const decoded = Buffer.from(req.query.host, "base64").toString("utf-8");
+        // 例: "catalog-app-dev-2.myshopify.com/admin"
+        shop = decoded.split("/")[0];
+        console.log("🔥 Decoded shop from host:", shop);
+      } catch (e) {
+        console.error("❌ Failed to decode host:", req.query.host, e);
+      }
     }
 
     const code = Array.isArray(req.query.code)
@@ -31,12 +46,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       : (req.query.code as string | undefined);
 
     if (!shop) {
+      console.error("❌ Missing shop parameter. req.query:", req.query);
       return res.status(400).send("Missing shop parameter");
     }
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // iframe アクセス時は必ず401返却 (Reauthorize ヘッダ付き)
+    // ✅ iframe アクセス時は必ず401返却 (Reauthorize ヘッダ付き)
     if (!code) {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
@@ -48,14 +64,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .send(""); // 本文なし
     }
 
-    // 認証開始
+    // ✅ 認証開始
     if (!code) {
       const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${process.env.SHOPIFY_SCOPES}&redirect_uri=${baseUrl}/api/auth&state=nonce`;
       console.log("🔗 Redirecting to", authUrl);
       return res.redirect(authUrl);
     }
 
-    // 認証コールバック
+    // ✅ 認証コールバック
     if (code) {
       const tokenUrl = `https://${shop}/admin/oauth/access_token`;
       const response = await fetch(tokenUrl, {
