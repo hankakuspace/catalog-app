@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         rawResponse: res,
       });
 
-      // ✅ callbackResponse.session を保存する
+      // ✅ セッション保存
       await sessionStorage.storeSession(callbackResponse.session);
 
       console.log("✅ OAuth success, session stored:", {
@@ -31,7 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         accessToken: callbackResponse.session.accessToken ? "exists" : "missing",
       });
 
-      return res.redirect("/admin");
+      // ✅ 認証後に /admin/dashboard に飛ばす
+      return res.redirect("/admin/dashboard");
     }
 
     return res.status(400).send("Invalid auth request");
