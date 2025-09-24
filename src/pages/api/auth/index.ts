@@ -26,8 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.query.embedded === "1") {
       if (session && session.accessToken) {
         console.log("✅ Existing session found, redirecting to /admin");
-        res.redirect("/admin");
-        return; // 🔴 ここで終了
+        res.writeHead(302, { Location: "/admin" });
+        res.end();
+        return;
       }
 
       const redirectUrl = `${process.env.SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
@@ -36,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1");
       res.setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl);
       res.status(401).end();
-      return; // 🔴 ここで終了
+      return;
     }
 
     // ✅ 通常の OAuth 開始フロー
@@ -48,7 +49,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       rawResponse: res,
     });
 
-    return res.redirect(redirectUrl); // 🔴 必ず return
+    res.writeHead(302, { Location: redirectUrl });
+    res.end();
+    return;
   } catch (err: unknown) {
     console.error("❌ /api/auth error:", err);
     if (!res.writableEnded) {
