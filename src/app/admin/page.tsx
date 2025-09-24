@@ -4,9 +4,10 @@
 import { useEffect } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { Redirect } from "@shopify/app-bridge/actions";
+import type { ClientApplication } from "@shopify/app-bridge";
 
 export default function AdminPage() {
-  const app: any = useAppBridge(); // ✅ 型をキャストしてエラー回避
+  const app = useAppBridge() as ClientApplication;
 
   useEffect(() => {
     async function checkSession() {
