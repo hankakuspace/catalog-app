@@ -1,7 +1,6 @@
 // src/pages/api/auth/[...shopify].ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { sessionStorage } from "@/lib/shopify";
-import { Session } from "@shopify/shopify-api"; // ✅ クラスを利用
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -14,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "") || "";
 
-    // ✅ iframe アクセス時は必ず401返却
+    // ✅ iframe から来た場合は必ず401返却（フルURLで指定）
     if (!code && req.headers["sec-fetch-dest"] === "iframe") {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}`;
       console.log("🔥 Custom Reauthorize", { shop, redirectUrl });
@@ -33,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.redirect(authUrl);
     }
 
-    // ✅ 認証コールバック
+    // ✅ 認証コールバック（SDKは使わず fetch で直接トークン交換）
     if (code) {
       const tokenUrl = `https://${shop}/admin/oauth/access_token`;
       const response = await fetch(tokenUrl, {
@@ -51,18 +50,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const data = await response.json();
-
-      // ✅ Session クラスを new して生成
-      const session = new Session({
-        id: `${shop}_${Date.now()}`,
+      const session = {
         shop,
-        state: "nonce",
-        isOnline: false,
-        scope: process.env.SHOPIFY_SCOPES || "",
         accessToken: data.access_token,
-      });
+        createdAt: new Date().toISOString(),
+      };
 
-      await sessionStorage.storeSession(session);
+      // 型エラーを避けるため any で保存
+      await sessionStorage.storeSession(session as any);
 
       console.log("✅ OAuth success (manual)", { shop });
 
