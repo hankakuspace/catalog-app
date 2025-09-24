@@ -2,11 +2,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAppBridge } from "@shopify/app-bridge-react";
 import { Redirect } from "@shopify/app-bridge/actions";
+import { useAppBridgeCustom } from "@/lib/AppBridgeProvider";
 
 export default function Home() {
-  const app = useAppBridge();
+  const app = useAppBridgeCustom();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
