@@ -7,16 +7,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = req.query.shop as string | undefined;
     const embedded = req.query.embedded;
 
-    // ✅ 埋め込み (iframe) からアクセスされた場合 → 401 + Reauthorize
+    // ✅ 埋め込み (iframe) からアクセスされた場合 → 401 + Reauthorize (フルURLで返す)
     if (embedded === "1" && shop) {
-      console.log("🔥 embedded reauth handler triggered", { shop });
+      const redirectUrl = `${process.env.SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
+      console.log("🔥 embedded reauth handler triggered", { shop, redirectUrl });
+
       res
         .status(401)
         .setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1")
-        .setHeader(
-          "X-Shopify-API-Request-Failure-Reauthorize-Url",
-          `/api/auth?shop=${shop}` // ✅ 正しいリダイレクト先を明示
-        )
+        .setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl)
         .end();
       return;
     }
