@@ -9,7 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   const navItems = [
-    { name: "ダッシュボード", href: "/admin" },
+    { name: "ダッシュボード", href: "/admin/dashboard" }, // ✅ 修正
     { name: "商品一覧", href: "/admin/products" },
     { name: "顧客一覧", href: "/admin/customers" },
     { name: "カタログ一覧", href: "/admin/catalogs" },
