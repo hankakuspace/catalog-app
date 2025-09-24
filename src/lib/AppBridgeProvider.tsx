@@ -1,7 +1,7 @@
 // src/lib/AppBridgeProvider.tsx
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import { createApp, type ClientApplication } from "@shopify/app-bridge";
 import { Redirect } from "@shopify/app-bridge/actions";
 
@@ -21,39 +21,36 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
       ? new URLSearchParams(window.location.search).get("host") || ""
       : "";
 
-  if (!host || !process.env.NEXT_PUBLIC_SHOPIFY_API_KEY) {
-    console.warn(
-      "⚠️ host または NEXT_PUBLIC_SHOPIFY_API_KEY が未設定のため AppBridge は初期化されません"
-    );
-    return <>{children}</>;
-  }
+  const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY;
 
-  // ✅ App Bridge 初期化
-  const app = createApp({
-    apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
-    host,
-    forceRedirect: true,
-  });
+  // ✅ useMemoで AppBridge を初期化
+  const app = useMemo(() => {
+    if (!host || !apiKey) {
+      console.warn("⚠️ host または NEXT_PUBLIC_SHOPIFY_API_KEY が未設定");
+      return null;
+    }
+    return createApp({
+      apiKey,
+      host,
+      forceRedirect: true,
+    });
+  }, [host, apiKey]);
 
-  // ✅ 初回マウント時にリダイレクト確認
+  // ✅ useEffect は常に呼び出す
   useEffect(() => {
     if (!app) return;
 
     const redirect = Redirect.create(app);
 
-    // Shopify が 401 + Reauthorize ヘッダを返したとき、
-    // App Bridge がトップレベルリダイレクトを行えるようにする
-    if (window.top === window.self) {
-      // すでにトップレベル → 何もしない
-      return;
-    } else {
+    if (window.top !== window.self) {
       // iframe 内 → トップレベルに強制リダイレクト
-      redirect.dispatch(
-        Redirect.Action.REMOTE,
-        `${window.location.origin}/api/auth?shop=${new URLSearchParams(
-          window.location.search
-        ).get("shop")}`
-      );
+      const shop = new URLSearchParams(window.location.search).get("shop");
+      if (shop) {
+        redirect.dispatch(
+          Redirect.Action.REMOTE,
+          `${window.location.origin}/api/auth?shop=${shop}`
+        );
+      }
     }
   }, [app]);
 
