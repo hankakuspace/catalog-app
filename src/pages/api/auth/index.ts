@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // ✅ 既存セッションの確認
+    // ✅ 既存セッション確認
     const sessionId = await shopify.session.getCurrentId({
       isOnline: false,
       rawRequest: req,
@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (session && session.accessToken) {
         console.log("✅ Existing session found, redirecting to /admin");
         res.redirect("/admin");
-        return; // 🔴 ここで処理を終了
+        return; // 🔴 ここで終了
       }
 
       const redirectUrl = `${process.env.SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader("X-Shopify-API-Request-Failure-Reauthorize", "1");
       res.setHeader("X-Shopify-API-Request-Failure-Reauthorize-Url", redirectUrl);
       res.status(401).end();
-      return; // 🔴 ここで処理を終了
+      return; // 🔴 ここで終了
     }
 
     // ✅ 通常の OAuth 開始フロー
@@ -48,10 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       rawResponse: res,
     });
 
-    res.redirect(redirectUrl);
-    return; // 🔴 ここで処理を終了
+    // 🔴 ここで必ず return
+    return res.redirect(redirectUrl);
   } catch (err: unknown) {
-    console.error("❌ /api/auth error:", err);
-    res.status(500).json({ error: (err as Error).message });
-  }
-}
+    console.error("❌ /api/auth error:", e
