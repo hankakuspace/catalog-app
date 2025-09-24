@@ -1,7 +1,17 @@
 // src/app/page.tsx
-import { redirect } from "next/navigation";
+"use client";
 
-export default function HomePage() {
-  // ✅ TOPにアクセスしたら管理画面へリダイレクト
-  redirect("/admin");
+import { useEffect } from "react";
+
+export default function Home() {
+  useEffect(() => {
+    const shop = new URLSearchParams(window.location.search).get("shop");
+    if (shop) {
+      window.location.href = `/api/auth?shop=${shop}`;
+    } else {
+      window.location.href = `/api/auth`;
+    }
+  }, []);
+
+  return <p>Redirecting to authentication...</p>;
 }
