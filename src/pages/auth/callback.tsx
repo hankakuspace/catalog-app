@@ -18,10 +18,22 @@ export default function AuthCallback() {
         return;
       }
 
-      const appBridgeObj = appBridgeGlobal as {
+      type AppBridgeModule = {
         default: (config: { apiKey: string; host: string }) => unknown;
-        actions: { Redirect: any };
+        actions: {
+          Redirect: {
+            create: (app: unknown) => {
+              dispatch: (action: unknown, path: string) => void;
+            };
+            Action: {
+              APP: string;
+              REMOTE: string;
+            };
+          };
+        };
       };
+
+      const appBridgeObj = appBridgeGlobal as AppBridgeModule;
 
       const createApp = appBridgeObj.default;
       const Redirect = appBridgeObj.actions.Redirect;
