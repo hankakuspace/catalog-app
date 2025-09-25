@@ -5,9 +5,10 @@ import * as admin from "firebase-admin";
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: process.env.GCP_PROJECT_ID,
-      clientEmail: process.env.GCP_CLIENT_EMAIL,
-      privateKey: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      // 🔑 Vercel の環境変数では \n が文字列なので実際の改行に戻す
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     }),
   });
 }
@@ -19,6 +20,7 @@ export const FirestoreSessionStorage = {
   async storeSession(session: Session): Promise<boolean> {
     try {
       await collection.doc(session.id).set(session.toObject());
+      console.log("🔥 Firestore storeSession success:", session.id);
       return true;
     } catch (err) {
       console.error("❌ Firestore storeSession error:", err);
@@ -32,6 +34,7 @@ export const FirestoreSessionStorage = {
       if (!doc.exists) return undefined;
 
       const data = doc.data() as SessionParams;
+      console.log("🔥 Firestore loadSession success:", id);
       return new Session(data);
     } catch (err) {
       console.error("❌ Firestore loadSession error:", err);
@@ -42,6 +45,7 @@ export const FirestoreSessionStorage = {
   async deleteSession(id: string): Promise<boolean> {
     try {
       await collection.doc(id).delete();
+      console.log("🔥 Firestore deleteSession success:", id);
       return true;
     } catch (err) {
       console.error("❌ Firestore deleteSession error:", err);
@@ -54,6 +58,7 @@ export const FirestoreSessionStorage = {
       const batch = firestore.batch();
       ids.forEach((id) => batch.delete(collection.doc(id)));
       await batch.commit();
+      console.log("🔥 Firestore deleteSessions success:", ids.length);
       return true;
     } catch (err) {
       console.error("❌ Firestore deleteSessions error:", err);
