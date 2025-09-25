@@ -42,8 +42,18 @@ interface Product {
   variants: {
     edges: { node: ProductVariant }[];
   };
+  metafields?: {
+    edges: {
+      node: {
+        namespace: string;
+        key: string;
+        value: string;
+      };
+    }[];
+  };
 }
 
+// ✅ Metafields を含めて商品を取得
 export async function fetchProducts(session: Session): Promise<Product[]> {
   try {
     const client = new shopify.clients.Graphql({ session });
@@ -64,18 +74,24 @@ export async function fetchProducts(session: Session): Promise<Product[]> {
                   }
                 }
               }
+              metafields(first: 20) {
+                edges {
+                  node {
+                    namespace
+                    key
+                    value
+                  }
+                }
+              }
             }
           }
         }
       }
     `;
 
-    // ✅ v12: request() は { data, errors, extensions }
     const response = await client.request<{ products: { edges: { node: Product }[] } }>(query);
 
-    const products = response.data?.products?.edges.map((edge) => edge.node) ?? [];
-
-    return products;
+    return response.data.products.edges.map((edge) => edge.node);
   } catch (error) {
     console.error("❌ fetchProducts error:", error);
     throw error;
