@@ -8,18 +8,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // ✅ セッションIDを JWT から取得 (isOnline: true)
-    const sessionId = await shopify.session.getCurrentId({
+    // 1. オンラインセッション確認 (JWT + authenticatedFetch)
+    let sessionId = await shopify.session.getCurrentId({
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
     });
 
-    if (!sessionId) {
-      return res.status(401).json({ error: "Unauthorized: セッションIDが見つかりません" });
+    let session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
+
+    // 2. Fallback: オフラインセッションをロード
+    if (!session) {
+      const shop = req.query.shop as string;
+      if (!shop) {
+        return res.status(401).json({ error: "Unauthorized: shop パラメータが必要です" });
+      }
+      session = await sessionStorage.loadSession(shop);
     }
 
-    const session = await sessionStorage.loadSession(sessionId);
     if (!session) {
       return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
     }
@@ -29,10 +35,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken: session.accessToken ? "存在する" : "なし",
     });
 
+    // 3. 商品データを取得
     const products = await fetchProducts(session);
+
     return res.status(200).json({ products });
   } catch (err: unknown) {
     console.error("❌ /api/products エラー詳細:", err);
-    return res.status(500).json({ error: (err as Error).message });
+    return res.status(500).json({
+      error: (err as Error).message,
+      stack: (err as Error).stack,
+    });
   }
 }
