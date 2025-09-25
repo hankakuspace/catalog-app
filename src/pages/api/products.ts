@@ -1,6 +1,6 @@
 // src/pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { sessionStorage, fetchProducts } from "@/lib/shopify";
+import { shopify, sessionStorage, fetchProducts } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -8,13 +8,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const shop = req.query.shop as string;
-    if (!shop) {
-      return res.status(400).json({ error: "Missing shop parameter" });
+    // ✅ セッションIDを JWT から取得 (isOnline: true)
+    const sessionId = await shopify.session.getCurrentId({
+      isOnline: true,
+      rawRequest: req,
+      rawResponse: res,
+    });
+
+    if (!sessionId) {
+      return res.status(401).json({ error: "Unauthorized: セッションIDが見つかりません" });
     }
 
-    // ✅ shop をキーに直接セッションをロード
-    const session = await sessionStorage.loadSession(shop);
+    const session = await sessionStorage.loadSession(sessionId);
     if (!session) {
       return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
     }
@@ -28,9 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ products });
   } catch (err: unknown) {
     console.error("❌ /api/products エラー詳細:", err);
-    return res.status(500).json({
-      error: (err as Error).message,
-      stack: (err as Error).stack,
-    });
+    return res.status(500).json({ error: (err as Error).message });
   }
 }
