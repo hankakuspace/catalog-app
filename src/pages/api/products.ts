@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // 1. オンラインセッション確認 (JWT + authenticatedFetch)
-    let sessionId = await shopify.session.getCurrentId({
+    const sessionId = await shopify.session.getCurrentId({
       isOnline: true,
       rawRequest: req,
       rawResponse: res,
