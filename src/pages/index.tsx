@@ -24,10 +24,14 @@ export default function Home() {
           throw new Error(`Failed to fetch products: ${res.status}`);
         }
 
-        const data = await res.json();
+        const data: { products?: Product[] } = await res.json();
         setProducts(data.products || []);
-      } catch (err: any) {
-        setError(err.message || "Error loading products");
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Error loading products");
+        }
       } finally {
         setLoading(false);
       }
