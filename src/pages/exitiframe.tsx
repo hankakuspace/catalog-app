@@ -2,30 +2,31 @@
 import { NextPage } from "next";
 
 const ExitIframe: NextPage = () => {
-  const params =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : null;
-  const redirectUrl = params?.get("redirectUrl") || "";
-
   return (
     <html>
-      <head>
-        {/* ✅ トップレベルで即リダイレクト */}
-        {redirectUrl && (
-          <meta httpEquiv="refresh" content={`0; url=${redirectUrl}`} />
-        )}
-      </head>
       <body>
-        <p>Redirecting to authentication...</p>
+        <p>Redirecting out of iframe...</p>
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              const params = new URLSearchParams(window.location.search);
-              const redirectUrl = params.get("redirectUrl");
-              if (redirectUrl) {
-                window.location.href = redirectUrl;
-              }
+              (function() {
+                const params = new URLSearchParams(window.location.search);
+                const redirectUrl = params.get("redirectUrl");
+                if (!redirectUrl) {
+                  console.error("❌ No redirectUrl found");
+                  return;
+                }
+
+                // ✅ iframe 内ならトップレベルで開き直す
+                if (window.top !== window.self) {
+                  window.top.location.href = window.location.href;
+                  return;
+                }
+
+                // ✅ トップレベルに出てきたら embedded=1 を削除してリダイレクト
+                const cleanUrl = redirectUrl.replace(/embedded=1&?/, "");
+                window.location.href = cleanUrl;
+              })();
             `,
           }}
         />
