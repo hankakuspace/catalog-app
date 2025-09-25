@@ -70,11 +70,10 @@ export async function fetchProducts(session: Session): Promise<Product[]> {
       }
     `;
 
-    // ✅ v12: request() は string を直接受け取る
-    const response = await client.request(query);
+    // ✅ v12: request() は { data, errors, extensions }
+    const response = await client.request<{ products: { edges: { node: Product }[] } }>(query);
 
-    const products =
-      response.body.data?.products?.edges.map((edge: { node: Product }) => edge.node) ?? [];
+    const products = response.data?.products?.edges.map((edge) => edge.node) ?? [];
 
     return products;
   } catch (error) {
