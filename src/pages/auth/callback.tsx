@@ -1,5 +1,6 @@
 // src/pages/auth/callback.tsx
 import { useEffect } from "react";
+import Head from "next/head";
 
 export default function AuthCallback() {
   useEffect(() => {
@@ -11,7 +12,7 @@ export default function AuthCallback() {
     console.log("🔥 DEBUG callback shop:", shop);
 
     (async () => {
-      const AppBridge = (window as any)["app-bridge"];
+      const AppBridge = (window as unknown as { [key: string]: any })["app-bridge"];
       if (!AppBridge) {
         console.error("❌ AppBridge not loaded");
         return;
@@ -32,13 +33,11 @@ export default function AuthCallback() {
   }, []);
 
   return (
-    <html>
-      <head>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      </head>
-      <body>
-        <p>Redirecting back to app...</p>
-      </body>
-    </html>
+    <>
+      <Head>
+        <script src="https://unpkg.com/@shopify/app-bridge@3" defer></script>
+      </Head>
+      <p>Redirecting back to app...</p>
+    </>
   );
 }
