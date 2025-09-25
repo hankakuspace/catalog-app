@@ -116,7 +116,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await sessionStorage.storeSession(session as unknown as Session);
 
-    console.warn("✅ OAuth success (manual)", { shop, hostParam });
+    // ✅ セッション保存確認ログ
+    console.warn("🔥 Session stored:", session);
 
     // ✅ HTMLドキュメントとして返却し、AppBridge redirect を確実に実行
     res.setHeader("Content-Type", "text/html");
