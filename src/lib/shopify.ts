@@ -31,8 +31,23 @@ export function getStoreDomain(): string {
   return storeDomain;
 }
 
+// 型定義
+interface ProductVariant {
+  id: string;
+  price: string;
+}
+
+interface Product {
+  id: string;
+  title: string;
+  handle: string;
+  variants: {
+    edges: { node: ProductVariant }[];
+  };
+}
+
 // ✅ GraphQL で商品取得
-export async function fetchProducts(session: Session) {
+export async function fetchProducts(session: Session): Promise<Product[]> {
   try {
     const client = new shopify.clients.Graphql({ session });
 
@@ -58,12 +73,13 @@ export async function fetchProducts(session: Session) {
       }
     `;
 
-    const response = await client.query({
-      query, // ← 修正: data ではなく query
+    const response = await client.query<{
+      data: { products: { edges: { node: Product }[] } };
+    }>({
+      query,
     });
 
-    const products =
-      response.body.data?.products?.edges.map((edge: any) => edge.node) ?? [];
+    const products = response.body.data.products.edges.map((edge) => edge.node);
 
     return products;
   } catch (error) {
