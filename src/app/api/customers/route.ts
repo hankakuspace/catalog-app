@@ -27,7 +27,7 @@ export async function GET() {
       expires: undefined,
       isActive: () => true,
       onlineAccessInfo: undefined,
-    } as unknown as Session; // ✅ 型アサーションで強制
+    } as unknown as Session;
 
     const client = new shopify.clients.Graphql({ session });
 
@@ -46,7 +46,7 @@ export async function GET() {
       }
     `;
 
-    const response = await client.query<{ customers: { edges: CustomerEdge[] } }>({
+    const response = await client.query<{ data: { customers: { edges: CustomerEdge[] } } }>({
       data: query,
     });
 
