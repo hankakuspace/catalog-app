@@ -16,27 +16,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const code = params.get("code") || undefined;
     const embedded = params.get("embedded");
 
-    // ✅ iframe 内からのアクセスならトップレベルにリダイレクトさせる
+    // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
       const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}&host=${hostParam}`;
-      console.log("🔄 Embedded=1, returning top-level redirect helper", redirectUrl);
+      console.log("🔄 Embedded=1, redirecting via exitiframe:", redirectUrl);
 
-      return res.send(`
-        <html>
-          <body>
-            <script>
-              if (window.top === window.self) {
-                // top-level → 直接リダイレクト
-                window.location.href = "${redirectUrl}";
-              } else {
-                // iframe 内 → top-level にこのURLを読み込ませる
-                window.top.location.href = window.location.href;
-              }
-            </script>
-          </body>
-        </html>
-      `);
+      return res.redirect(
+        `${baseUrl}/exitiframe?redirectUrl=${encodeURIComponent(redirectUrl)}`
+      );
     }
 
     // 1. ヘッダから取得
