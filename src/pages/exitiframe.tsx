@@ -10,20 +10,12 @@ const ExitIframe: NextPage = () => {
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                const params = new URLSearchParams(window.location.search);
-                let redirectUrl = window.location.origin + "/api/auth" + window.location.search;
+                var params = new URLSearchParams(window.location.search);
+                var redirectUrl = params.get("redirectUrl") || "/";
+                var cleanUrl = redirectUrl.replace(/([&?])embedded=1&?/, "$1");
 
-                // ✅ embedded=1 を削除
-                redirectUrl = redirectUrl.replace(/([&?])embedded=1&?/, "$1");
-
-                // ✅ iframe 内ならトップレベルでクリーン URL を開く
-                if (window.top !== window.self) {
-                  window.top.location.href = redirectUrl;
-                  return;
-                }
-
-                // ✅ 既にトップレベルならそのまま遷移
-                window.location.href = redirectUrl;
+                // ✅ Shopify公式推奨: document.write 経由で top-level redirect
+                document.write('<script>window.top.location.href="' + cleanUrl + '";<\\/script>');
               })();
             `,
           }}
