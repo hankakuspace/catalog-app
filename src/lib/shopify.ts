@@ -76,7 +76,7 @@ export async function fetchProducts(session: Session): Promise<Product[]> {
     const response = await client.query<{
       data: { products: { edges: { node: Product }[] } };
     }>({
-      query,
+      data: query, // ✅ 修正ポイント
     });
 
     const products = response.body.data.products.edges.map((edge) => edge.node);
