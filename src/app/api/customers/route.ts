@@ -24,9 +24,9 @@ export async function GET() {
       isOnline: true,
       accessToken: process.env.SHOPIFY_API_SECRET!,
       scope: "read_customers",
-      expires: undefined, // ✅ null → undefined に修正
+      expires: undefined, // ✅ 修正済み
       isActive: () => true,
-      onlineAccessInfo: null,
+      onlineAccessInfo: undefined, // ✅ null → undefined
     };
 
     const client = new shopify.clients.Graphql({ session });
