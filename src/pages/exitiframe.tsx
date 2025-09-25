@@ -1,36 +1,30 @@
 // src/pages/exitiframe.tsx
-import { NextPage } from "next";
+import { useEffect } from "react";
+import { Redirect } from "@shopify/app-bridge/actions";
+import createApp from "@shopify/app-bridge";
 
-const ExitIframe: NextPage = () => {
-  // ✅ クエリをすべて保持したまま meta refresh で遷移
-  return (
-    <html>
-      <head>
-        <meta charSet="utf-8" />
-        <title>Redirecting...</title>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var params = new URLSearchParams(window.location.search);
-                var redirectUrl = params.get("redirectUrl") || "/api/auth";
-                var cleanUrl = redirectUrl.replace(/([&?])embedded=1&?/, "$1");
+export default function ExitIframe() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const host = params.get("host");
+    const shop = params.get("shop");
 
-                // ✅ meta refresh を書き換え
-                var meta = document.createElement("meta");
-                meta.httpEquiv = "refresh";
-                meta.content = "0;url=" + cleanUrl;
-                document.head.appendChild(meta);
-              })();
-            `,
-          }}
-        />
-      </head>
-      <body>
-        <p>Redirecting out of iframe...</p>
-      </body>
-    </html>
-  );
-};
+    if (!host || !shop) {
+      // パラメータ不足なら認証に戻す
+      window.location.href = "/api/auth";
+      return;
+    }
 
-export default ExitIframe;
+    // ✅ App Bridge 初期化
+    const app = createApp({
+      apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
+      host,
+    });
+
+    // ✅ アプリTOP (/apps/{handle}) にリダイレクト
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.APP, "/");
+  }, []);
+
+  return <p>Redirecting out of iframe...</p>;
+}
