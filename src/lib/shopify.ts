@@ -1,8 +1,7 @@
 // src/lib/shopify.ts
 import "@shopify/shopify-api/adapters/node";
-import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
-// import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
-import { FirestoreSessionStorage } from "@/lib/firestore"; // ✅ Firestore を利用
+import { shopifyApi, ApiVersion, Session } from "@shopify/shopify-api"; // ✅ Session を import
+import { FirestoreSessionStorage } from "@/lib/firestore";
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -32,10 +31,9 @@ export function getStoreDomain(): string {
   return storeDomain;
 }
 
-export async function fetchProducts(session: unknown) {
+export async function fetchProducts(session: Session) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const client = new shopify.clients.Graphql({ session: session as any });
+    const client = new shopify.clients.Graphql({ session });
 
     const query = `
       {
@@ -59,10 +57,11 @@ export async function fetchProducts(session: unknown) {
       }
     `;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response: any = await client.query({ data: query });
+    const response = await client.query<{ products: { edges: { node: unknown }[] } }>({
+      data: query,
+    });
 
-    return response?.body?.data?.products?.edges?.map((edge: any) => edge.node) ?? [];
+    return response?.body?.data?.products?.edges?.map((edge) => edge.node) ?? [];
   } catch (error) {
     console.error("❌ fetchProducts error:", error);
     throw error;
