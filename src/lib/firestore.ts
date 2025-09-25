@@ -1,15 +1,21 @@
 // src/lib/firestore.ts
 import { Session } from "@shopify/shopify-api";
-import { Firestore } from "@google-cloud/firestore";
+import { Firestore, DocumentData } from "@google-cloud/firestore";
 
-const firestore = new Firestore();
+const firestore = new Firestore({
+  projectId: process.env.GCP_PROJECT_ID,
+  credentials: {
+    client_email: process.env.GCP_CLIENT_EMAIL,
+    private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  },
+});
+
 const collection = firestore.collection("shopify_sessions");
 
 export const FirestoreSessionStorage = {
   async storeSession(session: Session): Promise<boolean> {
     try {
-      // Session オブジェクトをシリアライズして保存
-      await collection.doc(session.id).set(JSON.parse(JSON.stringify(session)));
+      await collection.doc(session.id).set(session.toObject() as DocumentData); // 型を DocumentData にキャスト
       return true;
     } catch (err) {
       console.error("❌ Firestore storeSession error:", err);
@@ -21,7 +27,10 @@ export const FirestoreSessionStorage = {
     try {
       const doc = await collection.doc(id).get();
       if (!doc.exists) return undefined;
-      return doc.data() as Session;
+
+      // Firestore → Session に復元
+      const data = doc.data() as DocumentData;
+      return new Session(data); 
     } catch (err) {
       console.error("❌ Firestore loadSession error:", err);
       return undefined;
