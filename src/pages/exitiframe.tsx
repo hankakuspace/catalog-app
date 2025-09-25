@@ -4,8 +4,9 @@ import { NextPage } from "next";
 const ExitIframe: NextPage = () => {
   return (
     <html>
-      <body>
-        <p>Redirecting out of iframe...</p>
+      <head>
+        <meta charSet="utf-8" />
+        <title>Redirecting...</title>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -14,12 +15,17 @@ const ExitIframe: NextPage = () => {
                 var redirectUrl = params.get("redirectUrl") || "/";
                 var cleanUrl = redirectUrl.replace(/([&?])embedded=1&?/, "$1");
 
-                // ✅ Shopify公式推奨: document.write 経由で top-level redirect
-                document.write('<script>window.top.location.href="' + cleanUrl + '";<\\/script>');
+                // ✅ JS で即座にリダイレクト
+                window.top.location.href = cleanUrl;
               })();
             `,
           }}
         />
+      </head>
+      <body>
+        <p>Redirecting out of iframe...</p>
+        {/* ✅ meta refresh fallback */}
+        <meta httpEquiv="refresh" content="0; url=/api/auth" />
       </body>
     </html>
   );
