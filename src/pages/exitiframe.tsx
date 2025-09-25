@@ -17,22 +17,22 @@ export default function ExitIframe() {
     }
 
     const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY;
-    const appHandle = process.env.NEXT_PUBLIC_SHOPIFY_APP_HANDLE;
-
-    if (!apiKey || !appHandle) {
-      console.error("Missing env vars: NEXT_PUBLIC_SHOPIFY_API_KEY or NEXT_PUBLIC_SHOPIFY_APP_HANDLE");
+    if (!apiKey) {
+      console.error("❌ NEXT_PUBLIC_SHOPIFY_API_KEY is missing");
       window.location.href = "/api/auth";
       return;
     }
 
+    // ✅ App Bridge 初期化
     const app = createApp({
       apiKey,
       host,
       forceRedirect: true,
     });
 
+    // ✅ ポイント: アプリのTOP ("/") に戻す
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.ADMIN_PATH, `/apps/${appHandle}`);
+    redirect.dispatch(Redirect.Action.APP, "/");
   }, []);
 
   return <p>Redirecting out of iframe...</p>;
