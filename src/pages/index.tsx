@@ -1,8 +1,7 @@
 // src/pages/index.tsx
 import { useEffect, useState } from "react";
-import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticatedFetch } from "@shopify/app-bridge-utils";
-import type { ClientApplication } from "@shopify/app-bridge";
+import { useAppBridgeCustom } from "@/lib/AppBridgeProvider";
 
 interface Product {
   id: string;
@@ -10,14 +9,19 @@ interface Product {
 }
 
 export default function Home() {
-  // 型を ClientApplication にキャスト
-  const app = useAppBridge() as unknown as ClientApplication;
+  const app = useAppBridgeCustom();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
+      if (!app) {
+        setError("AppBridge が初期化されていません");
+        setLoading(false);
+        return;
+      }
+
       try {
         const fetchWithAuth = authenticatedFetch(app);
         const res = await fetchWithAuth("/api/products");
