@@ -21,13 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!session) {
       console.error("❌ セッションが見つからない", { sessionId, shop });
+
       // デバッグ: 保存されているセッションを一覧表示
       // ※ MemorySessionStorage なので dev 中だけ有効
-      // @ts-ignore
+      // @ts-expect-error 開発用デバッグ: sessionStorage 内部を直接参照
       if (sessionStorage.sessions) {
-        // eslint-disable-next-line no-console
         console.log("📦 保存されているセッション一覧:", sessionStorage.sessions);
       }
+
       return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
     }
 
@@ -39,8 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const products = await fetchProducts(session);
     return res.status(200).json({ products });
-  } catch (err: any) {
-    console.error("❌ /api/products エラー詳細:", err);
-    return res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error("❌ /api/products エラー詳細:", error);
+    return res.status(500).json({ error: error.message });
   }
 }
