@@ -43,4 +43,17 @@ export default function Home() {
 
       <h2>商品一覧</h2>
       {loading && <p>読み込み中...</p>}
-      {error && <p st
+      {error && <p style={{ color: "red" }}>エラー: {error}</p>}
+      {!loading && !error && products.length === 0 && (
+        <p>商品がまだ登録されていません。</p>
+      )}
+      {!loading && !error && products.length > 0 && (
+        <ul>
+          {products.map((p) => (
+            <li key={p.id}>{p.title}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
