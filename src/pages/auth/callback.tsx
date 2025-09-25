@@ -13,7 +13,7 @@ export default function AuthCallback() {
     console.log("🔥 DEBUG callback shop:", shop);
 
     (async () => {
-      const appBridgeGlobal = (window as Record<string, unknown>)["app-bridge"];
+      const appBridgeGlobal = (window as unknown as Record<string, unknown>)["app-bridge"];
       if (!appBridgeGlobal) {
         console.error("❌ AppBridge not loaded");
         return;
@@ -38,7 +38,7 @@ export default function AuthCallback() {
 
       const app = appBridgeObj.default({
         apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
-        host, // ✅ 加工せずにそのまま渡す
+        host, // ✅ hostParamは生のまま渡す
       });
 
       const redirect = appBridgeObj.actions.Redirect.create(app);
