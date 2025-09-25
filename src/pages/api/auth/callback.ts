@@ -77,4 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (err) {
     console.error("Auth Callback Error:", err);
-    return res.status(500).send("Intern
+    return res.status(500).send("Internal Server Error");
+  }
+}

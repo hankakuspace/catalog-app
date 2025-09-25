@@ -5,25 +5,34 @@ import createApp from "@shopify/app-bridge";
 
 export default function ExitIframe() {
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const params = new URLSearchParams(window.location.search);
     const host = params.get("host");
     const shop = params.get("shop");
 
     if (!host || !shop) {
-      // パラメータ不足なら認証に戻す
       window.location.href = "/api/auth";
       return;
     }
 
-    // ✅ App Bridge 初期化
+    const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY;
+    const appHandle = process.env.NEXT_PUBLIC_SHOPIFY_APP_HANDLE;
+
+    if (!apiKey || !appHandle) {
+      console.error("Missing env vars: NEXT_PUBLIC_SHOPIFY_API_KEY or NEXT_PUBLIC_SHOPIFY_APP_HANDLE");
+      window.location.href = "/api/auth";
+      return;
+    }
+
     const app = createApp({
-      apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
+      apiKey,
       host,
+      forceRedirect: true,
     });
 
-    // ✅ アプリTOP (/apps/{handle}) にリダイレクト
     const redirect = Redirect.create(app);
-    redirect.dispatch(Redirect.Action.APP, "/");
+    redirect.dispatch(Redirect.Action.ADMIN_PATH, `/apps/${appHandle}`);
   }, []);
 
   return <p>Redirecting out of iframe...</p>;
