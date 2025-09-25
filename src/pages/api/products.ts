@@ -1,6 +1,6 @@
 // src/pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { shopify, sessionStorage, fetchProducts } from "@/lib/shopify";
+import { sessionStorage, fetchProducts } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -8,24 +8,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // ✅ セッションIDを取得
-    const sessionId = await shopify.session.getCurrentId({
-      isOnline: false,
-      rawRequest: req,
-      rawResponse: res,
-    });
-
-    if (!sessionId) {
-      // 500ではなく401を返す（App Bridge RedirectでOAuth開始させる）
-      res.status(401).json({ error: "Unauthorized: セッションIDが見つかりません" });
-      return;
+    const shop = req.query.shop as string;
+    if (!shop) {
+      return res.status(400).json({ error: "Missing shop parameter" });
     }
 
-    // ✅ セッションをロード
-    const session = await sessionStorage.loadSession(sessionId);
+    // ✅ shop をキーに直接セッションをロード
+    const session = await sessionStorage.loadSession(shop);
     if (!session) {
-      res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
-      return;
+      return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
     }
 
     console.log("🔥 Debug session in /api/products:", {
@@ -33,10 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken: session.accessToken ? "存在する" : "なし",
     });
 
-    // ✅ 商品データを取得
     const products = await fetchProducts(session);
-
-    return res.status(200).json(products);
+    return res.status(200).json({ products });
   } catch (err: unknown) {
     console.error("❌ /api/products エラー詳細:", err);
     return res.status(500).json({
