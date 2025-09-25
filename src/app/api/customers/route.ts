@@ -2,6 +2,17 @@
 import { NextResponse } from "next/server";
 import { shopify } from "@/lib/shopify";
 
+type CustomerNode = {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+};
+
+type CustomerEdge = {
+  node: CustomerNode;
+};
+
 export async function GET() {
   try {
     const session = {
@@ -27,8 +38,11 @@ export async function GET() {
       }
     `;
 
-    const response = await client.query({ data: query });
-    const customers = response.body.data.customers.edges.map((e: any) => ({
+    const response = await client.query<{ customers: { edges: CustomerEdge[] } }>({
+      data: query,
+    });
+
+    const customers = response.body.data.customers.edges.map((e: CustomerEdge) => ({
       id: e.node.id,
       email: e.node.email,
       firstName: e.node.firstName,
