@@ -5,6 +5,9 @@ import { sessionStorage } from "@/lib/shopify";
 import type { Session } from "@shopify/shopify-api";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
+  console.log("⚡️ DEBUG baseUrl (function entry):", baseUrl);
+
   try {
     console.warn("🔥 DEBUG req.url:", req.url);
 
@@ -15,10 +18,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const hostParam = params.get("host") || undefined;
     const code = params.get("code") || undefined;
     const embedded = params.get("embedded");
-
-    // ✅ baseUrl を先に確認
-    const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
-    console.log("⚡️ DEBUG baseUrl (init):", baseUrl);
 
     // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
