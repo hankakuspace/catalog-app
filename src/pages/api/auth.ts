@@ -5,8 +5,9 @@ import { sessionStorage } from "@/lib/shopify";
 import type { Session } from "@shopify/shopify-api";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // ✅ try/catch の外、関数冒頭で warn 出力
   const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
-  console.log("⚡️ DEBUG baseUrl (function entry):", baseUrl);
+  console.warn("⚡️ DEBUG baseUrl (function entry):", baseUrl);
 
   try {
     console.warn("🔥 DEBUG req.url:", req.url);
@@ -22,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}&host=${hostParam}`;
-      console.log("🔄 Embedded=1, redirecting via exitiframe:", redirectUrl);
+      console.warn("🔄 Embedded=1, redirecting via exitiframe:", redirectUrl);
 
       return res.redirect(
         `${baseUrl}/exitiframe?redirectUrl=${encodeURIComponent(redirectUrl)}`
@@ -48,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (url.hostname.endsWith(".myshopify.com")) {
           shop = url.hostname;
         }
-        console.log("🔥 Decoded shop from host:", shop);
+        console.warn("🔥 Decoded shop from host:", shop);
       } catch (e) {
         console.error("❌ Failed to decode host:", hostParam, e);
       }
@@ -77,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           redirect_uri: `${baseUrl}/api/auth`,
         }).toString();
 
-      console.log("🔥 Begin OAuth flow", { shop, installUrl });
+      console.warn("🔥 Begin OAuth flow", { shop, installUrl });
       return res.redirect(installUrl);
     }
 
@@ -112,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await sessionStorage.storeSession(session as unknown as Session);
 
-    console.log("✅ OAuth success (manual)", { shop });
+    console.warn("✅ OAuth success (manual)", { shop });
 
     // ✅ AppBridge Redirect を使って埋め込みに戻す
     return res.send(`
