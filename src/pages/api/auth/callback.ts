@@ -66,9 +66,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const tokenData: TokenResponse = await tokenResponse.json();
 
-    // ✅ セッションを作成 & 保存
+    // ✅ セッションを作成 & 保存（オフライン）
     const session = shopify.session.customAppSession(shop);
     session.accessToken = tokenData.access_token;
+
     await sessionStorage.storeSession(session);
 
     console.log("🔥 Session stored:", {
@@ -76,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken: session.accessToken ? "存在する" : "なし",
     });
 
-    // ✅ exitiframe にリダイレクト（host と shop を必ず渡す）
+    // ✅ exitiframe にリダイレクト
     return res.redirect(
       `/exitiframe?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
     );
