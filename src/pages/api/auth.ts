@@ -8,18 +8,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log("🔥 DEBUG auth.begin start", { shop });
 
-    // ✅ rawResponse は渡さない
+    // ✅ Pages Router では rawRequest と rawResponse を両方渡す
     const authRoute = await shopify.auth.begin({
       shop,
       callbackPath: "/api/auth/callback",
       isOnline: true,
-      rawRequest: req, // Nodeのリクエストは必要
+      rawRequest: req,
+      rawResponse: res,
     });
 
     console.log("🔥 DEBUG authRoute:", authRoute);
 
-    // ここで一度だけリダイレクト
-    res.redirect(302, authRoute);
+    // SDK が自動でレスポンスを書き込むので res.redirect は不要
   } catch (error) {
     console.error("❌ Auth begin error:", error);
     if (!res.headersSent) {
