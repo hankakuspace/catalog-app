@@ -1,6 +1,7 @@
 // src/app/api/customers/route.ts
 import { NextResponse } from "next/server";
 import { shopify } from "@/lib/shopify";
+import type { Session } from "@shopify/shopify-api";
 
 type CustomerNode = {
   id: string;
@@ -15,10 +16,17 @@ type CustomerEdge = {
 
 export async function GET() {
   try {
-    const session = {
-      // 🔹 dev段階なので仮のセッション扱い（本来はOAuthで取得）
+    // 🔹 ダミーセッション（本番では OAuth で取得）
+    const session: Session = {
+      id: "dummy_session",
       shop: process.env.SHOPIFY_STORE_DOMAIN!,
+      state: "dummy_state",
+      isOnline: true,
       accessToken: process.env.SHOPIFY_API_SECRET!,
+      scope: "read_customers",
+      expires: null,
+      isActive: () => true,
+      onlineAccessInfo: null,
     };
 
     const client = new shopify.clients.Graphql({ session });
