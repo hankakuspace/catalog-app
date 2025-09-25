@@ -1,21 +1,24 @@
 // src/lib/firestore.ts
 import { Session, SessionParams } from "@shopify/shopify-api";
-import { Firestore, DocumentData } from "@google-cloud/firestore";
+import * as admin from "firebase-admin";
 
-const firestore = new Firestore({
-  projectId: process.env.GCP_PROJECT_ID,
-  credentials: {
-    client_email: process.env.GCP_CLIENT_EMAIL,
-    private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-  },
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.GCP_PROJECT_ID,
+      clientEmail: process.env.GCP_CLIENT_EMAIL,
+      privateKey: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  });
+}
 
+const firestore = admin.firestore();
 const collection = firestore.collection("shopify_sessions_catalog_app");
 
 export const FirestoreSessionStorage = {
   async storeSession(session: Session): Promise<boolean> {
     try {
-      await collection.doc(session.id).set(session.toObject() as DocumentData);
+      await collection.doc(session.id).set(session.toObject());
       return true;
     } catch (err) {
       console.error("❌ Firestore storeSession error:", err);
@@ -29,7 +32,7 @@ export const FirestoreSessionStorage = {
       if (!doc.exists) return undefined;
 
       const data = doc.data() as SessionParams;
-      return new Session(data); // ✅ Session を復元
+      return new Session(data);
     } catch (err) {
       console.error("❌ Firestore loadSession error:", err);
       return undefined;
