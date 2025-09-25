@@ -16,18 +16,18 @@ type CustomerEdge = {
 
 export async function GET() {
   try {
-    // 🔹 ダミーセッション（本番では OAuth で取得）
-    const session: Session = {
+    // 🔹 ダミーセッション（開発用）
+    const session = {
       id: "dummy_session",
       shop: process.env.SHOPIFY_STORE_DOMAIN!,
       state: "dummy_state",
       isOnline: true,
       accessToken: process.env.SHOPIFY_API_SECRET!,
       scope: "read_customers",
-      expires: undefined, // ✅ 修正済み
+      expires: undefined,
       isActive: () => true,
-      onlineAccessInfo: undefined, // ✅ null → undefined
-    };
+      onlineAccessInfo: undefined,
+    } as unknown as Session; // ✅ 型アサーションで強制
 
     const client = new shopify.clients.Graphql({ session });
 
