@@ -1,87 +1,71 @@
-// src/pages/api/auth/callback.ts
-import type { NextApiRequest, NextApiResponse } from "next";
-import crypto from "crypto";
-import { shopify, sessionStorage } from "@/lib/shopify";
+// src/lib/shopify.ts
+import "@shopify/shopify-api/adapters/node"; // ✅ Node.jsアダプターを追加
+import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
+import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
+const appUrl = process.env.SHOPIFY_APP_URL!;
+const scopes = process.env.SHOPIFY_SCOPES?.split(",") || [];
+const storeDomain = process.env.SHOPIFY_STORE_DOMAIN || "";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+// ✅ セッションストレージをインスタンス化
+const sessionStorage = new MemorySessionStorage();
+
+// ✅ Shopify API クライアント
+const shopify = shopifyApi({
+  apiKey,
+  apiSecretKey,
+  scopes,
+  hostName: appUrl.replace(/^https?:\/\//, ""),
+  apiVersion: ApiVersion.July25,
+  isEmbeddedApp: true,
+  sessionStorage,
+});
+
+export { shopify, sessionStorage };
+
+export function getStoreDomain(): string {
+  if (!storeDomain) {
+    console.warn("⚠️ SHOPIFY_STORE_DOMAIN が未設定です。");
+  }
+  return storeDomain;
+}
+
+export async function fetchProducts(session: unknown) {
   try {
-    const { shop, hmac, code, host } = req.query as {
-      shop?: string;
-      hmac?: string;
-      code?: string;
-      host?: string;
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client = new shopify.clients.Graphql({ session: session as any });
 
-    if (!shop || !hmac || !code || !host) {
-      return res.status(400).send("Missing required parameters");
-    }
-
-    // ✅ HMAC 検証
-    const queryEntries = Object.entries(req.query)
-      .filter(([key]) => key !== "hmac")
-      .map(([key, value]) => {
-        const val = Array.isArray(value) ? value.join(",") : value ?? "";
-        return [key, val];
-      });
-
-    const message = queryEntries
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, val]) => `${key}=${val}`)
-      .join("&");
-
-    const generatedHmac = crypto
-      .createHmac("sha256", apiSecretKey)
-      .update(message)
-      .digest("hex");
-
-    if (generatedHmac !== hmac) {
-      return res.status(400).send("HMAC validation failed");
-    }
-
-    // ✅ アクセストークンを取得
-    const tokenResponse = await fetch(
-      `https://${shop}/admin/oauth/access_token`,
+    const query = `
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          client_id: apiKey,
-          client_secret: apiSecretKey,
-          code,
-        }),
+        products(first: 10) {
+          edges {
+            node {
+              id
+              title
+              handle
+              variants(first: 1) {
+                edges {
+                  node {
+                    id
+                    price
+                  }
+                }
+              }
+            }
+          }
+        }
       }
-    );
+    `;
 
-    if (!tokenResponse.ok) {
-      return res.status(400).send("Failed to get access token");
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response: any = await client.query({ data: query });
 
-    type TokenResponse = {
-      access_token: string;
-      scope: string;
-    };
-
-    const tokenData: TokenResponse = await tokenResponse.json();
-
-    // ✅ セッションを作成 & 保存
-    const session = shopify.session.customAppSession(shop);
-    session.accessToken = tokenData.access_token;
-    await sessionStorage.storeSession(session);
-
-    console.log("🔥 Session stored:", {
-      shop,
-      accessToken: session.accessToken ? "存在する" : "なし",
-    });
-
-    // ✅ exitiframe にリダイレクト（host と shop を必ず渡す）
-    return res.redirect(
-      `/exitiframe?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
-    );
-  } catch (err) {
-    console.error("Auth Callback Error:", err);
-    return res.status(500).send("Internal Server Error");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response?.body?.data?.products?.edges?.map((edge: any) => edge.node) ?? [];
+  } catch (error) {
+    console.error("❌ fetchProducts error:", error);
+    throw error;
   }
 }
