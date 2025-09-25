@@ -19,6 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const code = params.get("code") || undefined;
     const embedded = params.get("embedded");
 
+    console.warn("🔥 DEBUG query params", Object.fromEntries(params));
+
     // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
       const redirectUrl = `https://catalog-app-swart.vercel.app/api/auth?shop=${shop}&host=${hostParam}`;
@@ -116,7 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.warn("✅ OAuth success (manual)", { shop, hostParam });
 
-    // ✅ AppBridge Redirect を使って埋め込みに戻す（アプリハンドル付きパスを指定）
+    // ✅ AppBridge Redirect を使って埋め込みに戻す（hostParam のログ付き）
     return res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
@@ -125,6 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         var Redirect = AppBridge.actions.Redirect;
 
         console.log("🔥 DEBUG hostParam in client:", "${hostParam}");
+        console.log("🔥 DEBUG apiKey in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
         console.log("🔥 DEBUG dispatching redirect to /apps/private-view/admin/dashboard ...");
 
         var app = createApp({
