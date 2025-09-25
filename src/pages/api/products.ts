@@ -1,40 +1,37 @@
-// src/pages/api/products.ts
-import type { NextApiRequest, NextApiResponse } from "next";
-import { shopify, sessionStorage, fetchProducts } from "@/lib/shopify";
+// src/lib/shopify.ts
+import { shopifyApi, LATEST_API_VERSION, Session } from "@shopify/shopify-api";
+import { FirestoreSessionStorage } from "@/lib/firestore";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+// ✅ Shopify API 初期化
+export const shopify = shopifyApi({
+  apiKey: process.env.SHOPIFY_API_KEY!,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET!,
+  scopes: process.env.SHOPIFY_SCOPES!.split(","),
+  hostName: process.env.SHOPIFY_APP_URL!.replace(/^https?:\/\//, ""),
+  apiVersion: LATEST_API_VERSION,
+  sessionStorage: FirestoreSessionStorage,
+});
+
+// ✅ Firestore 経由でセッションストレージを利用
+export const sessionStorage = FirestoreSessionStorage;
+
+// ✅ 最新版の fetchProducts 実装
+export async function fetchProducts(session: Session) {
   try {
-    const shop = req.query.shop as string | undefined;
+    const client = new shopify.clients.Rest({ session });
 
-    // 1. まずオフラインセッションを試す
-    let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
-
-    // 2. オフラインが無ければオンラインセッションを試す
-    if (!session) {
-      const sessionId = await shopify.session.getCurrentId({
-        isOnline: true,
-        rawRequest: req,
-        rawResponse: res,
-      });
-      session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
-    }
-
-    if (!session) {
-      console.error("❌ セッションが見つからない", { shop });
-      return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
-    }
-
-    console.log("🔥 Debug /api/products:", {
-      id: session.id,
-      shop: session.shop,
-      accessToken: session.accessToken ? "存在する" : "なし",
+    const response = await client.get({
+      path: "products",
     });
 
-    const products = await fetchProducts(session);
-    return res.status(200).json({ products });
-  } catch (err: unknown) {
-    const error = err as Error;
-    console.error("❌ /api/products エラー詳細:", error);
-    return res.status(500).json({ error: error.message });
+    console.log("🔥 fetchProducts response:", {
+      status: response.status,
+      headers: response.headers,
+    });
+
+    return response.body; // v12以降はここにデータが入る
+  } catch (err) {
+    console.error("❌ fetchProducts error:", err);
+    throw err;
   }
 }
