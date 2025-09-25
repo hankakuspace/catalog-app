@@ -24,7 +24,13 @@ export default function Home() {
 
       try {
         const fetchWithAuth = authenticatedFetch(app);
-        const res = await fetchWithAuth("/api/products");
+
+        // ✅ URL パラメータから shop を取得
+        const params = new URLSearchParams(window.location.search);
+        const shop = params.get("shop");
+
+        const url = shop ? `/api/products?shop=${shop}` : "/api/products";
+        const res = await fetchWithAuth(url);
 
         if (!res.ok) {
           throw new Error(`Failed to fetch products: ${res.status}`);
