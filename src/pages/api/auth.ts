@@ -5,7 +5,6 @@ import { sessionStorage } from "@/lib/shopify";
 import type { Session } from "@shopify/shopify-api";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // ✅ try/catch の外、関数冒頭で warn 出力
   const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
   console.warn("⚡️ DEBUG baseUrl (function entry):", baseUrl);
 
@@ -22,11 +21,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
-      const redirectUrl = `${baseUrl}/api/auth?shop=${shop}&host=${hostParam}`;
+      const redirectUrl = `https://catalog-app-swart.vercel.app/api/auth?shop=${shop}&host=${hostParam}`;
       console.warn("🔄 Embedded=1, redirecting via exitiframe:", redirectUrl);
 
       return res.redirect(
-        `${baseUrl}/exitiframe?redirectUrl=${encodeURIComponent(redirectUrl)}`
+        `https://catalog-app-swart.vercel.app/exitiframe?redirectUrl=${encodeURIComponent(
+          redirectUrl
+        )}`
       );
     }
 
@@ -64,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const clientSecret = process.env.SHOPIFY_API_SECRET;
     const scopes = process.env.SHOPIFY_SCOPES;
 
-    if (!baseUrl || !clientId || !clientSecret || !scopes) {
+    if (!clientId || !clientSecret || !scopes) {
       return res.status(500).send("❌ Missing environment variables");
     }
 
@@ -75,7 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         new URLSearchParams({
           client_id: clientId,
           scope: scopes,
-          redirect_uri: `${baseUrl}/api/auth`,
+          // ✅ 埋め込み管理画面に戻さず、必ず自分のアプリのURLへ返す
+          redirect_uri: "https://catalog-app-swart.vercel.app/api/auth",
         }).toString();
 
       console.warn("🔥 Begin OAuth flow", { shop, installUrl });
@@ -113,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await sessionStorage.storeSession(session as unknown as Session);
 
-    console.log("✅ OAuth success (manual)", { shop, hostParam });
+    console.warn("✅ OAuth success (manual)", { shop, hostParam });
 
     // ✅ AppBridge Redirect を使って埋め込みに戻す
     return res.send(`
@@ -137,7 +139,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
       </script>
     `);
-
   } catch (err) {
     const error = err as Error;
     console.error("❌ Auth error:", error);
