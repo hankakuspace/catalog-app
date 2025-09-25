@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticatedFetch } from "@shopify/app-bridge-utils";
 import type { ClientApplication } from "@shopify/app-bridge";
-import type { AppBridgeState } from "@shopify/app-bridge-core/actions/AppBridgeState";
 
 interface Product {
   id: string;
@@ -11,7 +10,8 @@ interface Product {
 }
 
 export default function Home() {
-  const app = useAppBridge() as unknown as ClientApplication<AppBridgeState>;
+  // 型を ClientApplication にキャスト
+  const app = useAppBridge() as unknown as ClientApplication;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
