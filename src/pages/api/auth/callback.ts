@@ -8,10 +8,10 @@ const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { shop, hmac, code, host } = req.query as {
-      shop: string;
-      hmac: string;
-      code: string;
-      host: string;
+      shop?: string;
+      hmac?: string;
+      code?: string;
+      host?: string;
     };
 
     if (!shop || !hmac || !code || !host) {
@@ -19,11 +19,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // ✅ HMAC 検証
-    const params: Record<string, string | string[]> = { ...req.query };
-    delete params.hmac;
-    const message = Object.keys(params)
-      .sort()
-      .map((key) => `${key}=${params[key]}`)
+    const queryEntries = Object.entries(req.query)
+      .filter(([key]) => key !== "hmac")
+      .map(([key, value]) => {
+        const val = Array.isArray(value) ? value.join(",") : value ?? "";
+        return [key, val];
+      });
+
+    const message = queryEntries
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, val]) => `${key}=${val}`)
       .join("&");
 
     const generatedHmac = crypto
@@ -72,6 +77,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (err) {
     console.error("Auth Callback Error:", err);
-    return res.status(500).send("Internal Server Error");
-  }
-}
+    return res.status(500).send("Intern
