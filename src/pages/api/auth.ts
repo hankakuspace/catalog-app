@@ -119,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ✅ セッション保存確認ログ
     console.warn("🔥 Session stored:", session);
 
-    // ✅ HTMLドキュメントとして返却し、AppBridge redirect を確実に実行
+    // ✅ HTMLドキュメントとして返却し、AppBridge redirect を REMOTE で実行
     res.setHeader("Content-Type", "text/html");
     return res.end(`
       <!DOCTYPE html>
@@ -138,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             console.log("🔥 DEBUG hostParam in client:", "${hostParam}");
             console.log("🔥 DEBUG apiKey in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
-            console.log("🔥 DEBUG dispatching redirect to /apps/private-view/admin/dashboard ...");
+            console.log("🔥 DEBUG dispatching redirect to REMOTE /admin/dashboard ...");
 
             var app = createApp({
               apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
@@ -147,8 +147,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             var redirect = Redirect.create(app);
             redirect.dispatch(
-              Redirect.Action.APP,
-              "/apps/private-view/admin/dashboard"
+              Redirect.Action.REMOTE,
+              "https://catalog-app-swart.vercel.app/admin/dashboard?shop=${shop}&host=${hostParam}"
             );
           </script>
         </body>
