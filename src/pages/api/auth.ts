@@ -8,7 +8,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     console.warn("🔥 DEBUG req.url:", req.url);
 
-    // ✅ req.url は "/api/auth?..." 形式なので、dummy ベースで絶対URLに変換
     const fullUrl = new URL(req.url || "", "http://dummy");
     const params = fullUrl.searchParams;
 
@@ -17,16 +16,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const code = params.get("code") || undefined;
     const embedded = params.get("embedded");
 
-    // ✅ iframe 内からのアクセスならトップレベルにリダイレクト
+    // ✅ iframe 内からのアクセスならトップレベルにリダイレクトさせる
     if (embedded === "1" && shop) {
       const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}&host=${hostParam}`;
-      console.log("🔄 Force top-level redirect:", redirectUrl);
+      console.log("🔄 Embedded=1, returning top-level redirect helper", redirectUrl);
 
       return res.send(`
-        <script>
-          window.top.location.href = "${redirectUrl}";
-        </script>
+        <html>
+          <body>
+            <script>
+              if (window.top === window.self) {
+                // top-level → 直接リダイレクト
+                window.location.href = "${redirectUrl}";
+              } else {
+                // iframe 内 → top-level にこのURLを読み込ませる
+                window.top.location.href = window.location.href;
+              }
+            </script>
+          </body>
+        </html>
       `);
     }
 
