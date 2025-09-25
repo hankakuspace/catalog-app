@@ -12,14 +12,14 @@ export default function AuthCallback() {
     console.log("🔥 DEBUG callback shop:", shop);
 
     (async () => {
-      const AppBridge = (window as unknown as { [key: string]: any })["app-bridge"];
+      const AppBridge = (window as unknown as Record<string, unknown>)["app-bridge"];
       if (!AppBridge) {
         console.error("❌ AppBridge not loaded");
         return;
       }
 
-      const createApp = AppBridge.default;
-      const Redirect = AppBridge.actions.Redirect;
+      const createApp = (AppBridge as any).default;
+      const Redirect = (AppBridge as any).actions.Redirect;
 
       const app = createApp({
         apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
