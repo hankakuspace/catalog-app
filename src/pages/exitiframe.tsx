@@ -2,6 +2,7 @@
 import { NextPage } from "next";
 
 const ExitIframe: NextPage = () => {
+  // ✅ クエリをすべて保持したまま meta refresh で遷移
   return (
     <html>
       <head>
@@ -12,11 +13,14 @@ const ExitIframe: NextPage = () => {
             __html: `
               (function() {
                 var params = new URLSearchParams(window.location.search);
-                var redirectUrl = params.get("redirectUrl") || "/";
+                var redirectUrl = params.get("redirectUrl") || "/api/auth";
                 var cleanUrl = redirectUrl.replace(/([&?])embedded=1&?/, "$1");
 
-                // ✅ JS で即座にリダイレクト
-                window.top.location.href = cleanUrl;
+                // ✅ meta refresh を書き換え
+                var meta = document.createElement("meta");
+                meta.httpEquiv = "refresh";
+                meta.content = "0;url=" + cleanUrl;
+                document.head.appendChild(meta);
               })();
             `,
           }}
@@ -24,8 +28,6 @@ const ExitIframe: NextPage = () => {
       </head>
       <body>
         <p>Redirecting out of iframe...</p>
-        {/* ✅ meta refresh fallback */}
-        <meta httpEquiv="refresh" content="0; url=/api/auth" />
       </body>
     </html>
   );
