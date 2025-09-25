@@ -4,30 +4,23 @@ import { shopify, sessionStorage, fetchProducts } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // 1. オンラインセッション (JWT)
-    const sessionId = await shopify.session.getCurrentId({
-      isOnline: true,
-      rawRequest: req,
-      rawResponse: res,
-    });
-
-    let session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
-
-    // 2. fallback: オフラインセッション (offline_{shop})
     const shop = req.query.shop as string | undefined;
-    if (!session && shop) {
-      session = await sessionStorage.loadSession(`offline_${shop}`);
+
+    // 1. まずオフラインセッションを試す
+    let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
+
+    // 2. オフラインが無ければオンラインセッションを試す
+    if (!session) {
+      const sessionId = await shopify.session.getCurrentId({
+        isOnline: true,
+        rawRequest: req,
+        rawResponse: res,
+      });
+      session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
     }
 
     if (!session) {
-      console.error("❌ セッションが見つからない", { sessionId, shop });
-
-      // デバッグ: 保存されているセッション一覧を出力（MemorySessionStorage 開発用）
-      const devSessions = (sessionStorage as unknown as { sessions?: unknown }).sessions;
-      if (devSessions) {
-        console.log("📦 保存されているセッション一覧:", devSessions);
-      }
-
+      console.error("❌ セッションが見つからない", { shop });
       return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
     }
 
