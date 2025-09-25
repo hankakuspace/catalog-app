@@ -113,7 +113,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log("✅ OAuth success (manual)", { shop });
 
-    return res.redirect("/admin/dashboard");
+    // ✅ AppBridge Redirect を使って埋め込みに戻す
+    return res.send(`
+      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+      <script>
+        var AppBridge = window['app-bridge'];
+        var createApp = AppBridge.default;
+        var Redirect = AppBridge.actions.Redirect;
+
+        var app = createApp({
+          apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
+          host: "${hostParam}"
+        });
+
+        var redirect = Redirect.create(app);
+        redirect.dispatch(
+          Redirect.Action.APP,
+          "/admin/dashboard"
+        );
+      </script>
+    `);
   } catch (err) {
     const error = err as Error;
     console.error("❌ Auth error:", error);
