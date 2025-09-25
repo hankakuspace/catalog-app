@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import { shopify, sessionStorage } from "@/lib/shopify";
+import { Session } from "@shopify/shopify-api"; // 👈 追加
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -67,7 +68,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const tokenData: TokenResponse = await tokenResponse.json();
 
     // ✅ オフラインセッションを自前で作成
-    const { Session } = shopify.session;
     const offlineSession = new Session({
       id: `offline_${shop}`,
       shop,
