@@ -13,10 +13,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
 
-    // 2. fallback: shopキー
+    // 2. fallback: オフラインセッション (offline_{shop})
     const shop = req.query.shop as string | undefined;
     if (!session && shop) {
-      session = await sessionStorage.loadSession(shop);
+      session = await sessionStorage.loadSession(`offline_${shop}`);
     }
 
     if (!session) {

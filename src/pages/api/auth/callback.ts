@@ -68,6 +68,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ セッションを作成 & 保存（オフライン）
     const session = shopify.session.customAppSession(shop);
+
+    // id が空の場合は強制的に設定
+    if (!session.id) {
+      session.id = `offline_${shop}`;
+    }
+
     session.accessToken = tokenData.access_token;
 
     await sessionStorage.storeSession(session);
