@@ -118,29 +118,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.warn("✅ OAuth success (manual)", { shop, hostParam });
 
-    // ✅ AppBridge Redirect を使って埋め込みに戻す（hostParam のログ付き）
-    return res.send(`
-      <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-      <script>
-        var AppBridge = window['app-bridge'];
-        var createApp = AppBridge.default;
-        var Redirect = AppBridge.actions.Redirect;
+    // ✅ HTMLドキュメントとして返却し、AppBridge redirect を確実に実行
+    res.setHeader("Content-Type", "text/html");
+    return res.end(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Redirecting...</title>
+          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        </head>
+        <body>
+          <p>Redirecting to app...</p>
+          <script>
+            var AppBridge = window['app-bridge'];
+            var createApp = AppBridge.default;
+            var Redirect = AppBridge.actions.Redirect;
 
-        console.log("🔥 DEBUG hostParam in client:", "${hostParam}");
-        console.log("🔥 DEBUG apiKey in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
-        console.log("🔥 DEBUG dispatching redirect to /apps/private-view/admin/dashboard ...");
+            console.log("🔥 DEBUG hostParam in client:", "${hostParam}");
+            console.log("🔥 DEBUG apiKey in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
+            console.log("🔥 DEBUG dispatching redirect to /apps/private-view/admin/dashboard ...");
 
-        var app = createApp({
-          apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
-          host: "${hostParam}"
-        });
+            var app = createApp({
+              apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
+              host: "${hostParam}"
+            });
 
-        var redirect = Redirect.create(app);
-        redirect.dispatch(
-          Redirect.Action.APP,
-          "/apps/private-view/admin/dashboard"
-        );
-      </script>
+            var redirect = Redirect.create(app);
+            redirect.dispatch(
+              Redirect.Action.APP,
+              "/apps/private-view/admin/dashboard"
+            );
+          </script>
+        </body>
+      </html>
     `);
   } catch (err) {
     const error = err as Error;
