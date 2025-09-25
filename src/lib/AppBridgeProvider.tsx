@@ -50,7 +50,8 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
     const redirect = Redirect.create(app);
     const shop = new URLSearchParams(window.location.search).get("shop");
     if (window.top !== window.self && shop) {
-      const redirectUrl = `${process.env.NEXT_PUBLIC_SHOPIFY_APP_URL}/api/auth?shop=${shop}`;
+      // ✅ 相対パスで十分
+      const redirectUrl = `/api/auth?shop=${shop}`;
       console.log("🔄 AppBridge redirect to:", redirectUrl);
       redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
     }
