@@ -113,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await sessionStorage.storeSession(session as unknown as Session);
 
-    console.warn("✅ OAuth success (manual)", { shop });
+    console.log("✅ OAuth success (manual)", { shop, hostParam });
 
     // ✅ AppBridge Redirect を使って埋め込みに戻す
     return res.send(`
@@ -122,6 +122,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         var AppBridge = window['app-bridge'];
         var createApp = AppBridge.default;
         var Redirect = AppBridge.actions.Redirect;
+
+        console.log("🔥 DEBUG hostParam in client:", "${hostParam}");
 
         var app = createApp({
           apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
@@ -135,6 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
       </script>
     `);
+
   } catch (err) {
     const error = err as Error;
     console.error("❌ Auth error:", error);
