@@ -11,21 +11,19 @@ const ExitIframe: NextPage = () => {
             __html: `
               (function() {
                 const params = new URLSearchParams(window.location.search);
-                const redirectUrl = params.get("redirectUrl");
-                if (!redirectUrl) {
-                  console.error("❌ No redirectUrl found");
-                  return;
-                }
+                let redirectUrl = window.location.origin + "/api/auth" + window.location.search;
 
-                // ✅ iframe 内ならトップレベルで開き直す
+                // ✅ embedded=1 を削除
+                redirectUrl = redirectUrl.replace(/([&?])embedded=1&?/, "$1");
+
+                // ✅ iframe 内ならトップレベルでクリーン URL を開く
                 if (window.top !== window.self) {
-                  window.top.location.href = window.location.href;
+                  window.top.location.href = redirectUrl;
                   return;
                 }
 
-                // ✅ トップレベルに出てきたら embedded=1 を削除してリダイレクト
-                const cleanUrl = redirectUrl.replace(/embedded=1&?/, "");
-                window.location.href = cleanUrl;
+                // ✅ 既にトップレベルならそのまま遷移
+                window.location.href = redirectUrl;
               })();
             `,
           }}
