@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 1. オンラインセッション確認 (JWT)
+    // 1. オンラインセッション (JWT + authenticatedFetch)
     const sessionId = await shopify.session.getCurrentId({
       isOnline: true,
       rawRequest: req,
@@ -17,17 +17,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
 
-    // 2. fallback: shopキーでも探す
+    // 2. Fallback: オフラインセッション (shop ドメインをキーに探す)
     const shop = req.query.shop as string | undefined;
     if (!session && shop) {
       session = await sessionStorage.loadSession(shop);
     }
 
     if (!session) {
+      console.error("❌ セッションが見つからない", { sessionId, shop });
       return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
     }
 
-    console.log("🔥 Debug session in /api/products:", {
+    console.log("🔥 Debug /api/products:", {
       id: session.id,
       shop: session.shop,
       accessToken: session.accessToken ? "存在する" : "なし",
@@ -35,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 3. 商品データを取得
     const products = await fetchProducts(session);
+
     return res.status(200).json({ products });
   } catch (err: unknown) {
     console.error("❌ /api/products エラー詳細:", err);
