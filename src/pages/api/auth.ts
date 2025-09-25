@@ -117,7 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.warn("✅ OAuth success (manual)", { shop, hostParam });
 
-    // ✅ AppBridge Redirect を使って埋め込みに戻す
+    // ✅ AppBridge Redirect を使って埋め込みに戻す（絶対URL指定）
     return res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
@@ -135,7 +135,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         var redirect = Redirect.create(app);
         redirect.dispatch(
           Redirect.Action.APP,
-          "/admin/dashboard"
+          "https://catalog-app-swart.vercel.app/admin/dashboard"
         );
       </script>
     `);
