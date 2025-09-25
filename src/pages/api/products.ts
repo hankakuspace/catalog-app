@@ -3,12 +3,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { shopify, sessionStorage, fetchProducts } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   try {
-    // 1. オンラインセッション (JWT + authenticatedFetch)
+    // 1. オンラインセッション (JWT)
     const sessionId = await shopify.session.getCurrentId({
       isOnline: true,
       rawRequest: req,
@@ -17,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
 
-    // 2. Fallback: オフラインセッション (shop ドメインをキーに探す)
+    // 2. fallback: shopキー
     const shop = req.query.shop as string | undefined;
     if (!session && shop) {
       session = await sessionStorage.loadSession(shop);
@@ -25,6 +21,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!session) {
       console.error("❌ セッションが見つからない", { sessionId, shop });
+      // デバッグ: 保存されているセッションを一覧表示
+      // ※ MemorySessionStorage なので dev 中だけ有効
+      // @ts-ignore
+      if (sessionStorage.sessions) {
+        // eslint-disable-next-line no-console
+        console.log("📦 保存されているセッション一覧:", sessionStorage.sessions);
+      }
       return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
     }
 
@@ -34,15 +37,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken: session.accessToken ? "存在する" : "なし",
     });
 
-    // 3. 商品データを取得
     const products = await fetchProducts(session);
-
     return res.status(200).json({ products });
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("❌ /api/products エラー詳細:", err);
-    return res.status(500).json({
-      error: (err as Error).message,
-      stack: (err as Error).stack,
-    });
+    return res.status(500).json({ error: err.message });
   }
 }
