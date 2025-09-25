@@ -24,7 +24,7 @@ export async function GET() {
       isOnline: true,
       accessToken: process.env.SHOPIFY_API_SECRET!,
       scope: "read_customers",
-      expires: null,
+      expires: undefined, // ✅ null → undefined に修正
       isActive: () => true,
       onlineAccessInfo: null,
     };
