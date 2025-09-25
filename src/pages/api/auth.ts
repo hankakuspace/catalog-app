@@ -58,6 +58,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
+    console.log("⚡️ DEBUG baseUrl:", baseUrl); // ← デバッグ出力追加
+
     const clientId = process.env.SHOPIFY_API_KEY;
     const clientSecret = process.env.SHOPIFY_API_SECRET;
     const scopes = process.env.SHOPIFY_SCOPES;
