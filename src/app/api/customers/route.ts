@@ -16,7 +16,7 @@ type CustomerEdge = {
 
 export async function GET() {
   try {
-    // 🔹 ダミーセッション（開発用）
+    // 🔹 ダミーセッション（開発用、本番では OAuth セッションを利用）
     const session = {
       id: "dummy_session",
       shop: process.env.SHOPIFY_STORE_DOMAIN!,
@@ -57,9 +57,21 @@ export async function GET() {
       lastName: e.node.lastName,
     }));
 
-    return NextResponse.json(customers);
+    return NextResponse.json(customers, {
+      headers: {
+        "Content-Type": "application/json; charset=utf-8", // ✅ UTF-8 を明示
+      },
+    });
   } catch (error) {
     console.error("❌ Customers API error:", error);
-    return NextResponse.json({ error: "顧客取得に失敗しました" }, { status: 500 });
+    return NextResponse.json(
+      { error: "顧客取得に失敗しました" },
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8", // ✅ UTF-8 を明示
+        },
+      }
+    );
   }
 }
