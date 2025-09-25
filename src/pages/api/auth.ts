@@ -13,22 +13,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       scopes: process.env.SHOPIFY_SCOPES,
     });
 
+    // URLを取得
     const authRoute = await shopify.auth.begin({
       shop,
       callbackPath: "/api/auth/callback",
       isOnline: true,
-      rawRequest: req, // ✅ Pages RouterなのでNodeリクエストが渡る
+      rawRequest: req,
       rawResponse: res,
     });
 
     console.log("🔥 DEBUG authRoute:", authRoute);
 
-    res.redirect(authRoute);
+    // 明示的にリダイレクト（write after endを避ける）
+    res.writeHead(302, { Location: authRoute });
+    res.end();
   } catch (error) {
     console.error("❌ Auth begin error:", error);
-    res.status(500).json({
-      error: "Auth begin failed",
-      message: error instanceof Error ? error.message : String(error),
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: "Auth begin failed",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }
