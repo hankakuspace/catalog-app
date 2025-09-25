@@ -12,16 +12,25 @@ export default function Home() {
   const app = useAppBridge();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const fetchWithAuth = authenticatedFetch(app);
-      const res = await fetchWithAuth("/api/products");
-      if (res.ok) {
+      try {
+        const fetchWithAuth = authenticatedFetch(app);
+        const res = await fetchWithAuth("/api/products");
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch products: ${res.status}`);
+        }
+
         const data = await res.json();
         setProducts(data.products || []);
+      } catch (err: any) {
+        setError(err.message || "Error loading products");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProducts();
@@ -34,13 +43,4 @@ export default function Home() {
 
       <h2>商品一覧</h2>
       {loading && <p>読み込み中...</p>}
-      {!loading && products.length === 0 && <p>商品がまだ登録されていません。</p>}
-      {!loading &&
-        products.map((p) => (
-          <div key={p.id}>
-            <p>{p.title}</p>
-          </div>
-        ))}
-    </div>
-  );
-}
+      {error && <p st
