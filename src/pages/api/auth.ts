@@ -20,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const embedded = params.get("embedded");
 
     console.warn("🔥 DEBUG query params", Object.fromEntries(params));
+    console.warn("🔥 DEBUG hostParam (server-side):", hostParam);
 
     // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
@@ -115,11 +116,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
 
     await sessionStorage.storeSession(session as unknown as Session);
-
-    // ✅ セッション保存確認ログ
     console.warn("🔥 Session stored:", session);
 
-    // ✅ HTMLドキュメントとして返却し、AppBridge redirect を REMOTE で実行
+    // ✅ HTML を返却し、AppBridge redirect
     res.setHeader("Content-Type", "text/html");
     return res.end(`
       <!DOCTYPE html>
@@ -132,13 +131,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <body>
           <p>Redirecting to app...</p>
           <script>
+            console.log("🔥 DEBUG hostParam in client (raw):", "${hostParam}");
+            console.log("🔥 DEBUG apiKey in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
             var AppBridge = window['app-bridge'];
             var createApp = AppBridge.default;
             var Redirect = AppBridge.actions.Redirect;
-
-            console.log("🔥 DEBUG hostParam in client:", "${hostParam}");
-            console.log("🔥 DEBUG apiKey in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
-            console.log("🔥 DEBUG dispatching redirect to REMOTE /admin/dashboard ...");
 
             var app = createApp({
               apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
