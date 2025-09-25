@@ -1,6 +1,6 @@
 // src/lib/shopify.ts
 import "@shopify/shopify-api/adapters/node";
-import { shopifyApi, ApiVersion, Session } from "@shopify/shopify-api"; // ✅ Session を追加 import
+import { shopifyApi, ApiVersion, Session } from "@shopify/shopify-api";
 import { FirestoreSessionStorage } from "@/lib/firestore";
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
@@ -31,6 +31,7 @@ export function getStoreDomain(): string {
   return storeDomain;
 }
 
+// ✅ GraphQL で商品取得
 export async function fetchProducts(session: Session) {
   try {
     const client = new shopify.clients.Graphql({ session });
@@ -57,17 +58,14 @@ export async function fetchProducts(session: Session) {
       }
     `;
 
-    const response = await client.query<{
-      data: {
-        products: {
-          edges: { node: { id: string; title: string; handle: string } }[];
-        };
-      };
-    }>({
-      data: query,
+    const response = await client.query({
+      query, // ← 修正: data ではなく query
     });
 
-    return response.body.data.products.edges.map((edge) => edge.node) ?? [];
+    const products =
+      response.body.data?.products?.edges.map((edge: any) => edge.node) ?? [];
+
+    return products;
   } catch (error) {
     console.error("❌ fetchProducts error:", error);
     throw error;
