@@ -116,7 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.warn("✅ OAuth success (manual)", { shop, hostParam });
 
-    // ✅ AppBridge Redirect を使って埋め込みに戻す（デバッグログ追加）
+    // ✅ AppBridge Redirect を使って埋め込みに戻す（相対パス指定）
     return res.send(`
       <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
       <script>
@@ -125,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         var Redirect = AppBridge.actions.Redirect;
 
         console.log("🔥 DEBUG hostParam in client:", "${hostParam}");
-        console.log("🔥 DEBUG API key in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
+        console.log("🔥 DEBUG dispatching redirect to /admin/dashboard ...");
 
         var app = createApp({
           apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
@@ -133,8 +133,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
         var redirect = Redirect.create(app);
-        console.log("🔥 DEBUG dispatching redirect to /admin/dashboard ...");
-
         redirect.dispatch(
           Redirect.Action.APP,
           "/admin/dashboard"
