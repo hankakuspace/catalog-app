@@ -1,6 +1,7 @@
 // src/pages/api/auth/callback.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
+import { shopify, sessionStorage } from "@/lib/shopify";
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -65,11 +66,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const tokenData: TokenResponse = await tokenResponse.json();
 
-    // ✅ Cookieに保存（簡易セッション）
-    res.setHeader(
-      "Set-Cookie",
-      `shopify_token=${tokenData.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax`
-    );
+    // ✅ セッションを作成 & 保存
+    const session = shopify.session.customAppSession(shop);
+    session.accessToken = tokenData.access_token;
+    await sessionStorage.storeSession(session);
+
+    console.log("🔥 Session stored:", {
+      shop,
+      accessToken: session.accessToken ? "存在する" : "なし",
+    });
 
     // ✅ exitiframe にリダイレクト（host と shop を必ず渡す）
     return res.redirect(
