@@ -1,40 +1,29 @@
 // src/pages/api/auth/callback.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
-import { shopifyApi, LATEST_API_VERSION } from "@shopify/shopify-api";
 
-// ✅ 環境変数から設定を読み込む
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
-const appUrl = process.env.SHOPIFY_APP_URL!;
-
-const shopify = shopifyApi({
-  apiKey,
-  apiSecretKey,
-  scopes: ["read_products", "write_products"],
-  hostName: appUrl.replace(/^https?:\/\//, ""),
-  apiVersion: LATEST_API_VERSION,
-});
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { shop, hmac, code, state } = req.query as {
+    const { shop, hmac, code, host } = req.query as {
       shop: string;
       hmac: string;
       code: string;
-      state: string;
+      host: string;
     };
 
-    if (!shop || !hmac || !code) {
+    if (!shop || !hmac || !code || !host) {
       return res.status(400).send("Missing required parameters");
     }
 
     // ✅ HMAC 検証
-    const params = { ...req.query };
-    delete (params as any).hmac;
+    const params: Record<string, string | string[]> = { ...req.query };
+    delete params.hmac;
     const message = Object.keys(params)
       .sort()
-      .map((key) => `${key}=${params[key as keyof typeof params]}`)
+      .map((key) => `${key}=${params[key]}`)
       .join("&");
 
     const generatedHmac = crypto
@@ -64,14 +53,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).send("Failed to get access token");
     }
 
-    const tokenData = await tokenResponse.json();
+    type TokenResponse = {
+      access_token: string;
+      scope: string;
+    };
 
-    // ✅ Cookieに保存（今回は簡易セッション）
-    res.setHeader("Set-Cookie", `shopify_token=${tokenData.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax`);
+    const tokenData: TokenResponse = await tokenResponse.json();
 
-    // ✅ exitiframe にリダイレクト
-    return res.redirect(`/exitiframe?shop=${shop}`);
-  } catch (err: any) {
+    // ✅ Cookieに保存（簡易セッション）
+    res.setHeader(
+      "Set-Cookie",
+      `shopify_token=${tokenData.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax`
+    );
+
+    // ✅ exitiframe にリダイレクト（host と shop を必ず渡す）
+    return res.redirect(
+      `/exitiframe?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
+    );
+  } catch (err) {
     console.error("Auth Callback Error:", err);
     return res.status(500).send("Internal Server Error");
   }
