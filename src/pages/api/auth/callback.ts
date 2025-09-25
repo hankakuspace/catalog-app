@@ -66,22 +66,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const tokenData: TokenResponse = await tokenResponse.json();
 
-    // ✅ セッションを作成 & 保存（オフライン）
-    const session = shopify.session.customAppSession(shop);
+    // ✅ オフラインセッションを自前で作成
+    const { Session } = shopify.session;
+    const offlineSession = new Session({
+      id: `offline_${shop}`,
+      shop,
+      isOnline: false,
+      state: "offline",
+    });
+    offlineSession.accessToken = tokenData.access_token;
 
-    // id が空の場合は強制的に設定
-    if (!session.id) {
-      session.id = `offline_${shop}`;
-    }
-
-    session.accessToken = tokenData.access_token;
-
-    await sessionStorage.storeSession(session);
+    await sessionStorage.storeSession(offlineSession);
 
     console.log("🔥 Session stored:", {
-      id: session.id,
-      shop: session.shop,
-      accessToken: session.accessToken ? "存在する" : "なし",
+      id: offlineSession.id,
+      shop: offlineSession.shop,
+      accessToken: offlineSession.accessToken ? "存在する" : "なし",
     });
 
     // ✅ exitiframe にリダイレクト
