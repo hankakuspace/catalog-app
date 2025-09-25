@@ -30,7 +30,7 @@ export const FirestoreSessionStorage = {
       if (!doc.exists) return undefined;
 
       const data = doc.data() as DocumentData;
-      return new Session(data); // DocumentData を渡す
+      return new Session(data);
     } catch (err) {
       console.error("❌ Firestore loadSession error:", err);
       return undefined;
