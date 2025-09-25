@@ -20,7 +20,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const embedded = params.get("embedded");
 
     console.warn("🔥 DEBUG query params", Object.fromEntries(params));
-    console.warn("🔥 DEBUG hostParam (server-side):", hostParam);
 
     // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
@@ -118,39 +117,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sessionStorage.storeSession(session as unknown as Session);
     console.warn("🔥 Session stored:", session);
 
-    // ✅ HTML を返却し、AppBridge redirect
-    res.setHeader("Content-Type", "text/html");
-    return res.end(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Redirecting...</title>
-          <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        </head>
-        <body>
-          <p>Redirecting to app...</p>
-          <script>
-            console.log("🔥 DEBUG hostParam in client (raw):", "${hostParam}");
-            console.log("🔥 DEBUG apiKey in client:", "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}");
-            var AppBridge = window['app-bridge'];
-            var createApp = AppBridge.default;
-            var Redirect = AppBridge.actions.Redirect;
-
-            var app = createApp({
-              apiKey: "${process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}",
-              host: "${hostParam}"
-            });
-
-            var redirect = Redirect.create(app);
-            redirect.dispatch(
-              Redirect.Action.REMOTE,
-              "https://catalog-app-swart.vercel.app/admin/dashboard?shop=${shop}&host=${hostParam}"
-            );
-          </script>
-        </body>
-      </html>
-    `);
+    // ✅ 認証完了 → /auth/callback にリダイレクト
+    return res.redirect(
+      `/auth/callback?shop=${shop}&host=${hostParam}`
+    );
   } catch (err) {
     const error = err as Error;
     console.error("❌ Auth error:", error);
