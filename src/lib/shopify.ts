@@ -1,7 +1,8 @@
 // src/lib/shopify.ts
-import "@shopify/shopify-api/adapters/node"; // ✅ Node.jsアダプターを追加
+import "@shopify/shopify-api/adapters/node";
 import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
-import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
+// import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
+import { FirestoreSessionStorage } from "@/lib/firestore"; // ✅ Firestore を利用
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -9,10 +10,9 @@ const appUrl = process.env.SHOPIFY_APP_URL!;
 const scopes = process.env.SHOPIFY_SCOPES?.split(",") || [];
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN || "";
 
-// ✅ セッションストレージをインスタンス化
-const sessionStorage = new MemorySessionStorage();
+// ✅ Firestore セッションストレージを使用
+const sessionStorage = FirestoreSessionStorage;
 
-// ✅ Shopify API クライアント
 const shopify = shopifyApi({
   apiKey,
   apiSecretKey,
@@ -62,7 +62,6 @@ export async function fetchProducts(session: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await client.query({ data: query });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response?.body?.data?.products?.edges?.map((edge: any) => edge.node) ?? [];
   } catch (error) {
     console.error("❌ fetchProducts error:", error);
