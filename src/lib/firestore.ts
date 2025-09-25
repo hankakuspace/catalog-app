@@ -1,5 +1,5 @@
 // src/lib/firestore.ts
-import { Session, sessionFromStorage, sessionToStorage } from "@shopify/shopify-api";
+import { Session, SessionParams } from "@shopify/shopify-api";
 import { Firestore, DocumentData } from "@google-cloud/firestore";
 
 const firestore = new Firestore({
@@ -15,8 +15,7 @@ const collection = firestore.collection("shopify_sessions_catalog_app");
 export const FirestoreSessionStorage = {
   async storeSession(session: Session): Promise<boolean> {
     try {
-      const plainObject = sessionToStorage(session); // ✅ 正しくシリアライズ
-      await collection.doc(session.id).set(plainObject as DocumentData);
+      await collection.doc(session.id).set(session.toObject() as DocumentData);
       return true;
     } catch (err) {
       console.error("❌ Firestore storeSession error:", err);
@@ -29,8 +28,8 @@ export const FirestoreSessionStorage = {
       const doc = await collection.doc(id).get();
       if (!doc.exists) return undefined;
 
-      const data = doc.data() as DocumentData;
-      return sessionFromStorage(data); // ✅ 復元
+      const data = doc.data() as SessionParams;
+      return new Session(data); // ✅ Session を復元
     } catch (err) {
       console.error("❌ Firestore loadSession error:", err);
       return undefined;
