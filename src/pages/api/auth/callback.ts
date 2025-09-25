@@ -73,7 +73,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sessionStorage.storeSession(session);
 
     console.log("🔥 Session stored:", {
-      shop,
+      id: session.id,
+      shop: session.shop,
       accessToken: session.accessToken ? "存在する" : "なし",
     });
 
