@@ -9,7 +9,6 @@ const appUrl = process.env.SHOPIFY_APP_URL!;
 const scopes = process.env.SHOPIFY_SCOPES?.split(",") || [];
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN || "";
 
-// ✅ Firestore セッションストレージを使用
 const sessionStorage = FirestoreSessionStorage;
 
 const shopify = shopifyApi({
@@ -46,7 +45,7 @@ interface Product {
   };
 }
 
-// ✅ GraphQL で商品取得
+// ✅ GraphQL で商品取得 (v12対応版)
 export async function fetchProducts(session: Session): Promise<Product[]> {
   try {
     const client = new shopify.clients.Graphql({ session });
@@ -73,10 +72,9 @@ export async function fetchProducts(session: Session): Promise<Product[]> {
       }
     `;
 
-    const response = await client.query<{
-      data: { products: { edges: { node: Product }[] } };
-    }>({
-      data: query, // ✅ 修正ポイント
+    // ✅ v12は request() を使用
+    const response = await client.request<{ data: { products: { edges: { node: Product }[] } } }>({
+      query,
     });
 
     const products = response.body.data.products.edges.map((edge) => edge.node);
