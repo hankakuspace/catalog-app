@@ -1,7 +1,8 @@
 // src/lib/shopify.ts
 import "@shopify/shopify-api/adapters/node";
-import { shopifyApi, ApiVersion, Session } from "@shopify/shopify-api"; // ✅ Session を import
-import { FirestoreSessionStorage } from "@/lib/firestore";
+import { shopifyApi, ApiVersion, Session } from "@shopify/shopify-api";
+// import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
+import { FirestoreSessionStorage } from "@/lib/firestore"; // ✅ Firestore を利用
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -57,9 +58,9 @@ export async function fetchProducts(session: Session) {
       }
     `;
 
-    const response = await client.query<{ products: { edges: { node: unknown }[] } }>({
-      data: query,
-    });
+    const response = await client.query<{
+      products: { edges: { node: unknown }[] };
+    }>({ data: query });
 
     return response?.body?.data?.products?.edges?.map((edge) => edge.node) ?? [];
   } catch (error) {
