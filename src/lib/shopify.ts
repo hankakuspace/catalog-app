@@ -9,6 +9,7 @@ const appUrl = process.env.SHOPIFY_APP_URL!;
 const scopes = process.env.SHOPIFY_SCOPES?.split(",") || [];
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN || "";
 
+// ✅ Firestore セッションストレージを使用
 const sessionStorage = FirestoreSessionStorage;
 
 const shopify = shopifyApi({
@@ -30,6 +31,7 @@ export function getStoreDomain(): string {
   return storeDomain;
 }
 
+// 型定義
 interface ProductVariant {
   id: string;
   price: string;
@@ -91,7 +93,10 @@ export async function fetchProducts(session: Session): Promise<Product[]> {
 
     const response = await client.request<{ products: { edges: { node: Product }[] } }>(query);
 
-    return response.data.products.edges.map((edge) => edge.node);
+    // ✅ 型エラー対策: data が undefined の場合は空配列を返す
+    const products = response.data?.products?.edges.map((edge) => edge.node) ?? [];
+
+    return products;
   } catch (error) {
     console.error("❌ fetchProducts error:", error);
     throw error;
