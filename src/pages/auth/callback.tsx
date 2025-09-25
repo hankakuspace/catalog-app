@@ -9,10 +9,15 @@ export default function AuthCallback() {
     const host = params.get("host") || "";
     const shop = params.get("shop") || "";
 
-    console.log("🔥 DEBUG callback host (raw):", host);
+    console.log("🔥 DEBUG callback host (raw base64):", host);
     console.log("🔥 DEBUG callback shop:", shop);
 
-    (async () => {
+    if (!host) {
+      console.error("❌ Missing host param in callback");
+      return;
+    }
+
+    const init = () => {
       const appBridgeGlobal = (window as unknown as Record<string, unknown>)["app-bridge"];
       if (!appBridgeGlobal) {
         console.error("❌ AppBridge not loaded");
@@ -38,13 +43,16 @@ export default function AuthCallback() {
 
       const app = appBridgeObj.default({
         apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY!,
-        host, // ✅ hostParamは生のまま渡す
+        host, // ✅ base64 のまま渡す
       });
 
       const redirect = appBridgeObj.actions.Redirect.create(app);
       console.log("🔥 DEBUG dispatching redirect to /admin/dashboard ...");
       redirect.dispatch(appBridgeObj.actions.Redirect.Action.APP, "/admin/dashboard");
-    })();
+    };
+
+    // app-bridge 読み込み後に実行
+    (window as any).onAppBridgeReady = init;
   }, []);
 
   return (
@@ -55,9 +63,12 @@ export default function AuthCallback() {
       <p>Redirecting back to app...</p>
       <Script
         src="https://unpkg.com/@shopify/app-bridge@3"
-        strategy="afterInteractive"
+        strategy="beforeInteractive"
         onLoad={() => {
-          console.log("🔥 AppBridge script loaded");
+          console.log("🔥 AppBridge script loaded (beforeInteractive)");
+          if ((window as any).onAppBridgeReady) {
+            (window as any).onAppBridgeReady();
+          }
         }}
       />
     </>
