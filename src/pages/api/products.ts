@@ -22,11 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!session) {
       console.error("❌ セッションが見つからない", { sessionId, shop });
 
-      // デバッグ: 保存されているセッションを一覧表示
-      // ※ MemorySessionStorage なので dev 中だけ有効
-      // @ts-expect-error 開発用デバッグ: sessionStorage 内部を直接参照
-      if (sessionStorage.sessions) {
-        console.log("📦 保存されているセッション一覧:", sessionStorage.sessions);
+      // デバッグ: 保存されているセッション一覧を出力（MemorySessionStorage 開発用）
+      const devSessions = (sessionStorage as unknown as { sessions?: unknown }).sessions;
+      if (devSessions) {
+        console.log("📦 保存されているセッション一覧:", devSessions);
       }
 
       return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
