@@ -16,9 +16,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const code = params.get("code") || undefined;
     const embedded = params.get("embedded");
 
+    // ✅ baseUrl を先に確認
+    const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
+    console.log("⚡️ DEBUG baseUrl (init):", baseUrl);
+
     // ✅ iframe 内からのアクセスなら exitiframe に誘導
     if (embedded === "1" && shop) {
-      const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
       const redirectUrl = `${baseUrl}/api/auth?shop=${shop}&host=${hostParam}`;
       console.log("🔄 Embedded=1, redirecting via exitiframe:", redirectUrl);
 
@@ -56,9 +59,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error("❌ Missing shop parameter. raw params:", Object.fromEntries(params));
       return res.status(400).send("Missing shop parameter");
     }
-
-    const baseUrl = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
-    console.log("⚡️ DEBUG baseUrl:", baseUrl); // ← デバッグ出力追加
 
     const clientId = process.env.SHOPIFY_API_KEY;
     const clientSecret = process.env.SHOPIFY_API_SECRET;
