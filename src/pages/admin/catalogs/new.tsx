@@ -59,7 +59,7 @@ export default function NewCatalog() {
               autoComplete="off"
             />
 
-            <Button primary loading={saving} onClick={saveCatalog}>
+            <Button variant="primary" loading={saving} onClick={saveCatalog}>
               カタログ作成
             </Button>
           </BlockStack>
