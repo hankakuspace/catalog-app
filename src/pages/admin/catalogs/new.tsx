@@ -134,49 +134,48 @@ export default function NewCatalog() {
   return (
     <Page title="新規カタログ作成">
       <Layout>
-        {/* 左: プレビュー */}
-        <Layout.Section variant="oneHalf">
-          <Card sectioned>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingLg">
-                プレビュー
-              </Text>
-
-              <ResourceList
-                resourceName={{ singular: "product", plural: "products" }}
-                items={selectedProducts}
-                renderItem={(item) => {
-                  const { id, title: pTitle, artist, imageUrl } = item;
-                  return (
-                    <ResourceItem
-                      id={id}
-                      media={<Thumbnail source={imageUrl || ""} alt={pTitle} />}
-                      onClick={() => {}}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <div>
-                          <Text as="h3" variant="bodyMd" fontWeight="bold">
-                            {pTitle}
-                          </Text>
-                          <div>{artist}</div>
-                        </div>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeSelected(id);
-                          }}
-                          outline
-                        >
-                          削除
-                        </Button>
-                      </div>
-                    </ResourceItem>
-                  );
-                }}
-              />
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+       {/* 左: プレビュー */}
+<Layout.Section variant="oneHalf">
+  <Card>
+    <BlockStack gap="200">
+      <Text as="h2" variant="headingLg">
+        プレビュー
+      </Text>
+      <ResourceList
+        resourceName={{ singular: "product", plural: "products" }}
+        items={selectedProducts}
+        renderItem={(item) => {
+          const { id, title: pTitle, artist, imageUrl } = item;
+          return (
+            <ResourceItem
+              id={id}
+              media={<Thumbnail source={imageUrl || ""} alt={pTitle} />}
+              onClick={() => {}}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div>
+                  <Text as="h3" variant="bodyMd" fontWeight="bold">
+                    {pTitle}
+                  </Text>
+                  <div>{artist}</div>
+                </div>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeSelected(id);
+                  }}
+                  outline
+                >
+                  削除
+                </Button>
+              </div>
+            </ResourceItem>
+          );
+        }}
+      />
+    </BlockStack>
+  </Card>
+</Layout.Section>
 
         {/* 右: 検索 + フォーム */}
         <Layout.Section variant="oneHalf">
