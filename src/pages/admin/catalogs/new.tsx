@@ -139,17 +139,23 @@ export default function NewCatalogPage() {
       <style jsx global>{`
         @keyframes shake {
           0% {
-            filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0.2));
+            transform: translate(0, 0);
+          }
+          25% {
+            transform: translate(1px, -1px);
           }
           50% {
-            filter: drop-shadow(2px 0 3px rgba(0, 0, 0, 0.3));
+            transform: translate(-1px, 1px);
+          }
+          75% {
+            transform: translate(1px, 1px);
           }
           100% {
-            filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0.2));
+            transform: translate(0, 0);
           }
         }
-        .shake {
-          animation: shake 0.3s infinite;
+        .shake-inner {
+          animation: shake 0.2s infinite;
         }
       `}</style>
 
@@ -225,14 +231,12 @@ export default function NewCatalogPage() {
                                 {...provided.dragHandleProps}
                                 style={{
                                   ...provided.draggableProps.style,
-                                  boxShadow: snapshot.isDragging
-                                    ? "0 4px 12px rgba(0,0,0,0.2)"
-                                    : "none",
                                   opacity: snapshot.isDragging ? 0.9 : 1,
                                 }}
-                                className={isReorderMode ? "shake" : ""}
                               >
-                                <Card>
+                                <Card
+                                  className={isReorderMode ? "shake-inner" : ""}
+                                >
                                   <BlockStack gap="200">
                                     {/* タイトル + メニュー */}
                                     <div
