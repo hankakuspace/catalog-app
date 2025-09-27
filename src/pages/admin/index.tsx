@@ -6,7 +6,9 @@ export default function AdminTop() {
   return (
     <AdminLayout>
       <Page title="アプリ TOP">
-        <Text>ここがTOPページです。サイドメニューから画面を切り替えてください。</Text>
+        <Text as="p">
+          ここがTOPページです。サイドメニューから画面を切り替えてください。
+        </Text>
       </Page>
     </AdminLayout>
   );
