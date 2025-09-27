@@ -179,7 +179,7 @@ export default function NewCatalogPage() {
                             index={index}
                           >
                             {(provided, snapshot) => (
-                              <Card
+                              <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
@@ -187,51 +187,53 @@ export default function NewCatalogPage() {
                                   ...provided.draggableProps.style,
                                   transform: snapshot.isDragging
                                     ? `${provided.draggableProps.style?.transform} rotate(2deg)`
-                                    : provided.draggableProps.style,
+                                    : provided.draggableProps.style?.transform,
                                   transition: snapshot.isDragging
                                     ? "transform 0.15s ease"
                                     : "transform 0.3s ease",
                                 }}
                               >
-                                <BlockStack gap="200">
-                                  {/* タイトル + 削除ボタン */}
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                    }}
-                                  >
-                                    <Text as="h3" variant="headingSm">
-                                      {item.artist}
-                                    </Text>
-                                    <Button
-                                      variant="plain"
-                                      tone="critical"
-                                      onClick={() => removeItem(item.id)}
+                                <Card>
+                                  <BlockStack gap="200">
+                                    {/* タイトル + 削除ボタン */}
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                      }}
                                     >
-                                      削除
-                                    </Button>
-                                  </div>
+                                      <Text as="h3" variant="headingSm">
+                                        {item.artist}
+                                      </Text>
+                                      <Button
+                                        variant="plain"
+                                        tone="critical"
+                                        onClick={() => removeItem(item.id)}
+                                      >
+                                        削除
+                                      </Button>
+                                    </div>
 
-                                  {/* 画像 + 詳細 */}
-                                  {item.imageUrl && (
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      style={{ width: "100%", borderRadius: "8px" }}
-                                    />
-                                  )}
-                                  <Text as="p">{item.title}</Text>
-                                  {item.year && <Text as="p">{item.year}</Text>}
-                                  {item.dimensions && (
-                                    <Text as="p">{item.dimensions}</Text>
-                                  )}
-                                  {item.medium && <Text as="p">{item.medium}</Text>}
-                                  {item.price && (
-                                    <Text as="p">{item.price} 円（税込）</Text>
-                                  )}
-                                </BlockStack>
-                              </Card>
+                                    {/* 画像 + 詳細 */}
+                                    {item.imageUrl && (
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        style={{ width: "100%", borderRadius: "8px" }}
+                                      />
+                                    )}
+                                    <Text as="p">{item.title}</Text>
+                                    {item.year && <Text as="p">{item.year}</Text>}
+                                    {item.dimensions && (
+                                      <Text as="p">{item.dimensions}</Text>
+                                    )}
+                                    {item.medium && <Text as="p">{item.medium}</Text>}
+                                    {item.price && (
+                                      <Text as="p">{item.price} 円（税込）</Text>
+                                    )}
+                                  </BlockStack>
+                                </Card>
+                              </div>
                             )}
                           </Draggable>
                         ))}
