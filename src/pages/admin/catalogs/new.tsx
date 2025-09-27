@@ -14,7 +14,7 @@ import {
   Button,
 } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
-import "./new.css"; // 🔹 スタイルを別ファイルで読み込む
+import styles from "./new.module.css"; // ✅ CSS Modules を読み込み
 
 interface Product {
   id: string;
@@ -99,7 +99,7 @@ export default function NewCatalogPage() {
               {selectedProducts.length === 0 ? (
                 <Text as="p">まだ商品が追加されていません</Text>
               ) : (
-                <div className="preview-grid">
+                <div className={styles.previewGrid}>
                   {selectedProducts.map((item) => (
                     <Card key={item.id}>
                       <BlockStack gap="200">
