@@ -14,7 +14,9 @@ import {
   Button,
   Popover,
   ActionList,
+  Icon,
 } from "@shopify/polaris";
+import { MenuHorizontalIcon } from "@shopify/polaris-icons";
 import AdminLayout from "@/components/AdminLayout";
 import styles from "./new.module.css";
 
@@ -80,6 +82,7 @@ export default function NewCatalogPage() {
 
   const moveItem = (id: string) => {
     console.log("➡️ Move item:", id);
+    // TODO: 並び替え処理を実装
   };
 
   const removeItem = (id: string) => {
@@ -120,27 +123,32 @@ export default function NewCatalogPage() {
                             {item.artist}
                           </Text>
                           <Popover
-  active={activePopoverId === item.id}
-  activator={
-    <Button
-      variant="plain"
-      onClick={() =>
-        setActivePopoverId(activePopoverId === item.id ? null : item.id)
-      }
-    >
-      …
-    </Button>
-  }
-  onClose={() => setActivePopoverId(null)}
->
-  <ActionList
-    items={[
-      { content: "Move item", onAction: () => moveItem(item.id) },
-      { destructive: true, content: "Remove", onAction: () => removeItem(item.id) },
-    ]}
-  />
-</Popover>
-
+                            active={activePopoverId === item.id}
+                            activator={
+                              <Button
+                                variant="plain"
+                                onClick={() =>
+                                  setActivePopoverId(
+                                    activePopoverId === item.id ? null : item.id
+                                  )
+                                }
+                              >
+                                <Icon source={MenuHorizontalIcon} />
+                              </Button>
+                            }
+                            onClose={() => setActivePopoverId(null)}
+                          >
+                            <ActionList
+                              items={[
+                                { content: "Move item", onAction: () => moveItem(item.id) },
+                                {
+                                  destructive: true,
+                                  content: "Remove",
+                                  onAction: () => removeItem(item.id),
+                                },
+                              ]}
+                            />
+                          </Popover>
                         </div>
 
                         {/* 画像 + 詳細 */}
