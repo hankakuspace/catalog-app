@@ -21,14 +21,14 @@ interface Product {
   imageUrl?: string;
 }
 
-// ✅ any を完全排除、unknown[] に修正
-function useDebouncedCallback<T extends (...args: unknown[]) => void | Promise<void>>(
-  fn: T,
+// ✅ Args extends unknown[] を利用して完全型推論に対応
+function useDebouncedCallback<Args extends unknown[]>(
+  fn: (...args: Args) => void | Promise<void>,
   wait = 300
 ) {
   const timer = useMemo<{ id: ReturnType<typeof setTimeout> | null }>(() => ({ id: null }), []);
   return useCallback(
-    (...args: Parameters<T>) => {
+    (...args: Args) => {
       if (timer.id) {
         clearTimeout(timer.id);
       }
