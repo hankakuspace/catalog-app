@@ -11,6 +11,7 @@ import {
   ResourceItem,
   Spinner,
   Thumbnail,
+  Button,          // 🔹 追加
 } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
 
@@ -32,7 +33,6 @@ export default function NewCatalogPage() {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 入力が変わるたびに検索（debounce 300ms）
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (searchQuery.trim() !== "") {
@@ -69,6 +69,11 @@ export default function NewCatalogPage() {
     }
   };
 
+  const handleSave = () => {
+    console.log("✅ カタログ保存:", { title, selectedProducts });
+    // TODO: Firestore 保存処理をここに追加
+  };
+
   return (
     <AdminLayout>
       <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
@@ -76,7 +81,6 @@ export default function NewCatalogPage() {
           新規カタログ作成
         </Text>
 
-        {/* Polaris LayoutではなくCSS Gridで制御 */}
         <div
           style={{
             display: "grid",
@@ -85,7 +89,7 @@ export default function NewCatalogPage() {
             marginTop: "20px",
           }}
         >
-          {/* 左側：プレビュー（3/4幅） */}
+          {/* 左：プレビュー */}
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">
@@ -105,8 +109,6 @@ export default function NewCatalogPage() {
                     <Card key={item.id}>
                       <BlockStack gap="200">
                         {item.imageUrl && (
-                          // Next.js警告回避するなら next/image に切り替え可
-                          // ただし一旦 <img> のまま
                           <img
                             src={item.imageUrl}
                             alt={item.title}
@@ -129,12 +131,10 @@ export default function NewCatalogPage() {
             </BlockStack>
           </Card>
 
-          {/* 右側：フォーム（1/4幅） */}
+          {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                カタログ情報
-              </Text>
+              <Text as="h2" variant="headingMd">カタログ情報</Text>
               <TextField
                 label="タイトル"
                 value={title}
@@ -143,9 +143,7 @@ export default function NewCatalogPage() {
               />
 
               <BlockStack gap="200">
-                <Text as="h2" variant="headingSm">
-                  商品検索
-                </Text>
+                <Text as="h2" variant="headingSm">商品検索</Text>
                 <TextField
                   label="検索キーワード"
                   labelHidden
@@ -185,6 +183,11 @@ export default function NewCatalogPage() {
                   />
                 )}
               </BlockStack>
+
+              {/* 🔹 保存ボタン復活 */}
+              <Button variant="primary" onClick={handleSave}>
+                カタログ作成
+              </Button>
             </BlockStack>
           </Card>
         </div>
