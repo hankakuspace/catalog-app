@@ -56,12 +56,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken: session.accessToken ? "存在する" : "なし",
     });
 
-    // GraphQL クエリ
-    const client = new GraphQLClient(`https://${session.shop}/admin/api/2025-01/graphql.json`, {
-      headers: {
-        "X-Shopify-Access-Token": session.accessToken,
-      },
-    });
+// GraphQL クエリ
+const client = new GraphQLClient(
+  `https://${session.shop}/admin/api/2025-01/graphql.json`,
+  {
+    headers: {
+      "X-Shopify-Access-Token": session.accessToken!, // ✅ Non-Null に修正
+    },
+  }
+);
+
 
     const query = gql`
       {
