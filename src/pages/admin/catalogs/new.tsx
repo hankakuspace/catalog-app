@@ -139,19 +139,13 @@ export default function NewCatalogPage() {
       <style jsx global>{`
         @keyframes shake {
           0% {
-            transform: translate(0, 0) rotate(0deg);
-          }
-          25% {
-            transform: translate(1px, -1px) rotate(-0.5deg);
+            filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0.2));
           }
           50% {
-            transform: translate(-1px, 1px) rotate(0.5deg);
-          }
-          75% {
-            transform: translate(1px, 1px) rotate(-0.5deg);
+            filter: drop-shadow(2px 0 3px rgba(0, 0, 0, 0.3));
           }
           100% {
-            transform: translate(0, 0) rotate(0deg);
+            filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0.2));
           }
         }
         .shake {
@@ -186,9 +180,27 @@ export default function NewCatalogPage() {
           {/* 左：プレビュー */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                プレビュー
-              </Text>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text as="h2" variant="headingMd">
+                  プレビュー
+                </Text>
+                {isReorderMode && (
+                  <Button
+                    size="slim"
+                    onClick={() => setIsReorderMode(false)}
+                    variant="secondary"
+                  >
+                    並べ替え終了
+                  </Button>
+                )}
+              </div>
+
               {selectedProducts.length === 0 ? (
                 <Text as="p">まだ商品が追加されていません</Text>
               ) : (
