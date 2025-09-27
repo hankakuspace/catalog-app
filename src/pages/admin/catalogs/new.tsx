@@ -21,8 +21,8 @@ interface Product {
   imageUrl?: string;
 }
 
-// ✅ any を unknown[] に置き換え
-function useDebouncedCallback<T extends (...args: unknown[]) => void>(fn: T, wait = 300) {
+// ✅ Promise<void> も許容するように型修正
+function useDebouncedCallback<T extends (...args: any[]) => void | Promise<void>>(fn: T, wait = 300) {
   const timer = useMemo<{ id: ReturnType<typeof setTimeout> | null }>(() => ({ id: null }), []);
   return useCallback(
     (...args: Parameters<T>) => {
@@ -30,7 +30,7 @@ function useDebouncedCallback<T extends (...args: unknown[]) => void>(fn: T, wai
         clearTimeout(timer.id);
       }
       timer.id = setTimeout(() => {
-        fn(...args);
+        void fn(...args);
       }, wait);
     },
     [fn, wait, timer]
