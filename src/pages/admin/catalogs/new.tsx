@@ -21,8 +21,8 @@ interface Product {
   imageUrl?: string;
 }
 
-function useDebouncedCallback<T extends (...args: any[]) => void>(fn: T, wait = 300) {
-  // ✅ any を排除
+// ✅ any を unknown[] に置き換え
+function useDebouncedCallback<T extends (...args: unknown[]) => void>(fn: T, wait = 300) {
   const timer = useMemo<{ id: ReturnType<typeof setTimeout> | null }>(() => ({ id: null }), []);
   return useCallback(
     (...args: Parameters<T>) => {
