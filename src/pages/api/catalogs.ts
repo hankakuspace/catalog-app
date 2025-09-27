@@ -19,7 +19,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "POST") {
     try {
       const { title, products } = req.body;
-
       if (!title || !products) {
         return res.status(400).json({ error: "Missing fields" });
       }
@@ -31,12 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       return res.status(200).json({ id: docRef.id });
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error saving catalog:", error.message);
-      } else {
-        console.error("Unknown error:", error);
-      }
+    } catch (err) {
+      console.error("Error saving catalog:", err);
       return res.status(500).json({ error: "Failed to save catalog" });
     }
   }

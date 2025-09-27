@@ -13,6 +13,8 @@ import {
   ResourceItem,
   Spinner,
   Thumbnail,
+  Button,
+  Toast,
 } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
 
@@ -29,6 +31,11 @@ export default function NewCatalogPage() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ active: boolean; message: string }>({
+    active: false,
+    message: "",
+  });
 
   // 入力が変わるたびに検索（debounce 300ms）
   useEffect(() => {
@@ -45,7 +52,6 @@ export default function NewCatalogPage() {
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
-      // ✅ shop パラメータを必ず渡す
       const params = new URLSearchParams({
         shop: "catalog-app-dev-2.myshopify.com",
         query,
@@ -53,8 +59,6 @@ export default function NewCatalogPage() {
 
       const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
-
-      // ✅ API 側で prefix match 済みなのでそのままセット
       setSearchResults(data.products || []);
     } catch (err) {
       console.error("商品検索エラー:", err);
@@ -66,6 +70,36 @@ export default function NewCatalogPage() {
   const handleAddProduct = (product: Product) => {
     if (!selectedProducts.find((p) => p.id === product.id)) {
       setSelectedProducts([...selectedProducts, product]);
+    }
+  };
+
+  // ✅ Firestore 保存
+  const handleSaveCatalog = async () => {
+    if (!title || selectedProducts.length === 0) {
+      setToast({ active: true, message: "タイトルと商品を入力してください" });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/catalogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, products: selectedProducts }),
+      });
+      if (res.ok) {
+        setToast({ active: true, message: "カタログを保存しました ✅" });
+        setTitle("");
+        setSelectedProducts([]);
+        setSearchQuery("");
+        setSearchResults([]);
+      } else {
+        setToast({ active: true, message: "保存に失敗しました ❌" });
+      }
+    } catch (err) {
+      console.error("保存エラー:", err);
+      setToast({ active: true, message: "エラーが発生しました ❌" });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -162,10 +196,19 @@ export default function NewCatalogPage() {
                     />
                   )}
                 </BlockStack>
+
+                {/* ✅ 保存ボタン追加 */}
+                <Button primary loading={saving} onClick={handleSaveCatalog}>
+                  カタログ作成
+                </Button>
               </BlockStack>
             </Card>
           </Layout.Section>
         </Layout>
+
+        {toast.active && (
+          <Toast content={toast.message} onDismiss={() => setToast({ active: false, message: "" })} />
+        )}
       </Page>
     </AdminLayout>
   );
