@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from "react";
 import {
-  Layout,
   BlockStack,
   Text,
   TextField,
@@ -72,114 +71,121 @@ export default function NewCatalogPage() {
 
   return (
     <AdminLayout>
-      {/* Polaris Page を除去し、全幅 div でラップ */}
       <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
         <Text as="h1" variant="headingLg">
           新規カタログ作成
         </Text>
 
-        <Layout>
-          {/* 左側：プレビュー（3/4 幅） */}
-          <Layout.Section span={9}>
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">
-                  プレビュー
-                </Text>
-                {selectedProducts.length === 0 ? (
-                  <Text as="p">まだ商品が追加されていません</Text>
-                ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                      gap: "16px",
-                    }}
-                  >
-                    {selectedProducts.map((item) => (
-                      <Card key={item.id}>
-                        <BlockStack gap="200">
-                          {item.imageUrl && (
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title}
-                              style={{ width: "100%", borderRadius: "8px" }}
-                            />
-                          )}
-                          <Text as="h3" variant="headingSm">
-                            {item.artist}
-                          </Text>
-                          <Text as="p">{item.title}</Text>
-                          {item.year && <Text as="p">{item.year}</Text>}
-                          {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                          {item.medium && <Text as="p">{item.medium}</Text>}
-                          {item.price && <Text as="p">{item.price} 円（税込）</Text>}
-                        </BlockStack>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </BlockStack>
-            </Card>
-          </Layout.Section>
+        {/* CSS Grid で 3/4 : 1/4 に分割 */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "3fr 1fr",
+            gap: "20px",
+            marginTop: "20px",
+          }}
+        >
+          {/* 左側：プレビュー */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">
+                プレビュー
+              </Text>
+              {selectedProducts.length === 0 ? (
+                <Text as="p">まだ商品が追加されていません</Text>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    gap: "16px",
+                  }}
+                >
+                  {selectedProducts.map((item) => (
+                    <Card key={item.id}>
+                      <BlockStack gap="200">
+                        {item.imageUrl && (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            style={{ width: "100%", borderRadius: "8px" }}
+                          />
+                        )}
+                        <Text as="h3" variant="headingSm">
+                          {item.artist}
+                        </Text>
+                        <Text as="p">{item.title}</Text>
+                        {item.year && <Text as="p">{item.year}</Text>}
+                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                        {item.medium && <Text as="p">{item.medium}</Text>}
+                        {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                      </BlockStack>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </BlockStack>
+          </Card>
 
-          {/* 右側：フォーム（1/4 幅） */}
-          <Layout.Section span={3}>
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">
-                  カタログ情報
+          {/* 右側：フォーム */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">
+                カタログ情報
+              </Text>
+              <TextField
+                label="タイトル"
+                value={title}
+                onChange={setTitle}
+                autoComplete="off"
+              />
+
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingSm">
+                  商品検索
                 </Text>
                 <TextField
-                  label="タイトル"
-                  value={title}
-                  onChange={setTitle}
+                  label="検索キーワード"
+                  labelHidden
+                  value={searchQuery}
+                  onChange={setSearchQuery}
                   autoComplete="off"
+                  placeholder="作家名・作品タイトルで検索"
                 />
 
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingSm">
-                    商品検索
-                  </Text>
-                  <TextField
-                    label="検索キーワード"
-                    labelHidden
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    autoComplete="off"
-                    placeholder="作家名・作品タイトルで検索"
+                {loading ? (
+                  <Spinner accessibilityLabel="検索中" size="large" />
+                ) : (
+                  <ResourceList
+                    resourceName={{ singular: "product", plural: "products" }}
+                    items={searchResults}
+                    renderItem={(item) => (
+                      <ResourceItem
+                        id={item.id}
+                        accessibilityLabel={`${item.title} を追加`}
+                        onClick={() => handleAddProduct(item)}
+                        media={
+                          item.imageUrl ? (
+                            <Thumbnail
+                              source={item.imageUrl}
+                              alt={item.title}
+                              size="small"
+                            />
+                          ) : undefined
+                        }
+                      >
+                        <Text as="p">
+                          {item.artist ? `${item.artist}, ` : ""}
+                          {item.title}
+                        </Text>
+                      </ResourceItem>
+                    )}
                   />
-
-                  {loading ? (
-                    <Spinner accessibilityLabel="検索中" size="large" />
-                  ) : (
-                    <ResourceList
-                      resourceName={{ singular: "product", plural: "products" }}
-                      items={searchResults}
-                      renderItem={(item) => (
-                        <ResourceItem
-                          id={item.id}
-                          accessibilityLabel={`${item.title} を追加`}
-                          onClick={() => handleAddProduct(item)}
-                          media={
-                            item.imageUrl ? (
-                              <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
-                            ) : undefined
-                          }
-                        >
-                          <Text as="p">
-                            {item.artist ? `${item.artist}, ` : ""}
-                            {item.title}
-                          </Text>
-                        </ResourceItem>
-                      )}
-                    />
-                  )}
-                </BlockStack>
+                )}
               </BlockStack>
-            </Card>
-          </Layout.Section>
-        </Layout>
+            </BlockStack>
+          </Card>
+        </div>
       </div>
     </AdminLayout>
   );
