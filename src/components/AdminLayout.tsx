@@ -1,30 +1,24 @@
-// src/components/AdminLayout.tsx
-import { Frame, Navigation } from "@shopify/polaris";
+// src/components/AdminContentLayout.tsx
 import { ReactNode } from "react";
 
-interface AdminLayoutProps {
-  children: ReactNode;
+interface AdminContentLayoutProps {
+  left: ReactNode;
+  right: ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminContentLayout({ left, right }: AdminContentLayoutProps) {
   return (
-    <Frame
-      navigation={
-        <Navigation location="/">
-          <Navigation.Section
-            items={[
-              { label: "TOP", url: "/admin" },
-              { label: "カタログ一覧", url: "/admin/catalogs" },
-              { label: "新規カタログ作成", url: "/admin/catalogs/new" },
-            ]}
-          />
-        </Navigation>
-      }
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "3fr 1fr",
+        gap: "20px",
+        marginTop: "20px",
+        width: "100%",
+      }}
     >
-      {/* 🔹 maxWidth制限を解除してブラウザ幅いっぱいに */}
-      <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
-        {children}
-      </div>
-    </Frame>
+      <div>{left}</div>
+      <div>{right}</div>
+    </div>
   );
 }
