@@ -68,7 +68,11 @@ export default function NewCatalogPage() {
                     resourceName={{ singular: "product", plural: "products" }}
                     items={selectedProducts}
                     renderItem={(item) => (
-                      <ResourceItem id={item.id} accessibilityLabel={`${item.title} を表示`}>
+                      <ResourceItem
+                        id={item.id}
+                        accessibilityLabel={`${item.title} を表示`}
+                        onClick={() => {}} // ✅ ダミー onClick 追加
+                      >
                         <Text as="p">{item.title}</Text>
                       </ResourceItem>
                     )}
@@ -125,6 +129,7 @@ export default function NewCatalogPage() {
                         <ResourceItem
                           id={item.id}
                           accessibilityLabel={`${item.title} を追加`}
+                          onClick={() => handleAddProduct(item)} // ✅ 検索結果は追加処理
                         >
                           <InlineStack align="space-between">
                             <Text as="p">{item.title}</Text>
