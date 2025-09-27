@@ -21,7 +21,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </Navigation>
       }
     >
-      {children}
+      {/* 🔹 maxWidth制限を解除してブラウザ幅いっぱいに */}
+      <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
+        {children}
+      </div>
     </Frame>
   );
 }
