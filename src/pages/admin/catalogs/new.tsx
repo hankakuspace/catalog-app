@@ -198,9 +198,10 @@ export default function NewCatalogPage() {
                 </BlockStack>
 
                 {/* ✅ 保存ボタン追加 */}
-                <Button primary loading={saving} onClick={handleSaveCatalog}>
-                  カタログ作成
-                </Button>
+                <Button variant="primary" loading={saving} onClick={handleSaveCatalog}>
+  カタログ作成
+</Button>
+
               </BlockStack>
             </Card>
           </Layout.Section>
