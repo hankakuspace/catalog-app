@@ -33,9 +33,10 @@ export default function NewCatalog() {
   });
 
   // 🔍 商品検索
-  const searchProducts = async (q: string) => {
-    setQuery(q);
-    if (!q) {
+  const searchProducts = async (value: string) => {
+    setQuery(value);
+
+    if (!value) {
       setResults([]);
       return;
     }
@@ -44,7 +45,7 @@ export default function NewCatalog() {
     const shop = params.get("shop");
 
     try {
-      const res = await fetch(`/api/products?shop=${shop}&query=${q}`);
+      const res = await fetch(`/api/products?shop=${shop}&query=${value}`);
       const data = await res.json();
       setResults(data.products || []);
     } catch (err) {
@@ -83,39 +84,42 @@ export default function NewCatalog() {
     <Page title="新規カタログ作成">
       <Layout>
         {/* 左: プレビュー */}
-        <Layout.Section>
+        <Layout.Section oneHalf>
           <Card>
-            <Text as="h2" variant="headingLg">
-              プレビュー
-            </Text>
-            <ResourceList
-              resourceName={{ singular: "product", plural: "products" }}
-              items={selectedProducts}
-              renderItem={(item) => {
-                const { id, title, artist, imageUrl } = item;
-                return (
-                  <ResourceItem
-                    id={id}
-                    media={<Thumbnail source={imageUrl || ""} alt={title} />}
-                    onClick={() => {}} // Polaris v13 で必須
-                  >
-                    <Text as="h3" variant="bodyMd" fontWeight="bold">
-                      {title}
-                    </Text>
-                    <div>{artist}</div>
-                  </ResourceItem>
-                );
-              }}
-            />
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingLg">
+                プレビュー
+              </Text>
+              <ResourceList
+                resourceName={{ singular: "product", plural: "products" }}
+                items={selectedProducts}
+                renderItem={(item) => {
+                  const { id, title, artist, imageUrl } = item;
+                  return (
+                    <ResourceItem
+                      id={id}
+                      media={<Thumbnail source={imageUrl || ""} alt={title} />}
+                      onClick={() => {}} // Polaris v13 必須
+                    >
+                      <Text as="h3" variant="bodyMd" fontWeight="bold">
+                        {title}
+                      </Text>
+                      <div>{artist}</div>
+                    </ResourceItem>
+                  );
+                }}
+              />
+            </BlockStack>
           </Card>
         </Layout.Section>
 
-        {/* 右: 入力フォーム */}
-        <Layout.Section>
+        {/* 右: フォーム */}
+        <Layout.Section oneHalf>
           <BlockStack gap="400">
             <Text as="h2" variant="headingLg">
               カタログ情報
             </Text>
+
             <TextField
               label="カタログタイトル"
               value={title}
