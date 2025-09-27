@@ -23,6 +23,10 @@ interface Product {
   title: string;
   artist?: string;
   imageUrl?: string;
+  medium?: string;
+  dimensions?: string;
+  price?: number;
+  year?: string;
 }
 
 export default function NewCatalogPage() {
@@ -73,7 +77,7 @@ export default function NewCatalogPage() {
     }
   };
 
-  // ✅ Firestore 保存
+  // Firestore 保存
   const handleSaveCatalog = async () => {
     if (!title || selectedProducts.length === 0) {
       setToast({ active: true, message: "タイトルと商品を入力してください" });
@@ -103,11 +107,16 @@ export default function NewCatalogPage() {
     }
   };
 
+  const formatPrice = (price?: number) => {
+    if (!price) return "";
+    return `${price.toLocaleString()} 円（税込）`;
+  };
+
   return (
     <AdminLayout>
       <Page title="新規カタログ作成">
         <Layout>
-          {/* 左側：プレビュー */}
+          {/* 左側：プレビュー（カードレイアウト） */}
           <Layout.Section variant="oneHalf">
             <Card>
               <BlockStack gap="400">
@@ -117,27 +126,33 @@ export default function NewCatalogPage() {
                 {selectedProducts.length === 0 ? (
                   <Text as="p">まだ商品が追加されていません</Text>
                 ) : (
-                  <ResourceList
-                    resourceName={{ singular: "product", plural: "products" }}
-                    items={selectedProducts}
-                    renderItem={(item) => (
-                      <ResourceItem
-                        id={item.id}
-                        accessibilityLabel={`${item.title} を表示`}
-                        onClick={() => {}}
-                        media={
-                          item.imageUrl ? (
-                            <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
-                          ) : undefined
-                        }
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+                    {selectedProducts.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          width: "220px",
+                          display: "inline-block",
+                          verticalAlign: "top",
+                        }}
                       >
-                        <Text as="p">
-                          {item.artist ? `${item.artist}, ` : ""}
-                          {item.title}
+                        <Thumbnail
+                          source={item.imageUrl || ""}
+                          alt={item.title}
+                          size="large"
+                        />
+                        <Text as="h3" variant="bodyMd" fontWeight="bold">
+                          {item.artist}
                         </Text>
-                      </ResourceItem>
-                    )}
-                  />
+                        <Text as="p">
+                          {item.title} {item.year ? `, ${item.year}` : ""}
+                        </Text>
+                        <Text as="p">{item.medium}</Text>
+                        <Text as="p">{item.dimensions}</Text>
+                        <Text as="p">{formatPrice(item.price)}</Text>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </BlockStack>
             </Card>
@@ -183,7 +198,11 @@ export default function NewCatalogPage() {
                           onClick={() => handleAddProduct(item)}
                           media={
                             item.imageUrl ? (
-                              <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
+                              <Thumbnail
+                                source={item.imageUrl}
+                                alt={item.title}
+                                size="small"
+                              />
                             ) : undefined
                           }
                         >
@@ -197,18 +216,20 @@ export default function NewCatalogPage() {
                   )}
                 </BlockStack>
 
-                {/* ✅ 保存ボタン追加 */}
-                <Button variant="primary" loading={saving} onClick={handleSaveCatalog}>
-  カタログ作成
-</Button>
-
+                {/* 保存ボタン */}
+                <Button primary loading={saving} onClick={handleSaveCatalog}>
+                  カタログ作成
+                </Button>
               </BlockStack>
             </Card>
           </Layout.Section>
         </Layout>
 
         {toast.active && (
-          <Toast content={toast.message} onDismiss={() => setToast({ active: false, message: "" })} />
+          <Toast
+            content={toast.message}
+            onDismiss={() => setToast({ active: false, message: "" })}
+          />
         )}
       </Page>
     </AdminLayout>
