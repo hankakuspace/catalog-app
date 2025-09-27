@@ -11,9 +11,10 @@ import {
   ResourceItem,
   Spinner,
   Thumbnail,
-  Button,          // 🔹 追加
+  Button,
 } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
+import "./new.css"; // 🔹 スタイルを別ファイルで読み込む
 
 interface Product {
   id: string;
@@ -71,7 +72,7 @@ export default function NewCatalogPage() {
 
   const handleSave = () => {
     console.log("✅ カタログ保存:", { title, selectedProducts });
-    // TODO: Firestore 保存処理をここに追加
+    // TODO: Firestore 保存処理
   };
 
   return (
@@ -98,13 +99,7 @@ export default function NewCatalogPage() {
               {selectedProducts.length === 0 ? (
                 <Text as="p">まだ商品が追加されていません</Text>
               ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                    gap: "16px",
-                  }}
-                >
+                <div className="preview-grid">
                   {selectedProducts.map((item) => (
                     <Card key={item.id}>
                       <BlockStack gap="200">
@@ -184,7 +179,6 @@ export default function NewCatalogPage() {
                 )}
               </BlockStack>
 
-              {/* 🔹 保存ボタン復活 */}
               <Button variant="primary" onClick={handleSave}>
                 カタログ作成
               </Button>
