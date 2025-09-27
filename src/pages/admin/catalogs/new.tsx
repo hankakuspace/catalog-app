@@ -68,6 +68,8 @@ export default function NewCatalog() {
         setToast({ active: true, message: "カタログを保存しました ✅" });
         setTitle("");
         setSelectedProducts([]);
+        setQuery("");
+        setResults([]);
       } else {
         setToast({ active: true, message: "保存に失敗しました ❌" });
         console.error(data.error);
