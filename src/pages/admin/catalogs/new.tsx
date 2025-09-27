@@ -21,7 +21,7 @@ interface Product {
   imageUrl?: string;
 }
 
-// ✅ Args extends unknown[] を利用して完全型推論に対応
+// ✅ Args extends unknown[] にして完全に型推論対応
 function useDebouncedCallback<Args extends unknown[]>(
   fn: (...args: Args) => void | Promise<void>,
   wait = 300
@@ -39,7 +39,6 @@ function useDebouncedCallback<Args extends unknown[]>(
     [fn, wait, timer]
   );
 }
-
 
 export default function NewCatalog() {
   const [title, setTitle] = useState("");
@@ -134,49 +133,50 @@ export default function NewCatalog() {
   return (
     <Page title="新規カタログ作成">
       <Layout>
-       {/* 左: プレビュー */}
-<Layout.Section variant="oneHalf">
-  <Card>
-    <BlockStack gap="200">
-      <Text as="h2" variant="headingLg">
-        プレビュー
-      </Text>
-      <ResourceList
-        resourceName={{ singular: "product", plural: "products" }}
-        items={selectedProducts}
-        renderItem={(item) => {
-          const { id, title: pTitle, artist, imageUrl } = item;
-          return (
-           <ResourceItem
-  id={id}
-  media={<Thumbnail source={imageUrl || ""} alt={pTitle} />}
-  onClick={() => {}}
->
-  <div style={{ display: "flex", justifyContent: "space-between" }}>
-    <div>
-      <Text as="h3" variant="bodyMd" fontWeight="bold">
-        {pTitle}
-      </Text>
-      <div>{artist}</div>
-    </div>
-    <Button
-      onClick={() => removeSelected(id)}
-      variant="secondary"
-    >
-      削除
-    </Button>
-  </div>
-</ResourceItem>
-          );
-        }}
-      />
-    </BlockStack>
-  </Card>
-</Layout.Section>
+        {/* 左: プレビュー */}
+        <Layout.Section variant="oneHalf">
+          <Card>
+            <BlockStack gap="200">
+              <Text as="h2" variant="headingLg">
+                プレビュー
+              </Text>
+
+              <ResourceList
+                resourceName={{ singular: "product", plural: "products" }}
+                items={selectedProducts}
+                renderItem={(item) => {
+                  const { id, title: pTitle, artist, imageUrl } = item;
+                  return (
+                    <ResourceItem
+                      id={id}
+                      media={<Thumbnail source={imageUrl || ""} alt={pTitle} />}
+                      onClick={() => {}}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div>
+                          <Text as="h3" variant="bodyMd" fontWeight="bold">
+                            {pTitle}
+                          </Text>
+                          <div>{artist}</div>
+                        </div>
+                        <Button
+                          onClick={() => removeSelected(id)}
+                          variant="secondary"
+                        >
+                          削除
+                        </Button>
+                      </div>
+                    </ResourceItem>
+                  );
+                }}
+              />
+            </BlockStack>
+          </Card>
+        </Layout.Section>
 
         {/* 右: 検索 + フォーム */}
         <Layout.Section variant="oneHalf">
-          <Card sectioned>
+          <Card>
             <BlockStack gap="200">
               <Text as="h2" variant="headingLg">
                 カタログ情報
