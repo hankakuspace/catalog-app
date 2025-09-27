@@ -12,7 +12,7 @@ export default function NewCatalogPage() {
             <Card>
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">プレビュー</Text>
-                <Text>ここに作品プレビューが表示されます</Text>
+                <Text as="p">ここに作品プレビューが表示されます</Text>
               </BlockStack>
             </Card>
           </Layout.Section>
@@ -22,7 +22,7 @@ export default function NewCatalogPage() {
             <Card>
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">カタログ情報</Text>
-                <Text>フォームエリア</Text>
+                <Text as="p">フォームエリア</Text>
               </BlockStack>
             </Card>
           </Layout.Section>
