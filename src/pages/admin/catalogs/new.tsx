@@ -8,7 +8,7 @@ export default function NewCatalogPage() {
       <Page title="新規カタログ作成">
         <Layout>
           {/* 左：プレビュー */}
-          <Layout.Section>
+          <Layout.Section variant="twoThirds">
             <Card>
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">プレビュー</Text>
@@ -18,7 +18,7 @@ export default function NewCatalogPage() {
           </Layout.Section>
 
           {/* 右：入力フォーム */}
-          <Layout.Section secondary>
+          <Layout.Section variant="oneThird">
             <Card>
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">カタログ情報</Text>
