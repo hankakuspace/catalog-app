@@ -36,7 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Firestore からオフラインセッションをロード
     let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
 
-    // オンラインセッションのフォールバック
     if (!session) {
       const sessionId = await shopify.session.getCurrentId({
         isOnline: true,
@@ -60,10 +59,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ✅ GraphQL クエリ（変数を利用して安全に検索）
+    // ✅ 全件取得（GraphQL側で query は使わない）
     const gqlQuery = gql`
-      query getProducts($search: String) {
-        products(first: 50, query: $search) {
+      {
+        products(first: 50) {
           edges {
             node {
               id
@@ -98,15 +97,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     `;
 
-    // ✅ 先頭一致検索に修正
-    const variables = {
-      search: search ? `title:${search}* OR vendor:${search}*` : undefined,
-    };
-
-    const data = await client.request<GraphQLResponse>(gqlQuery, variables);
+    const data = await client.request<GraphQLResponse>(gqlQuery);
 
     // 整形
-    const formatted = data.products.edges.map((edge) => {
+    let formatted = data.products.edges.map((edge) => {
       const p = edge.node;
 
       const metafields: Record<string, string> = {};
@@ -132,6 +126,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         frame: metafields["frame"] || "",
       };
     });
+
+    // ✅ サーバー側で prefix match を適用
+    if (search) {
+      const q = search.toLowerCase();
+      formatted = formatted.filter(
+        (p) =>
+          p.title.toLowerCase().startsWith(q) ||
+          (p.artist && p.artist.toLowerCase().startsWith(q))
+      );
+    }
 
     return res.status(200).json({ products: formatted });
   } catch (err: unknown) {
