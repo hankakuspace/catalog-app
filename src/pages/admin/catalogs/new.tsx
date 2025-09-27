@@ -120,28 +120,27 @@ export default function NewCatalogPage() {
                             {item.artist}
                           </Text>
                           <Popover
-                            active={activePopoverId === item.id}
-                            activator={
-                              <Button
-                                plain
-                                onClick={() =>
-                                  setActivePopoverId(
-                                    activePopoverId === item.id ? null : item.id
-                                  )
-                                }
-                              >
-                                …
-                              </Button>
-                            }
-                            onClose={() => setActivePopoverId(null)}
-                          >
-                            <ActionList
-                              items={[
-                                { content: "Move item", onAction: () => moveItem(item.id) },
-                                { destructive: true, content: "Remove", onAction: () => removeItem(item.id) },
-                              ]}
-                            />
-                          </Popover>
+  active={activePopoverId === item.id}
+  activator={
+    <Button
+      variant="plain"
+      onClick={() =>
+        setActivePopoverId(activePopoverId === item.id ? null : item.id)
+      }
+    >
+      …
+    </Button>
+  }
+  onClose={() => setActivePopoverId(null)}
+>
+  <ActionList
+    items={[
+      { content: "Move item", onAction: () => moveItem(item.id) },
+      { destructive: true, content: "Remove", onAction: () => removeItem(item.id) },
+    ]}
+  />
+</Popover>
+
                         </div>
 
                         {/* 画像 + 詳細 */}
