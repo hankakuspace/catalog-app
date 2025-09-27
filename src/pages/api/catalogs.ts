@@ -31,8 +31,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       return res.status(200).json({ id: docRef.id });
-    } catch (error: any) {
-      console.error("Error saving catalog:", error);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Error saving catalog:", error.message);
+      } else {
+        console.error("Unknown error:", error);
+      }
       return res.status(500).json({ error: "Failed to save catalog" });
     }
   }
