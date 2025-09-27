@@ -8,11 +8,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log("🔥 DEBUG auth.begin start", { shop });
 
-    // ✅ Pages Router では rawRequest と rawResponse を両方渡す
+    // ✅ offline token を取得するように修正
     const authRoute = await shopify.auth.begin({
       shop,
       callbackPath: "/api/auth/callback",
-      isOnline: true,
+      isOnline: false,   // ← 修正ポイント (true → false)
       rawRequest: req,
       rawResponse: res,
     });
