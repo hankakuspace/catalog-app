@@ -31,7 +31,7 @@ interface GraphQLResponse {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const shop = req.query.shop as string | undefined;
-    const search = (req.query.query as string) || ""; // ← 検索ワード
+    const search = (req.query.query as string) || ""; // 検索ワード
 
     // Firestore からオフラインセッションをロード
     let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
@@ -60,11 +60,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ✅ 検索クエリ（先頭一致検索）
-    // a → title:a* OR vendor:a*
-    // ab → title:ab* OR vendor:ab*
+    // ✅ タイトルは GraphQL で prefix match
     const variables = {
-      query: search ? `title:${search}* OR vendor:${search}*` : undefined,
+      query: search ? `title:${search}*` : undefined,
     };
 
     const gqlQuery = gql`
@@ -107,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = await client.request<GraphQLResponse>(gqlQuery, variables);
 
     // 整形
-    const formatted = data.products.edges.map((edge) => {
+    let formatted = data.products.edges.map((edge) => {
       const p = edge.node;
 
       const metafields: Record<string, string> = {};
@@ -133,6 +131,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         frame: metafields["frame"] || "",
       };
     });
+
+    // ✅ 作家名はフロント側で prefix match
+    if (search) {
+      const q = search.toLowerCase();
+      formatted = formatted.filter(
+        (p) =>
+          p.title.toLowerCase().startsWith(q) ||
+          (p.artist && p.artist.toLowerCase().startsWith(q))
+      );
+    }
 
     return res.status(200).json({ products: formatted });
   } catch (err: unknown) {
