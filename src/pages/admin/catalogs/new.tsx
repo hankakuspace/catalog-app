@@ -76,7 +76,7 @@ export default function NewCatalogPage() {
           新規カタログ作成
         </Text>
 
-        {/* CSS Grid で 3/4 : 1/4 に分割 */}
+        {/* Polaris LayoutではなくCSS Gridで制御 */}
         <div
           style={{
             display: "grid",
@@ -85,7 +85,7 @@ export default function NewCatalogPage() {
             marginTop: "20px",
           }}
         >
-          {/* 左側：プレビュー */}
+          {/* 左側：プレビュー（3/4幅） */}
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">
@@ -105,6 +105,8 @@ export default function NewCatalogPage() {
                     <Card key={item.id}>
                       <BlockStack gap="200">
                         {item.imageUrl && (
+                          // Next.js警告回避するなら next/image に切り替え可
+                          // ただし一旦 <img> のまま
                           <img
                             src={item.imageUrl}
                             alt={item.title}
@@ -127,7 +129,7 @@ export default function NewCatalogPage() {
             </BlockStack>
           </Card>
 
-          {/* 右側：フォーム */}
+          {/* 右側：フォーム（1/4幅） */}
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">
