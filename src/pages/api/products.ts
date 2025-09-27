@@ -60,14 +60,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ✅ タイトルは GraphQL で prefix match
-    const variables = {
-      query: search ? `title:${search}*` : undefined,
-    };
-
+    // ✅ GraphQL クエリ（変数を利用して安全に検索）
     const gqlQuery = gql`
-      query getProducts($query: String) {
-        products(first: 50, query: $query) {
+      query getProducts($search: String) {
+        products(first: 50, query: $search) {
           edges {
             node {
               id
@@ -102,10 +98,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     `;
 
+    // ✅ 先頭一致検索に修正
+    const variables = {
+      search: search ? `title:${search}* OR vendor:${search}*` : undefined,
+    };
+
     const data = await client.request<GraphQLResponse>(gqlQuery, variables);
 
     // 整形
-    let formatted = data.products.edges.map((edge) => {
+    const formatted = data.products.edges.map((edge) => {
       const p = edge.node;
 
       const metafields: Record<string, string> = {};
@@ -131,16 +132,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         frame: metafields["frame"] || "",
       };
     });
-
-    // ✅ 作家名はフロント側で prefix match
-    if (search) {
-      const q = search.toLowerCase();
-      formatted = formatted.filter(
-        (p) =>
-          p.title.toLowerCase().startsWith(q) ||
-          (p.artist && p.artist.toLowerCase().startsWith(q))
-      );
-    }
 
     return res.status(200).json({ products: formatted });
   } catch (err: unknown) {
