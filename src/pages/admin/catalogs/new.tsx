@@ -20,7 +20,7 @@ interface Product {
   id: string;
   title: string;
   artist?: string;
-  imageUrl?: string; // 追加：商品サムネイル用
+  imageUrl?: string;
 }
 
 export default function NewCatalogPage() {
@@ -45,17 +45,17 @@ export default function NewCatalogPage() {
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/products?query=${encodeURIComponent(query)}`);
-      const data = await res.json();
-
-      const q = query.toLowerCase();
-      const filtered = (data.products || []).filter((p: Product) => {
-        const title = p.title?.toLowerCase() || "";
-        const artist = p.artist?.toLowerCase() || "";
-        return title.includes(q) || artist.includes(q);
+      // ✅ shop パラメータを必ず渡す
+      const params = new URLSearchParams({
+        shop: "catalog-app-dev-2.myshopify.com",
+        query,
       });
 
-      setSearchResults(filtered);
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const data = await res.json();
+
+      // ✅ API 側で prefix match 済みなのでそのままセット
+      setSearchResults(data.products || []);
     } catch (err) {
       console.error("商品検索エラー:", err);
     } finally {
