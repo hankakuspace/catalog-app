@@ -9,15 +9,21 @@ export default function NewCatalogPage() {
         <Layout>
           {/* 左：プレビュー */}
           <Layout.Section>
-            <Card title="プレビュー" sectioned>
-              <Text>ここに作品プレビューが表示されます</Text>
+            <Card>
+              <Card.Header title="プレビュー" />
+              <Card.Section>
+                <Text>ここに作品プレビューが表示されます</Text>
+              </Card.Section>
             </Card>
           </Layout.Section>
 
           {/* 右：入力フォーム */}
           <Layout.Section secondary>
-            <Card title="カタログ情報" sectioned>
-              <Text>フォームエリア</Text>
+            <Card>
+              <Card.Header title="カタログ情報" />
+              <Card.Section>
+                <Text>フォームエリア</Text>
+              </Card.Section>
             </Card>
           </Layout.Section>
         </Layout>
