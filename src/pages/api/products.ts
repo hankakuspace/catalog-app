@@ -31,11 +31,12 @@ interface GraphQLResponse {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const shop = req.query.shop as string | undefined;
-    const search = (req.query.query as string) || ""; // ← 追加: 検索ワード
+    const search = (req.query.query as string) || ""; // ← 検索ワード
 
     // Firestore からオフラインセッションをロード
     let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
 
+    // オンラインセッションのフォールバック
     if (!session) {
       const sessionId = await shopify.session.getCurrentId({
         isOnline: true,
@@ -59,11 +60,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ✅ 検索クエリ組み立て
-    // 大文字小文字を区別しない部分一致検索: title:*a* OR vendor:*a*
+    // ✅ 検索クエリ（先頭一致検索）
+    // a → title:a* OR vendor:a*
+    // ab → title:ab* OR vendor:ab*
+    const variables = {
+      query: search ? `title:${search}* OR vendor:${search}*` : undefined,
+    };
+
     const gqlQuery = gql`
-      {
-        products(first: 50, query: "${search ? `title:*${search}* OR vendor:*${search}*` : ""}") {
+      query getProducts($query: String) {
+        products(first: 50, query: $query) {
           edges {
             node {
               id
@@ -98,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     `;
 
-    const data = await client.request<GraphQLResponse>(gqlQuery);
+    const data = await client.request<GraphQLResponse>(gqlQuery, variables);
 
     // 整形
     const formatted = data.products.edges.map((edge) => {
