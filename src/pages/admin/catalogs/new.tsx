@@ -15,7 +15,7 @@ import {
   ResourceItem,
   Spinner,
 } from "@shopify/polaris";
-import { AdminLayout } from "@/components/AdminLayout";
+import AdminLayout from "@/components/AdminLayout";
 
 interface Product {
   id: string;
