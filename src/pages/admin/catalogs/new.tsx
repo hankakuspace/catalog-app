@@ -1,42 +1,61 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Page,
   Layout,
   BlockStack,
   Text,
   TextField,
-  Button,
   Card,
-  InlineStack,
   ResourceList,
   ResourceItem,
   Spinner,
+  Thumbnail,
 } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
 
 interface Product {
   id: string;
   title: string;
+  artist?: string;
+  imageUrl?: string; // 追加：商品サムネイル用
 }
 
 export default function NewCatalogPage() {
   const [title, setTitle] = useState("");
-  const [label, setLabel] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
-    if (!searchQuery) return;
+  // 入力が変わるたびに検索（debounce 300ms）
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (searchQuery.trim() !== "") {
+        handleSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+
+  const handleSearch = async (query: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/products?query=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`/api/products?query=${encodeURIComponent(query)}`);
       const data = await res.json();
-      setSearchResults(data.products || []);
+
+      const q = query.toLowerCase();
+      const filtered = (data.products || []).filter((p: Product) => {
+        const title = p.title?.toLowerCase() || "";
+        const artist = p.artist?.toLowerCase() || "";
+        return title.includes(q) || artist.includes(q);
+      });
+
+      setSearchResults(filtered);
     } catch (err) {
       console.error("商品検索エラー:", err);
     } finally {
@@ -71,9 +90,17 @@ export default function NewCatalogPage() {
                       <ResourceItem
                         id={item.id}
                         accessibilityLabel={`${item.title} を表示`}
-                        onClick={() => {}} // ✅ ダミー onClick 追加
+                        onClick={() => {}}
+                        media={
+                          item.imageUrl ? (
+                            <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
+                          ) : undefined
+                        }
                       >
-                        <Text as="p">{item.title}</Text>
+                        <Text as="p">
+                          {item.artist ? `${item.artist}, ` : ""}
+                          {item.title}
+                        </Text>
                       </ResourceItem>
                     )}
                   />
@@ -95,29 +122,19 @@ export default function NewCatalogPage() {
                   onChange={setTitle}
                   autoComplete="off"
                 />
-                <TextField
-                  label="ラベル"
-                  value={label}
-                  onChange={setLabel}
-                  autoComplete="off"
-                />
 
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingSm">
                     商品検索
                   </Text>
-                  <InlineStack gap="200">
-                    <TextField
-                      label="検索キーワード"
-                      labelHidden
-                      value={searchQuery}
-                      onChange={setSearchQuery}
-                      autoComplete="off"
-                    />
-                    <Button onClick={handleSearch} loading={loading}>
-                      検索
-                    </Button>
-                  </InlineStack>
+                  <TextField
+                    label="検索キーワード"
+                    labelHidden
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    autoComplete="off"
+                    placeholder="作家名・作品タイトルで検索"
+                  />
 
                   {loading ? (
                     <Spinner accessibilityLabel="検索中" size="large" />
@@ -129,12 +146,17 @@ export default function NewCatalogPage() {
                         <ResourceItem
                           id={item.id}
                           accessibilityLabel={`${item.title} を追加`}
-                          onClick={() => handleAddProduct(item)} // ✅ 検索結果は追加処理
+                          onClick={() => handleAddProduct(item)}
+                          media={
+                            item.imageUrl ? (
+                              <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
+                            ) : undefined
+                          }
                         >
-                          <InlineStack align="space-between">
-                            <Text as="p">{item.title}</Text>
-                            <Button onClick={() => handleAddProduct(item)}>追加</Button>
-                          </InlineStack>
+                          <Text as="p">
+                            {item.artist ? `${item.artist}, ` : ""}
+                            {item.title}
+                          </Text>
                         </ResourceItem>
                       )}
                     />
