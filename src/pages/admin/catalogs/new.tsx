@@ -21,8 +21,11 @@ interface Product {
   imageUrl?: string;
 }
 
-// ✅ Promise<void> も許容するように型修正
-function useDebouncedCallback<T extends (...args: any[]) => void | Promise<void>>(fn: T, wait = 300) {
+// ✅ any を完全排除、unknown[] に修正
+function useDebouncedCallback<T extends (...args: unknown[]) => void | Promise<void>>(
+  fn: T,
+  wait = 300
+) {
   const timer = useMemo<{ id: ReturnType<typeof setTimeout> | null }>(() => ({ id: null }), []);
   return useCallback(
     (...args: Parameters<T>) => {
@@ -36,6 +39,7 @@ function useDebouncedCallback<T extends (...args: any[]) => void | Promise<void>
     [fn, wait, timer]
   );
 }
+
 
 export default function NewCatalog() {
   const [title, setTitle] = useState("");
