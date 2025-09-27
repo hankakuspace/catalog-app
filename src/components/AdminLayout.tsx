@@ -1,7 +1,12 @@
 // src/components/AdminLayout.tsx
 import { Frame, Navigation } from "@shopify/polaris";
+import { ReactNode } from "react";
 
-export default function AdminLayout({ children }) {
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <Frame
       navigation={
