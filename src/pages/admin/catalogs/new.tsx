@@ -117,39 +117,33 @@ export default function NewCatalogPage() {
                     <Card key={item.id}>
                       <BlockStack gap="200">
                         {/* タイトル + メニュー */}
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <Text as="h3" variant="headingSm">
-                            {item.artist}
-                          </Text>
-                          <Popover
-                            active={activePopoverId === item.id}
-                            activator={
-                              <Button
-                                icon={HorizontalDotsMinor}
-                                onClick={() =>
-                                  setActivePopoverId(
-                                    activePopoverId === item.id ? null : item.id
-                                  )
-                                }
-                              />
-                            }
-                            onClose={() => setActivePopoverId(null)}
-                          >
-                            <ActionList
-                              items={[
-                                {
-                                  content: "Move item",
-                                  onAction: () => moveItem(item.id),
-                                },
-                                {
-                                  destructive: true,
-                                  content: "Remove",
-                                  onAction: () => removeItem(item.id),
-                                },
-                              ]}
-                            />
-                          </Popover>
-                        </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+  <Text as="h3" variant="headingSm">
+    {item.artist}
+  </Text>
+  <Popover
+    active={activePopoverId === item.id}
+    activator={
+      <Button
+        plain
+        onClick={() =>
+          setActivePopoverId(activePopoverId === item.id ? null : item.id)
+        }
+      >
+        …
+      </Button>
+    }
+    onClose={() => setActivePopoverId(null)}
+  >
+    <ActionList
+      items={[
+        { content: "Move item", onAction: () => moveItem(item.id) },
+        { destructive: true, content: "Remove", onAction: () => removeItem(item.id) },
+      ]}
+    />
+  </Popover>
+</div>
+
 
                         {/* 画像 + 詳細 */}
                         {item.imageUrl && (
