@@ -84,7 +84,7 @@ export default function NewCatalog() {
     <Page title="新規カタログ作成">
       <Layout>
         {/* 左: プレビュー */}
-        <Layout.Section oneHalf>
+        <Layout.Section variant="oneHalf">
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingLg">
@@ -114,7 +114,7 @@ export default function NewCatalog() {
         </Layout.Section>
 
         {/* 右: フォーム */}
-        <Layout.Section oneHalf>
+        <Layout.Section variant="oneHalf">
           <BlockStack gap="400">
             <Text as="h2" variant="headingLg">
               カタログ情報
