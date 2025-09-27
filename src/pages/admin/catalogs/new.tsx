@@ -75,8 +75,8 @@ export default function NewCatalogPage() {
     <AdminLayout>
       <Page title="新規カタログ作成">
         <Layout>
-          {/* 左側：プレビュー */}
-          <Layout.Section variant="oneHalf">
+          {/* 左側：プレビュー（3/4 幅） */}
+          <Layout.Section span={9}>
             <Card>
               <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">
@@ -119,8 +119,8 @@ export default function NewCatalogPage() {
             </Card>
           </Layout.Section>
 
-          {/* 右側：フォーム */}
-          <Layout.Section variant="oneHalf">
+          {/* 右側：フォーム（1/4 幅） */}
+          <Layout.Section span={3}>
             <Card>
               <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">
