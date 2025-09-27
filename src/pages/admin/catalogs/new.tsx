@@ -13,7 +13,10 @@ import {
   Thumbnail,
   Button,
   Banner,
+  Popover,
+  ActionList,
 } from "@shopify/polaris";
+import { MenuHorizontalIcon } from "@shopify/polaris-icons";
 import AdminLayout from "@/components/AdminLayout";
 import styles from "./new.module.css";
 
@@ -49,6 +52,8 @@ export default function NewCatalogPage() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
+  const [isReorderMode, setIsReorderMode] = useState(false);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -131,6 +136,29 @@ export default function NewCatalogPage() {
 
   return (
     <AdminLayout>
+      <style jsx global>{`
+        @keyframes shake {
+          0% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+          25% {
+            transform: translate(1px, -1px) rotate(-0.5deg);
+          }
+          50% {
+            transform: translate(-1px, 1px) rotate(0.5deg);
+          }
+          75% {
+            transform: translate(1px, 1px) rotate(-0.5deg);
+          }
+          100% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+        }
+        .shake {
+          animation: shake 0.3s infinite;
+        }
+      `}</style>
+
       <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
         <Text as="h1" variant="headingLg">
           新規カタログ作成
@@ -178,24 +206,20 @@ export default function NewCatalogPage() {
                             draggableId={item.id}
                             index={index}
                           >
-                            {(provided, snapshot) => (
+                            {(provided) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 style={{
                                   ...provided.draggableProps.style,
-                                  transform: snapshot.isDragging
-                                    ? `${provided.draggableProps.style?.transform} rotate(2deg)`
-                                    : provided.draggableProps.style?.transform,
-                                  transition: snapshot.isDragging
-                                    ? "transform 0.15s ease"
-                                    : "transform 0.3s ease",
+                                  transition: "transform 0.2s ease",
                                 }}
+                                className={isReorderMode ? "shake" : ""}
                               >
                                 <Card>
                                   <BlockStack gap="200">
-                                    {/* タイトル + 削除ボタン */}
+                                    {/* タイトル + メニュー */}
                                     <div
                                       style={{
                                         display: "flex",
@@ -205,13 +229,45 @@ export default function NewCatalogPage() {
                                       <Text as="h3" variant="headingSm">
                                         {item.artist}
                                       </Text>
-                                      <Button
-                                        variant="plain"
-                                        tone="critical"
-                                        onClick={() => removeItem(item.id)}
+                                      <Popover
+                                        active={activePopoverId === item.id}
+                                        activator={
+                                          <Button
+                                            variant="plain"
+                                            icon={MenuHorizontalIcon}
+                                            onClick={() =>
+                                              setActivePopoverId(
+                                                activePopoverId === item.id
+                                                  ? null
+                                                  : item.id
+                                              )
+                                            }
+                                          />
+                                        }
+                                        onClose={() => setActivePopoverId(null)}
                                       >
-                                        削除
-                                      </Button>
+                                        <ActionList
+                                          items={[
+                                            {
+                                              content: isReorderMode
+                                                ? "Finish move"
+                                                : "Move item",
+                                              onAction: () => {
+                                                setIsReorderMode(
+                                                  !isReorderMode
+                                                );
+                                                setActivePopoverId(null);
+                                              },
+                                            },
+                                            {
+                                              destructive: true,
+                                              content: "Remove",
+                                              onAction: () =>
+                                                removeItem(item.id),
+                                            },
+                                          ]}
+                                        />
+                                      </Popover>
                                     </div>
 
                                     {/* 画像 + 詳細 */}
@@ -219,7 +275,10 @@ export default function NewCatalogPage() {
                                       <img
                                         src={item.imageUrl}
                                         alt={item.title}
-                                        style={{ width: "100%", borderRadius: "8px" }}
+                                        style={{
+                                          width: "100%",
+                                          borderRadius: "8px",
+                                        }}
                                       />
                                     )}
                                     <Text as="p">{item.title}</Text>
@@ -227,7 +286,9 @@ export default function NewCatalogPage() {
                                     {item.dimensions && (
                                       <Text as="p">{item.dimensions}</Text>
                                     )}
-                                    {item.medium && <Text as="p">{item.medium}</Text>}
+                                    {item.medium && (
+                                      <Text as="p">{item.medium}</Text>
+                                    )}
                                     {item.price && (
                                       <Text as="p">{item.price} 円（税込）</Text>
                                     )}
