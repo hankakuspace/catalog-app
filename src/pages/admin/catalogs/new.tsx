@@ -122,33 +122,27 @@ export default function NewCatalogPage() {
                           <Text as="h3" variant="headingSm">
                             {item.artist}
                           </Text>
-                          <Popover
-                            active={activePopoverId === item.id}
-                            activator={
-                              <Button
-                                variant="plain"
-                                onClick={() =>
-                                  setActivePopoverId(
-                                    activePopoverId === item.id ? null : item.id
-                                  )
-                                }
-                              >
-                                <Icon source={MenuHorizontalIcon} />
-                              </Button>
-                            }
-                            onClose={() => setActivePopoverId(null)}
-                          >
-                            <ActionList
-                              items={[
-                                { content: "Move item", onAction: () => moveItem(item.id) },
-                                {
-                                  destructive: true,
-                                  content: "Remove",
-                                  onAction: () => removeItem(item.id),
-                                },
-                              ]}
-                            />
-                          </Popover>
+                         <Popover
+  active={activePopoverId === item.id}
+  activator={
+    <Button
+      variant="plain"
+      icon={MenuHorizontalIcon}
+      onClick={() =>
+        setActivePopoverId(activePopoverId === item.id ? null : item.id)
+      }
+    />
+  }
+  onClose={() => setActivePopoverId(null)}
+>
+  <ActionList
+    items={[
+      { content: "Move item", onAction: () => moveItem(item.id) },
+      { destructive: true, content: "Remove", onAction: () => removeItem(item.id) },
+    ]}
+  />
+</Popover>
+
                         </div>
 
                         {/* 画像 + 詳細 */}
