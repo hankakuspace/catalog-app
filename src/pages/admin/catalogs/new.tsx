@@ -12,9 +12,12 @@ import {
   Spinner,
   Thumbnail,
   Button,
+  Popover,
+  ActionList,
 } from "@shopify/polaris";
+import { HorizontalDotsMinor } from "@shopify/polaris-icons";
 import AdminLayout from "@/components/AdminLayout";
-import styles from "./new.module.css"; // ✅ CSS Modules を読み込み
+import styles from "./new.module.css";
 
 interface Product {
   id: string;
@@ -33,6 +36,7 @@ export default function NewCatalogPage() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -75,6 +79,15 @@ export default function NewCatalogPage() {
     // TODO: Firestore 保存処理
   };
 
+  const moveItem = (id: string) => {
+    console.log("➡️ Move item:", id);
+    // TODO: 並び替えモードに入る or 別の処理を追加予定
+  };
+
+  const removeItem = (id: string) => {
+    setSelectedProducts(selectedProducts.filter((p) => p.id !== id));
+  };
+
   return (
     <AdminLayout>
       <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
@@ -103,6 +116,42 @@ export default function NewCatalogPage() {
                   {selectedProducts.map((item) => (
                     <Card key={item.id}>
                       <BlockStack gap="200">
+                        {/* タイトル + メニュー */}
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <Text as="h3" variant="headingSm">
+                            {item.artist}
+                          </Text>
+                          <Popover
+                            active={activePopoverId === item.id}
+                            activator={
+                              <Button
+                                icon={HorizontalDotsMinor}
+                                onClick={() =>
+                                  setActivePopoverId(
+                                    activePopoverId === item.id ? null : item.id
+                                  )
+                                }
+                              />
+                            }
+                            onClose={() => setActivePopoverId(null)}
+                          >
+                            <ActionList
+                              items={[
+                                {
+                                  content: "Move item",
+                                  onAction: () => moveItem(item.id),
+                                },
+                                {
+                                  destructive: true,
+                                  content: "Remove",
+                                  onAction: () => removeItem(item.id),
+                                },
+                              ]}
+                            />
+                          </Popover>
+                        </div>
+
+                        {/* 画像 + 詳細 */}
                         {item.imageUrl && (
                           <img
                             src={item.imageUrl}
@@ -110,9 +159,6 @@ export default function NewCatalogPage() {
                             style={{ width: "100%", borderRadius: "8px" }}
                           />
                         )}
-                        <Text as="h3" variant="headingSm">
-                          {item.artist}
-                        </Text>
                         <Text as="p">{item.title}</Text>
                         {item.year && <Text as="p">{item.year}</Text>}
                         {item.dimensions && <Text as="p">{item.dimensions}</Text>}
