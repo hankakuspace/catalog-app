@@ -129,18 +129,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ サーバー側で prefix match を適用
     if (search) {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase().trim();
       const before = formatted.length;
 
-      formatted = formatted.filter(
-        (p) =>
-          p.title.toLowerCase().startsWith(q) ||
-          (p.artist && p.artist.toLowerCase().startsWith(q))
-      );
+      formatted = formatted.filter((p) => {
+        const titleMatch = q && p.title?.toLowerCase().startsWith(q);
+        const artistMatch = q && p.artist?.toLowerCase().startsWith(q);
+        return Boolean(titleMatch || artistMatch);
+      });
 
       console.log("🔍 検索ワード:", search);
       console.log("🔍 フィルタ前件数:", before);
       console.log("🔍 フィルタ後件数:", formatted.length);
+      formatted.forEach((p) =>
+        console.log("👉 残った商品:", p.title, "/", p.artist)
+      );
     }
 
     return res.status(200).json({ products: formatted });
