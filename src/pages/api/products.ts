@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ✅ 全件取得（GraphQL側で query は使わない）
+    // ✅ GraphQL 側では全件取得
     const gqlQuery = gql`
       {
         products(first: 50) {
@@ -130,11 +130,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ✅ サーバー側で prefix match を適用
     if (search) {
       const q = search.toLowerCase();
+      const before = formatted.length;
+
       formatted = formatted.filter(
         (p) =>
           p.title.toLowerCase().startsWith(q) ||
           (p.artist && p.artist.toLowerCase().startsWith(q))
       );
+
+      console.log("🔍 検索ワード:", search);
+      console.log("🔍 フィルタ前件数:", before);
+      console.log("🔍 フィルタ後件数:", formatted.length);
     }
 
     return res.status(200).json({ products: formatted });
