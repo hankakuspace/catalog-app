@@ -206,14 +206,17 @@ export default function NewCatalogPage() {
                             draggableId={item.id}
                             index={index}
                           >
-                            {(provided) => (
+                            {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 style={{
                                   ...provided.draggableProps.style,
-                                  transition: "transform 0.2s ease",
+                                  boxShadow: snapshot.isDragging
+                                    ? "0 4px 12px rgba(0,0,0,0.2)"
+                                    : "none",
+                                  opacity: snapshot.isDragging ? 0.9 : 1,
                                 }}
                                 className={isReorderMode ? "shake" : ""}
                               >
