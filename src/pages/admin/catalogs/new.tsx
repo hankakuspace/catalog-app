@@ -43,9 +43,13 @@ export default function NewCatalog() {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
 
-    const res = await fetch(`/api/products?shop=${shop}&query=${q}`);
-    const data = await res.json();
-    setResults(data.products || []);
+    try {
+      const res = await fetch(`/api/products?shop=${shop}&query=${q}`);
+      const data = await res.json();
+      setResults(data.products || []);
+    } catch (err) {
+      console.error("商品検索エラー:", err);
+    }
   };
 
   // ✅ Firestore に保存
@@ -93,6 +97,7 @@ export default function NewCatalog() {
                   <ResourceItem
                     id={id}
                     media={<Thumbnail source={imageUrl || ""} alt={title} />}
+                    onClick={() => {}} // Polaris v13 で必須
                   >
                     <Text as="h3" variant="bodyMd" fontWeight="bold">
                       {title}
