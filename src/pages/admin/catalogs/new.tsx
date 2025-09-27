@@ -1,5 +1,5 @@
 // src/pages/admin/catalogs/new.tsx
-import { Page, Layout, Card, Text } from "@shopify/polaris";
+import { Page, Layout, Card, Text, BlockStack } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
 
 export default function NewCatalogPage() {
@@ -10,20 +10,20 @@ export default function NewCatalogPage() {
           {/* 左：プレビュー */}
           <Layout.Section>
             <Card>
-              <Card.Header title="プレビュー" />
-              <Card.Section>
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">プレビュー</Text>
                 <Text>ここに作品プレビューが表示されます</Text>
-              </Card.Section>
+              </BlockStack>
             </Card>
           </Layout.Section>
 
           {/* 右：入力フォーム */}
           <Layout.Section secondary>
             <Card>
-              <Card.Header title="カタログ情報" />
-              <Card.Section>
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">カタログ情報</Text>
                 <Text>フォームエリア</Text>
-              </Card.Section>
+              </BlockStack>
             </Card>
           </Layout.Section>
         </Layout>
