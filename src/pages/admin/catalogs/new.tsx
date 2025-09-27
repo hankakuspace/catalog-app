@@ -12,7 +12,6 @@ import {
   Card,
   InlineStack,
   ResourceList,
-  ResourceItem,
   Spinner,
 } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
@@ -67,11 +66,17 @@ export default function NewCatalogPage() {
                   <ResourceList
                     resourceName={{ singular: "product", plural: "products" }}
                     items={selectedProducts}
-                    renderItem={(item) => (
-                      <ResourceItem id={item.id}>
-                        <Text as="p">{item.title}</Text>
-                      </ResourceItem>
-                    )}
+                    renderItem={(item) => {
+                      return {
+                        id: item.id,
+                        accessibilityLabel: `${item.title} を表示`,
+                        shortcutActions: [],
+                        persistActions: true,
+                        media: null,
+                        onClick: () => {},
+                        children: <Text as="p">{item.title}</Text>,
+                      };
+                    }}
                   />
                 )}
               </BlockStack>
@@ -121,14 +126,19 @@ export default function NewCatalogPage() {
                     <ResourceList
                       resourceName={{ singular: "product", plural: "products" }}
                       items={searchResults}
-                      renderItem={(item) => (
-                        <ResourceItem id={item.id}>
-                          <InlineStack align="space-between">
-                            <Text as="p">{item.title}</Text>
-                            <Button onClick={() => handleAddProduct(item)}>追加</Button>
-                          </InlineStack>
-                        </ResourceItem>
-                      )}
+                      renderItem={(item) => {
+                        return {
+                          id: item.id,
+                          accessibilityLabel: `${item.title} を追加`,
+                          onClick: () => handleAddProduct(item),
+                          children: (
+                            <InlineStack align="space-between">
+                              <Text as="p">{item.title}</Text>
+                              <Button onClick={() => handleAddProduct(item)}>追加</Button>
+                            </InlineStack>
+                          ),
+                        };
+                      }}
                     />
                   )}
                 </BlockStack>
