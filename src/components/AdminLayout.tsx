@@ -1,16 +1,19 @@
 // src/components/AdminLayout.tsx
 import { Frame, Navigation } from "@shopify/polaris";
 import { ReactNode } from "react";
+import { useRouter } from "next/router";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const router = useRouter();
+
   return (
     <Frame
       navigation={
-        <Navigation location="/">
+        <Navigation location={router.pathname}>
           <Navigation.Section
             items={[
               { label: "TOP", url: "/admin" },
