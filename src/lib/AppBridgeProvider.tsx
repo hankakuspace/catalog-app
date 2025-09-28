@@ -21,12 +21,19 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
       ? new URLSearchParams(window.location.search).get("host") || ""
       : "";
 
-  // ✅ host があれば localStorage に保存、なければ復元
+  // ✅ host と shop を localStorage に保存/復元
   if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get("shop");
+
     if (host) {
       localStorage.setItem("shopify_host", host);
     } else {
       host = localStorage.getItem("shopify_host") || "";
+    }
+
+    if (shop) {
+      localStorage.setItem("shopify_shop", shop);
     }
   }
 
@@ -50,7 +57,6 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
     const redirect = Redirect.create(app);
     const shop = new URLSearchParams(window.location.search).get("shop");
     if (window.top !== window.self && shop) {
-      // ✅ 相対パスで十分
       const redirectUrl = `/api/auth?shop=${shop}`;
       console.log("🔄 AppBridge redirect to:", redirectUrl);
       redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
