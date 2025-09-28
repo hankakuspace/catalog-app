@@ -1,35 +1,80 @@
 // src/pages/admin/catalogs/index.tsx
-"use client";
+import { useEffect, useState } from "react";
+import { Page, Card, IndexTable, Text, Spinner, EmptyState } from "@shopify/polaris";
+import Link from "next/link";
 
-import { Text, Card, BlockStack } from "@shopify/polaris";
-import AdminLayout from "@/components/AdminLayout";
-import AdminContentLayout from "@/components/AdminContentLayout";
+interface Catalog {
+  id: string;
+  title: string;
+  products?: any[];
+  createdAt?: { seconds: number; nanoseconds: number };
+}
 
 export default function CatalogListPage() {
-  return (
-    <AdminLayout>
-      <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
-        <Text as="h1" variant="headingLg">カタログ一覧</Text>
+  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+  const [loading, setLoading] = useState(true);
 
-        <AdminContentLayout
-          left={
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">カタログリスト</Text>
-                <Text as="p">ここに Firestore から取得したカタログ一覧を表示します。</Text>
-              </BlockStack>
-            </Card>
-          }
-          right={
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">フィルタ</Text>
-                <Text as="p">検索や絞り込み機能をここに追加予定です。</Text>
-              </BlockStack>
-            </Card>
-          }
-        />
-      </div>
-    </AdminLayout>
+  useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const res = await fetch("/api/catalogs/list");
+        const data = await res.json();
+        setCatalogs(data.catalogs || []);
+      } catch (err) {
+        console.error("Failed to load catalogs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCatalogs();
+  }, []);
+
+  return (
+    <Page title="保存済みカタログ一覧">
+      <Card>
+        {loading ? (
+          <div style={{ padding: "20px", textAlign: "center" }}>
+            <Spinner accessibilityLabel="Loading catalogs" size="large" />
+          </div>
+        ) : catalogs.length === 0 ? (
+          <EmptyState
+            heading="保存されたカタログはありません"
+            action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
+            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+          >
+            <p>カタログを作成すると、ここに一覧表示されます。</p>
+          </EmptyState>
+        ) : (
+          <IndexTable
+            resourceName={{ singular: "catalog", plural: "catalogs" }}
+            itemCount={catalogs.length}
+            headings={[
+              { title: "タイトル" },
+              { title: "作成日" },
+              { title: "商品数" },
+            ]}
+            selectable={false}
+          >
+            {catalogs.map((catalog, index) => {
+              const createdAtDate = catalog.createdAt
+                ? new Date(catalog.createdAt.seconds * 1000).toLocaleString()
+                : "-";
+
+              return (
+                <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
+                  <IndexTable.Cell>
+                    <Link href={`/admin/catalogs/${catalog.id}`}>
+                      <Text as="span" fontWeight="bold">{catalog.title || "(無題)"}</Text>
+                    </Link>
+                  </IndexTable.Cell>
+                  <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+                  <IndexTable.Cell>{catalog.products?.length || 0}</IndexTable.Cell>
+                </IndexTable.Row>
+              );
+            })}
+          </IndexTable>
+        )}
+      </Card>
+    </Page>
   );
 }
