@@ -279,15 +279,9 @@ export default function NewCatalogPage() {
                               flexDirection: "column",
                             }}
                           >
-                            <Card>
-                              <div
-                                style={{
-                                  flex: 1,
-                                  display: "flex",
-                                  flexDirection: "column",
-                                }}
-                              >
-                                <BlockStack gap="200">
+                            <div className="cardWrapper">
+                              <Card>
+                                <BlockStack gap="200" style={{ flex: 1 }}>
                                   {/* タイトル + メニュー */}
                                   <div
                                     style={{
@@ -362,8 +356,8 @@ export default function NewCatalogPage() {
                                     <Text as="p">{item.price} 円（税込）</Text>
                                   )}
                                 </BlockStack>
-                              </div>
-                            </Card>
+                              </Card>
+                            </div>
                           </div>
                         </SortableItem>
                       ))}

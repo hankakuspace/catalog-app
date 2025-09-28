@@ -2,28 +2,32 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
-  align-items: stretch; /* 各セルは同じ高さ */
 }
 
 .previewGrid > div {
-  display: flex;          /* セルをflexに */
-  flex-direction: column;
+  display: flex;
 }
 
 .previewGrid > div > div {
-  flex: 1;                /* 内側ラッパーをセル全体に引き伸ばす */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.previewGrid .cardWrapper {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 @media (max-width: 1024px) {
   .previewGrid {
-    grid-template-columns: repeat(2, 1fr); /* タブレット: 2列 */
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 600px) {
   .previewGrid {
-    grid-template-columns: 1fr; /* スマホ: 1列 */
+    grid-template-columns: 1fr;
   }
 }
