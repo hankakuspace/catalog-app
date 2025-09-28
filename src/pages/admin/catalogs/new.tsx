@@ -239,90 +239,91 @@ export default function NewCatalogPage() {
                                   style={{ height: "100%" }}
                                 >
                                   <Card>
-                                    <BlockStack
-                                      gap="200"
-                                      style={{ height: "100%" }}
-                                    >
-                                      {/* タイトル + メニュー */}
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          justifyContent: "space-between",
-                                        }}
-                                      >
-                                        <Text as="h3" variant="headingSm">
-                                          {item.artist}
-                                        </Text>
-                                        <Popover
-                                          active={activePopoverId === item.id}
-                                          activator={
-                                            <Button
-                                              variant="plain"
-                                              icon={MenuHorizontalIcon}
-                                              onClick={() =>
-                                                setActivePopoverId(
-                                                  activePopoverId === item.id
-                                                    ? null
-                                                    : item.id
-                                                )
-                                              }
-                                            />
-                                          }
-                                          onClose={() =>
-                                            setActivePopoverId(null)
-                                          }
-                                        >
-                                          <ActionList
-                                            items={[
-                                              {
-                                                content: isReorderMode
-                                                  ? "Finish move"
-                                                  : "Move item",
-                                                onAction: () => {
-                                                  setIsReorderMode(
-                                                    !isReorderMode
-                                                  );
-                                                  setActivePopoverId(null);
-                                                },
-                                              },
-                                              {
-                                                destructive: true,
-                                                content: "Remove",
-                                                onAction: () =>
-                                                  removeItem(item.id),
-                                              },
-                                            ]}
-                                          />
-                                        </Popover>
-                                      </div>
-
-                                      {/* 画像 + 詳細 */}
-                                      {item.imageUrl && (
-                                        <img
-                                          src={item.imageUrl}
-                                          alt={item.title}
+                                    <div style={{ height: "100%" }}>
+                                      <BlockStack gap="200">
+                                        {/* タイトル + メニュー */}
+                                        <div
                                           style={{
-                                            width: "100%",
-                                            borderRadius: "8px",
+                                            display: "flex",
+                                            justifyContent: "space-between",
                                           }}
-                                        />
-                                      )}
-                                      <Text as="p">{item.title}</Text>
-                                      {item.year && (
-                                        <Text as="p">{item.year}</Text>
-                                      )}
-                                      {item.dimensions && (
-                                        <Text as="p">{item.dimensions}</Text>
-                                      )}
-                                      {item.medium && (
-                                        <Text as="p">{item.medium}</Text>
-                                      )}
-                                      {item.price && (
-                                        <Text as="p">
-                                          {item.price} 円（税込）
-                                        </Text>
-                                      )}
-                                    </BlockStack>
+                                        >
+                                          <Text as="h3" variant="headingSm">
+                                            {item.artist}
+                                          </Text>
+                                          <Popover
+                                            active={
+                                              activePopoverId === item.id
+                                            }
+                                            activator={
+                                              <Button
+                                                variant="plain"
+                                                icon={MenuHorizontalIcon}
+                                                onClick={() =>
+                                                  setActivePopoverId(
+                                                    activePopoverId === item.id
+                                                      ? null
+                                                      : item.id
+                                                  )
+                                                }
+                                              />
+                                            }
+                                            onClose={() =>
+                                              setActivePopoverId(null)
+                                            }
+                                          >
+                                            <ActionList
+                                              items={[
+                                                {
+                                                  content: isReorderMode
+                                                    ? "Finish move"
+                                                    : "Move item",
+                                                  onAction: () => {
+                                                    setIsReorderMode(
+                                                      !isReorderMode
+                                                    );
+                                                    setActivePopoverId(null);
+                                                  },
+                                                },
+                                                {
+                                                  destructive: true,
+                                                  content: "Remove",
+                                                  onAction: () =>
+                                                    removeItem(item.id),
+                                                },
+                                              ]}
+                                            />
+                                          </Popover>
+                                        </div>
+
+                                        {/* 画像 + 詳細 */}
+                                        {item.imageUrl && (
+                                          <img
+                                            src={item.imageUrl}
+                                            alt={item.title}
+                                            style={{
+                                              width: "100%",
+                                              borderRadius: "8px",
+                                            }}
+                                          />
+                                        )}
+                                        <Text as="p">{item.title}</Text>
+                                        {item.year && (
+                                          <Text as="p">{item.year}</Text>
+                                        )}
+                                        {item.dimensions && (
+                                          <Text as="p">{item.dimensions}</Text>
+                                        )}
+                                        {item.medium && (
+                                          <Text as="p">{item.medium}</Text>
+                                        )}
+                                        {item.price && (
+                                          <Text as="p">
+                                            {item.price} 円（税込）
+                                          </Text>
+                                        )}
+                                      </BlockStack>
+                                    </div>
                                   </Card>
                                 </div>
                               </div>
@@ -341,7 +342,9 @@ export default function NewCatalogPage() {
           {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">カタログ情報</Text>
+              <Text as="h2" variant="headingMd">
+                カタログ情報
+              </Text>
               <TextField
                 label="タイトル"
                 value={title}
@@ -350,7 +353,9 @@ export default function NewCatalogPage() {
               />
 
               <BlockStack gap="200">
-                <Text as="h2" variant="headingSm">商品検索</Text>
+                <Text as="h2" variant="headingSm">
+                  商品検索
+                </Text>
                 <TextField
                   label="検索キーワード"
                   labelHidden
@@ -391,11 +396,7 @@ export default function NewCatalogPage() {
                 )}
               </BlockStack>
 
-              <Button
-                variant="primary"
-                onClick={handleSave}
-                loading={saving}
-              >
+              <Button variant="primary" onClick={handleSave} loading={saving}>
                 カタログ作成
               </Button>
             </BlockStack>
