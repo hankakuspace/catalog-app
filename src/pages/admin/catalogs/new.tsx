@@ -203,10 +203,13 @@ export default function NewCatalogPage() {
       setSaveSuccess(true);
       setTitle("");
       setSelectedProducts([]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Firestore 保存エラー:", err);
-      // ✅ 詳細エラーを UI に表示
-      setSaveError(`保存に失敗しました: ${err.message || String(err)}`);
+      if (err instanceof Error) {
+        setSaveError(`保存に失敗しました: ${err.message}`);
+      } else {
+        setSaveError(`保存に失敗しました: ${String(err)}`);
+      }
     } finally {
       setSaving(false);
     }
