@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: "Missing fields" });
       }
 
-      // ✅ セッション確認だけ行う（アクセストークン存在チェック）
+      // ✅ セッション確認
       const sessionId = shopify.session.getOfflineId(shop);
       const session = await sessionStorage.loadSession(sessionId);
 
@@ -21,7 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // ✅ Firestore に保存
       const docRef = dbAdmin.collection("shopify_catalogs_app").doc();
-      const previewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/preview/${docRef.id}`;
+
+      // ✅ baseUrl を SHOPIFY_APP_URL に統一
+      const baseUrl = process.env.SHOPIFY_APP_URL;
+      if (!baseUrl) {
+        throw new Error("SHOPIFY_APP_URL is not defined");
+      }
+
+      const previewUrl = `${baseUrl}/preview/${docRef.id}`;
 
       await docRef.set({
         title,

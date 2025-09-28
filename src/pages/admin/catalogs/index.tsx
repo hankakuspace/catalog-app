@@ -1,34 +1,41 @@
 // src/pages/admin/catalogs/index.tsx
+"use client";
+
 import { useEffect, useState } from "react";
 import {
   Card,
-  IndexTable,
-  Text,
-  Spinner,
-  EmptyState,
   Page,
-  Link as PolarisLink,
+  ResourceList,
+  ResourceItem,
+  Text,
+  Link,
+  Spinner,
 } from "@shopify/polaris";
+import { db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: { seconds: number; nanoseconds: number; toDate?: () => Date };
+  createdAt?: any; // Firestore Timestamp
   previewUrl?: string;
 }
 
-export default function CatalogListPage() {
+export default function CatalogList() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
-        const res = await fetch("/api/catalogs/list");
-        const data = await res.json();
-        setCatalogs(data.catalogs || []);
+        const snapshot = await getDocs(collection(db, "shopify_catalogs_app"));
+        const data: Catalog[] = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Catalog[];
+        setCatalogs(data);
       } catch (err) {
-        console.error("Failed to load catalogs:", err);
+        console.error("❌ Error fetching catalogs:", err);
       } finally {
         setLoading(false);
       }
@@ -37,88 +44,60 @@ export default function CatalogListPage() {
   }, []);
 
   return (
-    <Page title="保存済みカタログ一覧" fullWidth>
-      {loading ? (
-        <Card>
-          <div style={{ padding: "20px", textAlign: "center" }}>
-            <Spinner accessibilityLabel="Loading catalogs" size="large" />
+    <Page title="保存済みカタログ一覧">
+      <Card>
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "20px" }}>
+            <Spinner accessibilityLabel="Loading" size="large" />
           </div>
-        </Card>
-      ) : catalogs.length === 0 ? (
-        <Card>
-          <EmptyState
-            heading="保存されたカタログはありません"
-            action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
-            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-          >
-            <p>カタログを作成すると、ここに一覧表示されます。</p>
-          </EmptyState>
-        </Card>
-      ) : (
-        <Card>
-          <IndexTable
+        ) : (
+          <ResourceList
             resourceName={{ singular: "catalog", plural: "catalogs" }}
-            itemCount={catalogs.length}
-            headings={[
-              { title: "タイトル" },
-              { title: "作成日" },
-              { title: "プレビューURL" },
-              { title: "View" },
-            ]}
-            selectable={false}
-          >
-            {catalogs.map((catalog, index) => {
-              // ✅ Firestore Timestamp を正しい日付に変換
-              let createdAtDate = "-";
-              if (catalog.createdAt) {
-                if (typeof catalog.createdAt.toDate === "function") {
-                  createdAtDate = catalog.createdAt.toDate().toLocaleString();
-                } else if ("seconds" in catalog.createdAt) {
-                  createdAtDate = new Date(
-                    catalog.createdAt.seconds * 1000
-                  ).toLocaleString();
-                }
-              }
+            items={catalogs}
+            renderItem={(item) => {
+              const { id, title, createdAt, previewUrl } = item;
 
               return (
-                <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
-                  {/* タイトル */}
-                  <IndexTable.Cell>
-                    <Text as="span" fontWeight="semibold">
-                      {catalog.title || "(無題)"}
+                <ResourceItem id={id}>
+                  <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr 1fr", gap: "16px", alignItems: "center" }}>
+                    {/* タイトル */}
+                    <Text variant="bodyMd" fontWeight="bold">
+                      {title}
                     </Text>
-                  </IndexTable.Cell>
 
-                  {/* 作成日 */}
-                  <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+                    {/* 作成日 */}
+                    <Text variant="bodyMd">
+                      {createdAt
+                        ? createdAt.toDate().toLocaleString("ja-JP", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "-"}
+                    </Text>
 
-                  {/* プレビューURL */}
-                  <IndexTable.Cell>
-                    {catalog.previewUrl ? (
-                      <Text as="span" tone="subdued">
-                        {catalog.previewUrl}
-                      </Text>
-                    ) : (
-                      "-"
-                    )}
-                  </IndexTable.Cell>
+                    {/* プレビューURL */}
+                    <Text variant="bodyMd">
+                      {previewUrl ? previewUrl : "-"}
+                    </Text>
 
-                  {/* View */}
-                  <IndexTable.Cell>
-                    {catalog.previewUrl ? (
-                      <PolarisLink url={catalog.previewUrl} external>
+                    {/* View リンク */}
+                    {previewUrl ? (
+                      <Link url={previewUrl} external>
                         View
-                      </PolarisLink>
+                      </Link>
                     ) : (
                       "-"
                     )}
-                  </IndexTable.Cell>
-                </IndexTable.Row>
+                  </div>
+                </ResourceItem>
               );
-            })}
-          </IndexTable>
-        </Card>
-      )}
+            }}
+          />
+        )}
+      </Card>
     </Page>
   );
 }
