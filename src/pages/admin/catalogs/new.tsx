@@ -1,7 +1,7 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   BlockStack,
   Text,
@@ -103,33 +103,35 @@ export default function NewCatalogPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  // ✅ カード高さを統一
+  // ✅ 高さを計算して揃える関数
+  const adjustHeights = useCallback(() => {
+    let maxHeight = 0;
+    cardRefs.current.forEach((el) => {
+      if (el) {
+        el.style.minHeight = "auto"; // リセット
+        maxHeight = Math.max(maxHeight, el.offsetHeight);
+      }
+    });
+    cardRefs.current.forEach((el) => {
+      if (el) {
+        el.style.minHeight = `${maxHeight}px`;
+      }
+    });
+  }, []);
+
+  // ✅ 商品が変わったときに高さを再計算
   useEffect(() => {
     if (selectedProducts.length === 0) return;
+    adjustHeights();
+  }, [selectedProducts, adjustHeights]);
 
-    const observer = new ResizeObserver(() => {
-      let maxHeight = 0;
-      cardRefs.current.forEach((el) => {
-        if (el) {
-          el.style.height = "auto";
-          maxHeight = Math.max(maxHeight, el.offsetHeight);
-        }
-      });
-      cardRefs.current.forEach((el) => {
-        if (el) {
-          el.style.height = `${maxHeight}px`;
-        }
-      });
-    });
+  // ✅ リサイズ時にも高さを再計算
+  useEffect(() => {
+    window.addEventListener("resize", adjustHeights);
+    return () => window.removeEventListener("resize", adjustHeights);
+  }, [adjustHeights]);
 
-    cardRefs.current.forEach((el) => el && observer.observe(el));
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [selectedProducts]);
-
-  // ✅ 検索クエリ監視（復活）
+  // ✅ 検索クエリ監視
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (searchQuery.trim() !== "") {
@@ -379,6 +381,7 @@ export default function NewCatalogPage() {
                                         width: "100%",
                                         borderRadius: "8px",
                                       }}
+                                      onLoad={adjustHeights} // ✅ 画像ロード後に高さ再計算
                                     />
                                   )}
                                   <Text as="p">{item.title}</Text>
