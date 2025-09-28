@@ -1,7 +1,8 @@
 .previewGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* PC: 4列 */
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  align-items: stretch; /* 高さを統一 */
 }
 
 @media (max-width: 1024px) {

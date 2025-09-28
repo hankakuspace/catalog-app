@@ -211,7 +211,7 @@ export default function NewCatalogPage() {
                 <Text as="p">まだ商品が追加されていません</Text>
               ) : (
                 <DragDropContext onDragEnd={handleDragEnd}>
-                  <Droppable droppableId="products" direction="horizontal">
+                  <Droppable droppableId="products" direction="vertical">
                     {(provided) => (
                       <div
                         className={styles.previewGrid}
@@ -236,9 +236,13 @@ export default function NewCatalogPage() {
                               >
                                 <div
                                   className={isReorderMode ? "shake-inner" : ""}
+                                  style={{ height: "100%" }}
                                 >
-                                  <Card>
-                                    <BlockStack gap="200">
+                                  <Card style={{ height: "100%" }}>
+                                    <BlockStack
+                                      gap="200"
+                                      style={{ height: "100%" }}
+                                    >
                                       {/* タイトル + メニュー */}
                                       <div
                                         style={{
