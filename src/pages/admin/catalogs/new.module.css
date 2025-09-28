@@ -11,6 +11,7 @@
 }
 
 
+
 @media (max-width: 1024px) {
   .previewGrid {
     grid-template-columns: repeat(2, 1fr); /* タブレット: 2列 */
