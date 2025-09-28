@@ -1,6 +1,6 @@
 // src/pages/api/catalogs.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 
 if (!getApps().length) {
@@ -23,15 +23,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: "Missing fields" });
       }
 
-      const docRef = await db.collection("catalogs").add({
+      const docRef = await db.collection("shopify_catalogs_app").add({
         title,
         products,
-        createdAt: new Date(),
+        createdAt: FieldValue.serverTimestamp(),
       });
 
       return res.status(200).json({ id: docRef.id });
     } catch (err) {
-      console.error("Error saving catalog:", err);
+      console.error("❌ Error saving catalog:", err);
       return res.status(500).json({ error: "Failed to save catalog" });
     }
   }
