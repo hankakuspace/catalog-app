@@ -55,10 +55,14 @@ export default function CatalogList() {
             resourceName={{ singular: "catalog", plural: "catalogs" }}
             items={catalogs}
             renderItem={(item) => {
-              const { title, createdAt, previewUrl } = item;
+              const { id, title, createdAt, previewUrl } = item;
 
               return (
-                <ResourceItem>
+                <ResourceItem
+                  id={id}
+                  accessibilityLabel={`View details for ${title}`}
+                  onClick={() => {}}
+                >
                   <div
                     style={{
                       display: "grid",
@@ -96,8 +100,7 @@ export default function CatalogList() {
                         View
                       </Link>
                     ) : (
-                      "-"
-                    )}
+                      "-"}
                   </div>
                 </ResourceItem>
               );
