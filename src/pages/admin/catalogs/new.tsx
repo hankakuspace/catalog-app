@@ -112,7 +112,7 @@ export default function NewCatalogPage() {
     });
 
     // 行ごとにグループ化
-    let rows: { top: number; els: HTMLDivElement[] }[] = [];
+const rows: { top: number; els: HTMLDivElement[] }[] = [];
 
     cardRefs.current.forEach((el) => {
       if (!el) return;
