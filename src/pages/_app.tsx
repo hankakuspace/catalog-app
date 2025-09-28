@@ -4,13 +4,15 @@ import { AppBridgeProvider } from "@/lib/AppBridgeProvider";
 
 // Polaris
 import "@shopify/polaris/build/esm/styles.css";
-import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
+import { AppProvider as PolarisAppProvider, Frame } from "@shopify/polaris";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <AppBridgeProvider>
       <PolarisAppProvider i18n={{}}>
-        <Component {...pageProps} />
+        <Frame>
+          <Component {...pageProps} />
+        </Frame>
       </PolarisAppProvider>
     </AppBridgeProvider>
   );
