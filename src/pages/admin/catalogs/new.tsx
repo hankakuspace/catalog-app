@@ -423,7 +423,13 @@ export default function NewCatalogPage() {
                   )}
                 />
               )}
-              <Button variant="primary" onClick={handleSave} loading={saving}>
+              {/* ✅ ボタン型を明示 */}
+              <Button
+                variant="primary"
+                onClick={handleSave}
+                loading={saving}
+                type="button"
+              >
                 カタログ作成
               </Button>
             </BlockStack>
