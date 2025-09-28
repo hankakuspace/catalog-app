@@ -74,8 +74,7 @@ function SortableItem({
     flexDirection: "column",
   };
 
-  const shakeClass =
-    isReorderMode || isDragging ? styles.shakeWrapper : "";
+  const shakeClass = isReorderMode || isDragging ? styles.shakeWrapper : "";
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
@@ -188,6 +187,14 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
+      // ✅ URL パラメータから shop を取得
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get("shop");
+
+      if (!shop) {
+        throw new Error("Shop parameter is missing");
+      }
+
       const res = await fetch("/api/catalogs", {
         method: "POST",
         headers: {
@@ -196,12 +203,14 @@ export default function NewCatalogPage() {
         body: JSON.stringify({
           title,
           products: selectedProducts,
+          shop, // 👈 追加
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
+      console.log("✅ Firestore 保存成功:", data.id, data.createdBy);
       setSaveSuccess(true);
       setTitle("");
       setSelectedProducts([]);
@@ -418,11 +427,7 @@ export default function NewCatalogPage() {
                 )}
               />
             )}
-            <Button
-              variant="primary"
-              onClick={handleSave}
-              loading={saving}
-            >
+            <Button variant="primary" onClick={handleSave} loading={saving}>
               カタログ作成
             </Button>
           </BlockStack>
