@@ -86,7 +86,9 @@ export default function CatalogList() {
                     </Text>
 
                     {/* プレビューURL */}
-                    <Text variant="bodyMd">{previewUrl ? previewUrl : "-"}</Text>
+                    <Text variant="bodyMd">
+                      {previewUrl ? previewUrl : "-"}
+                    </Text>
 
                     {/* View リンク */}
                     {previewUrl ? (
@@ -94,7 +96,8 @@ export default function CatalogList() {
                         View
                       </Link>
                     ) : (
-                      "-"}
+                      "-"
+                    )}
                   </div>
                 </ResourceItem>
               );
