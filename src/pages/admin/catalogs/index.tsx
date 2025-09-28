@@ -12,12 +12,12 @@ import {
   Spinner,
 } from "@shopify/polaris";
 import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, Timestamp } from "firebase/firestore";
 
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: any; // Firestore Timestamp
+  createdAt?: Timestamp; // ← any を Timestamp に修正
   previewUrl?: string;
 }
 
@@ -59,7 +59,14 @@ export default function CatalogList() {
 
               return (
                 <ResourceItem id={id}>
-                  <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr 1fr", gap: "16px", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr 2fr 1fr",
+                      gap: "16px",
+                      alignItems: "center",
+                    }}
+                  >
                     {/* タイトル */}
                     <Text variant="bodyMd" fontWeight="bold">
                       {title}
