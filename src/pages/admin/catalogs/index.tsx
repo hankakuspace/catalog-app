@@ -1,6 +1,6 @@
 // src/pages/admin/catalogs/index.tsx
 import { useEffect, useState } from "react";
-import { Page, Card, IndexTable, Text, Spinner, EmptyState } from "@shopify/polaris";
+import { Card, IndexTable, Text, Spinner, EmptyState, Page } from "@shopify/polaris";
 import Link from "next/link";
 
 interface Product {
@@ -45,7 +45,7 @@ export default function CatalogListPage() {
           <EmptyState
             heading="保存されたカタログはありません"
             action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
-            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"}
           >
             <p>カタログを作成すると、ここに一覧表示されます。</p>
           </EmptyState>
