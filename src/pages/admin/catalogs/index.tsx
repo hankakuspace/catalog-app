@@ -96,7 +96,8 @@ export default function CatalogList() {
                         View
                       </Link>
                     ) : (
-                      "-"}
+                      "-"
+                    )}
                   </div>
                 </ResourceItem>
               );
