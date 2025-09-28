@@ -4,11 +4,13 @@
   gap: 20px;
   align-items: stretch;
 }
+
 .previewGrid > div {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
+
 
 
 

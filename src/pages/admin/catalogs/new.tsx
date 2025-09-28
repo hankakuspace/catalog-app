@@ -73,14 +73,10 @@ function SortableItem({
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={isReorderMode ? "shake-inner" : ""}
-    >
-      {children}
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <div className={isReorderMode ? "shake-inner" : ""} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -97,7 +93,6 @@ export default function NewCatalogPage() {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // 🔹 dnd-kit sensors
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
@@ -138,7 +133,6 @@ export default function NewCatalogPage() {
     }
   };
 
-  // 🔹 Firestore 保存処理
   const handleSave = async () => {
     if (!title.trim()) {
       setSaveError("タイトルを入力してください");
@@ -168,7 +162,6 @@ export default function NewCatalogPage() {
     }
   };
 
-  // 🔹 dnd-kit 並び替え処理
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -188,70 +181,31 @@ export default function NewCatalogPage() {
     <AdminLayout>
       <style jsx global>{`
         @keyframes shake {
-          0% {
-            box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
-          }
-          25% {
-            box-shadow: 2px 0 3px rgba(0, 0, 0, 0.3);
-          }
-          50% {
-            box-shadow: -2px 0 3px rgba(0, 0, 0, 0.3);
-          }
-          75% {
-            box-shadow: 2px 0 3px rgba(0, 0, 0, 0.3);
-          }
-          100% {
-            box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
-          }
+          0% { transform: translate(0, 0); }
+          25% { transform: translate(1px, -1px); }
+          50% { transform: translate(-1px, 1px); }
+          75% { transform: translate(1px, 1px); }
+          100% { transform: translate(0, 0); }
         }
         .shake-inner {
-          animation: shake 0.3s infinite;
+          animation: shake 0.2s infinite;
         }
       `}</style>
 
       <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
-        <Text as="h1" variant="headingLg">
-          新規カタログ作成
-        </Text>
+        <Text as="h1" variant="headingLg">新規カタログ作成</Text>
 
-        {saveSuccess && (
-          <Banner tone="success" title="保存完了">
-            カタログを保存しました。
-          </Banner>
-        )}
-        {saveError && (
-          <Banner tone="critical" title="エラー">
-            {saveError}
-          </Banner>
-        )}
+        {saveSuccess && <Banner tone="success" title="保存完了">カタログを保存しました。</Banner>}
+        {saveError && <Banner tone="critical" title="エラー">{saveError}</Banner>}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "3fr 1fr",
-            gap: "20px",
-            marginTop: "20px",
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginTop: "20px" }}>
           {/* 左：プレビュー */}
           <Card>
             <BlockStack gap="400">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text as="h2" variant="headingMd">
-                  プレビュー
-                </Text>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Text as="h2" variant="headingMd">プレビュー</Text>
                 {isReorderMode && (
-                  <Button
-                    size="slim"
-                    onClick={() => setIsReorderMode(false)}
-                    variant="secondary"
-                  >
+                  <Button size="slim" onClick={() => setIsReorderMode(false)} variant="secondary">
                     並べ替え終了
                   </Button>
                 )}
@@ -260,115 +214,61 @@ export default function NewCatalogPage() {
               {selectedProducts.length === 0 ? (
                 <Text as="p">まだ商品が追加されていません</Text>
               ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={selectedProducts.map((p) => p.id)}
-                    strategy={rectSortingStrategy}
-                  >
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={selectedProducts.map((p) => p.id)} strategy={rectSortingStrategy}>
                     <div className={styles.previewGrid}>
                       {selectedProducts.map((item) => (
-                        <SortableItem
-                          key={item.id}
-                          id={item.id}
-                          isReorderMode={isReorderMode}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              height: "100%",
-                            }}
-                          >
-                            <Card>
-                              <div
-                                style={{
-                                  flex: 1,
-                                  display: "flex",
-                                  flexDirection: "column",
-                                }}
-                              >
-                                <BlockStack gap="200">
-                                  {/* タイトル + メニュー */}
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                    }}
-                                  >
-                                    <Text as="h3" variant="headingSm">
-                                      {item.artist}
-                                    </Text>
-                                    <Popover
-                                      active={activePopoverId === item.id}
-                                      activator={
-                                        <Button
-                                          variant="plain"
-                                          icon={MenuHorizontalIcon}
-                                          onClick={() =>
-                                            setActivePopoverId(
-                                              activePopoverId === item.id
-                                                ? null
-                                                : item.id
-                                            )
-                                          }
-                                        />
-                                      }
-                                      onClose={() => setActivePopoverId(null)}
-                                    >
-                                      <ActionList
-                                        items={[
-                                          {
-                                            content: isReorderMode
-                                              ? "Finish move"
-                                              : "Move item",
-                                            onAction: () => {
-                                              setIsReorderMode(!isReorderMode);
-                                              setActivePopoverId(null);
-                                            },
-                                          },
-                                          {
-                                            destructive: true,
-                                            content: "Remove",
-                                            onAction: () =>
-                                              removeItem(item.id),
-                                          },
-                                        ]}
+                        <SortableItem key={item.id} id={item.id} isReorderMode={isReorderMode}>
+                          <Card style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                              <BlockStack gap="200">
+                                {/* タイトル + メニュー */}
+                                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                  <Text as="h3" variant="headingSm">{item.artist}</Text>
+                                  <Popover
+                                    active={activePopoverId === item.id}
+                                    activator={
+                                      <Button
+                                        variant="plain"
+                                        icon={MenuHorizontalIcon}
+                                        onClick={() =>
+                                          setActivePopoverId(activePopoverId === item.id ? null : item.id)
+                                        }
                                       />
-                                    </Popover>
-                                  </div>
-
-                                  {/* 画像 + 詳細 */}
-                                  {item.imageUrl && (
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      style={{
-                                        width: "100%",
-                                        borderRadius: "8px",
-                                      }}
+                                    }
+                                    onClose={() => setActivePopoverId(null)}
+                                  >
+                                    <ActionList
+                                      items={[
+                                        {
+                                          content: isReorderMode ? "Finish move" : "Move item",
+                                          onAction: () => {
+                                            setIsReorderMode(!isReorderMode);
+                                            setActivePopoverId(null);
+                                          },
+                                        },
+                                        {
+                                          destructive: true,
+                                          content: "Remove",
+                                          onAction: () => removeItem(item.id),
+                                        },
+                                      ]}
                                     />
-                                  )}
-                                  <Text as="p">{item.title}</Text>
-                                  {item.year && (
-                                    <Text as="p">{item.year}</Text>
-                                  )}
-                                  {item.dimensions && (
-                                    <Text as="p">{item.dimensions}</Text>
-                                  )}
-                                  {item.medium && (
-                                    <Text as="p">{item.medium}</Text>
-                                  )}
-                                  {item.price && (
-                                    <Text as="p">{item.price} 円（税込）</Text>
-                                  )}
-                                </BlockStack>
-                              </div>
-                            </Card>
-                          </div>
+                                  </Popover>
+                                </div>
+
+                                {/* 画像 + 詳細 */}
+                                {item.imageUrl && (
+                                  <img src={item.imageUrl} alt={item.title} style={{ width: "100%", borderRadius: "8px" }} />
+                                )}
+                                <Text as="p">{item.title}</Text>
+                                {item.year && <Text as="p">{item.year}</Text>}
+                                {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                                {item.medium && <Text as="p">{item.medium}</Text>}
+                                {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                              </BlockStack>
+                            </div>
+                          </Card>
                         </SortableItem>
                       ))}
                     </div>
@@ -381,20 +281,11 @@ export default function NewCatalogPage() {
           {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                カタログ情報
-              </Text>
-              <TextField
-                label="タイトル"
-                value={title}
-                onChange={setTitle}
-                autoComplete="off"
-              />
+              <Text as="h2" variant="headingMd">カタログ情報</Text>
+              <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
 
               <BlockStack gap="200">
-                <Text as="h2" variant="headingSm">
-                  商品検索
-                </Text>
+                <Text as="h2" variant="headingSm">商品検索</Text>
                 <TextField
                   label="検索キーワード"
                   labelHidden
@@ -417,11 +308,7 @@ export default function NewCatalogPage() {
                         onClick={() => handleAddProduct(item)}
                         media={
                           item.imageUrl ? (
-                            <Thumbnail
-                              source={item.imageUrl}
-                              alt={item.title}
-                              size="small"
-                            />
+                            <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
                           ) : undefined
                         }
                       >
@@ -435,9 +322,7 @@ export default function NewCatalogPage() {
                 )}
               </BlockStack>
 
-              <Button variant="primary" onClick={handleSave} loading={saving}>
-                カタログ作成
-              </Button>
+              <Button variant="primary" onClick={handleSave} loading={saving}>カタログ作成</Button>
             </BlockStack>
           </Card>
         </div>
