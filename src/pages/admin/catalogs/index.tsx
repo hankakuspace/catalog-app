@@ -14,7 +14,6 @@ interface Catalog {
   id: string;
   title: string;
   createdAt?: { seconds: number; nanoseconds: number; toDate?: () => Date };
-  createdBy?: string;
   previewUrl?: string;
 }
 
@@ -63,7 +62,6 @@ export default function CatalogListPage() {
             headings={[
               { title: "タイトル" },
               { title: "作成日" },
-              { title: "作成者" },
               { title: "プレビューURL" },
               { title: "View" },
             ]}
@@ -93,9 +91,6 @@ export default function CatalogListPage() {
 
                   {/* 作成日 */}
                   <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
-
-                  {/* 作成者 */}
-                  <IndexTable.Cell>{catalog.createdBy || "-"}</IndexTable.Cell>
 
                   {/* プレビューURL */}
                   <IndexTable.Cell>
