@@ -100,7 +100,7 @@ export default function CatalogListPage() {
                   {/* プレビューURL */}
                   <IndexTable.Cell>
                     {catalog.previewUrl ? (
-                      <Text as="span" color="subdued">
+                      <Text as="span" tone="subdued">
                         {catalog.previewUrl}
                       </Text>
                     ) : (
