@@ -1,7 +1,6 @@
 // src/pages/api/catalogs.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { dbAdmin } from "@/lib/firebaseAdmin";
-import * as admin from "firebase-admin";
+import { dbAdmin, FieldValue } from "@/lib/firebaseAdmin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
@@ -14,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const docRef = await dbAdmin.collection("shopify_catalogs_app").add({
         title,
         products,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       });
 
       return res.status(200).json({ id: docRef.id });
