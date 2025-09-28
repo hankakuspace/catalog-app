@@ -20,10 +20,6 @@ import { MenuHorizontalIcon } from "@shopify/polaris-icons";
 import AdminLayout from "@/components/AdminLayout";
 import styles from "./new.module.css";
 
-// Firestore
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-
 // dnd-kit
 import {
   DndContext,
@@ -197,13 +193,21 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
-      const docRef = await addDoc(collection(db, "catalogs"), {
-        title,
-        products: selectedProducts,
-        createdAt: serverTimestamp(),
+      const res = await fetch("/api/catalogs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          products: selectedProducts,
+        }),
       });
-      console.log("✅ Firestore 保存成功:", docRef.id);
 
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "保存失敗");
+
+      console.log("✅ Firestore 保存成功:", data.id);
       setSaveSuccess(true);
       setTitle("");
       setSelectedProducts([]);
@@ -423,13 +427,9 @@ export default function NewCatalogPage() {
                   )}
                 />
               )}
-              {/* ✅ クリックログ追加 */}
               <Button
                 variant="primary"
-                onClick={() => {
-                  console.log("🖱 カタログ作成ボタン押下");
-                  handleSave();
-                }}
+                onClick={handleSave}
                 loading={saving}
               >
                 カタログ作成
