@@ -63,13 +63,15 @@ function SortableItem({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
-  const style = {
+
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     height: "100%",
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "column" as const, // ✅ 型エラー解消
   };
+
   return (
     <div
       ref={setNodeRef}
@@ -274,7 +276,13 @@ export default function NewCatalogPage() {
                           id={item.id}
                           isReorderMode={isReorderMode}
                         >
-                          <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              height: "100%",
+                            }}
+                          >
                             <Card>
                               <BlockStack gap="200" style={{ flex: 1 }}>
                                 {/* タイトル + メニュー */}
