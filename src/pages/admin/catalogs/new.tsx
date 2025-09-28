@@ -96,7 +96,7 @@ export default function NewCatalogPage() {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // ✅ Card 自体を参照
+  // ✅ Card をラップする div に ref を付与
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const sensors = useSensors(
@@ -111,13 +111,13 @@ export default function NewCatalogPage() {
       let maxHeight = 0;
       cardRefs.current.forEach((el) => {
         if (el) {
-          el.style.height = "auto"; // 一旦リセット
+          el.style.height = "auto"; // リセット
           maxHeight = Math.max(maxHeight, el.offsetHeight);
         }
       });
       cardRefs.current.forEach((el) => {
         if (el) {
-          el.style.height = `${maxHeight}px`; // ✅ 最大値に揃える
+          el.style.height = `${maxHeight}px`; // ✅ 最大高さに揃える
         }
       });
     });
@@ -290,93 +290,101 @@ export default function NewCatalogPage() {
                           id={item.id}
                           isReorderMode={isReorderMode}
                         >
-                          <Card
+                          {/* ✅ Card を div でラップして ref を付与 */}
+                          <div
                             ref={(el) => {
                               cardRefs.current[index] = el;
                             }}
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              height: "100%",
+                            }}
                           >
-                            <div
-                              style={{
-                                flex: 1,
-                                display: "flex",
-                                flexDirection: "column",
-                              }}
-                            >
-                              <BlockStack gap="200">
-                                {/* タイトル + メニュー */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                  }}
-                                >
-                                  <Text as="h3" variant="headingSm">
-                                    {item.artist}
-                                  </Text>
-                                  <Popover
-                                    active={activePopoverId === item.id}
-                                    activator={
-                                      <Button
-                                        variant="plain"
-                                        icon={MenuHorizontalIcon}
-                                        onClick={() =>
-                                          setActivePopoverId(
-                                            activePopoverId === item.id
-                                              ? null
-                                              : item.id
-                                          )
-                                        }
-                                      />
-                                    }
-                                    onClose={() => setActivePopoverId(null)}
-                                  >
-                                    <ActionList
-                                      items={[
-                                        {
-                                          content: isReorderMode
-                                            ? "Finish move"
-                                            : "Move item",
-                                          onAction: () => {
-                                            setIsReorderMode(!isReorderMode);
-                                            setActivePopoverId(null);
-                                          },
-                                        },
-                                        {
-                                          destructive: true,
-                                          content: "Remove",
-                                          onAction: () =>
-                                            removeItem(item.id),
-                                        },
-                                      ]}
-                                    />
-                                  </Popover>
-                                </div>
-
-                                {/* 画像 + 詳細 */}
-                                {item.imageUrl && (
-                                  <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
+                            <Card>
+                              <div
+                                style={{
+                                  flex: 1,
+                                  display: "flex",
+                                  flexDirection: "column",
+                                }}
+                              >
+                                <BlockStack gap="200">
+                                  {/* タイトル + メニュー */}
+                                  <div
                                     style={{
-                                      width: "100%",
-                                      borderRadius: "8px",
+                                      display: "flex",
+                                      justifyContent: "space-between",
                                     }}
-                                  />
-                                )}
-                                <Text as="p">{item.title}</Text>
-                                {item.year && <Text as="p">{item.year}</Text>}
-                                {item.dimensions && (
-                                  <Text as="p">{item.dimensions}</Text>
-                                )}
-                                {item.medium && (
-                                  <Text as="p">{item.medium}</Text>
-                                )}
-                                {item.price && (
-                                  <Text as="p">{item.price} 円（税込）</Text>
-                                )}
-                              </BlockStack>
-                            </div>
-                          </Card>
+                                  >
+                                    <Text as="h3" variant="headingSm">
+                                      {item.artist}
+                                    </Text>
+                                    <Popover
+                                      active={activePopoverId === item.id}
+                                      activator={
+                                        <Button
+                                          variant="plain"
+                                          icon={MenuHorizontalIcon}
+                                          onClick={() =>
+                                            setActivePopoverId(
+                                              activePopoverId === item.id
+                                                ? null
+                                                : item.id
+                                            )
+                                          }
+                                        />
+                                      }
+                                      onClose={() => setActivePopoverId(null)}
+                                    >
+                                      <ActionList
+                                        items={[
+                                          {
+                                            content: isReorderMode
+                                              ? "Finish move"
+                                              : "Move item",
+                                            onAction: () => {
+                                              setIsReorderMode(!isReorderMode);
+                                              setActivePopoverId(null);
+                                            },
+                                          },
+                                          {
+                                            destructive: true,
+                                            content: "Remove",
+                                            onAction: () =>
+                                              removeItem(item.id),
+                                          },
+                                        ]}
+                                      />
+                                    </Popover>
+                                  </div>
+
+                                  {/* 画像 + 詳細 */}
+                                  {item.imageUrl && (
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.title}
+                                      style={{
+                                        width: "100%",
+                                        borderRadius: "8px",
+                                      }}
+                                    />
+                                  )}
+                                  <Text as="p">{item.title}</Text>
+                                  {item.year && <Text as="p">{item.year}</Text>}
+                                  {item.dimensions && (
+                                    <Text as="p">{item.dimensions}</Text>
+                                  )}
+                                  {item.medium && (
+                                    <Text as="p">{item.medium}</Text>
+                                  )}
+                                  {item.price && (
+                                    <Text as="p">{item.price} 円（税込）</Text>
+                                  )}
+                                </BlockStack>
+                              </div>
+                            </Card>
+                          </div>
                         </SortableItem>
                       ))}
                     </div>
