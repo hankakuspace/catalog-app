@@ -57,6 +57,7 @@ export default function CatalogList() {
             renderItem={(item) => {
               const { id, title, createdAt, previewUrl } = item;
 
+              // ✅ return をシンプルに修正
               return (
                 <ResourceItem
                   id={id}
@@ -102,7 +103,7 @@ export default function CatalogList() {
                     ) : (
                       "-"}
                   </div>
-                </ResourceItem>
+                </ResourceItem> // ← ここでreturnを閉じる。余計な「);」はナシ。
               );
             }}
           />
