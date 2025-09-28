@@ -112,7 +112,7 @@ export default function NewCatalogPage() {
     if (!cardRefs.current.length) return;
 
     let maxH = 0;
-    cardRefs.current.forEach((el, i) => {
+    cardRefs.current.forEach((el) => {
       if (el) {
         const h = el.offsetHeight;
         maxH = Math.max(maxH, h);
@@ -153,7 +153,7 @@ export default function NewCatalogPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        shop: "catalog-app-dev-2.myshopify.com",
+        shop: "catalog-app-dev-2.myshopify.com", // TODO: 環境変数/URLパラメータ化も検討
         query,
       });
 
@@ -187,9 +187,13 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
-      // ✅ URL パラメータから shop を取得
+      // ✅ shop を URL か localStorage から取得
       const params = new URLSearchParams(window.location.search);
-      const shop = params.get("shop");
+      let shop = params.get("shop");
+
+      if (!shop && typeof window !== "undefined") {
+        shop = localStorage.getItem("shopify_shop") || undefined;
+      }
 
       if (!shop) {
         throw new Error("Shop parameter is missing");
@@ -203,7 +207,7 @@ export default function NewCatalogPage() {
         body: JSON.stringify({
           title,
           products: selectedProducts,
-          shop, // 👈 追加
+          shop, // ✅ APIに渡す
         }),
       });
 
