@@ -61,7 +61,7 @@ export default function CatalogList() {
                 <ResourceItem
                   id={id}
                   accessibilityLabel={`View details for ${title}`}
-                  onClick={() => {}} // 必須プロパティ（今回は何もしない）
+                  onClick={() => {}}
                 >
                   <div
                     style={{
@@ -101,8 +101,8 @@ export default function CatalogList() {
                       "-"}
                   </div>
                 </ResourceItem>
-              );
-            }}
+              ); // ← return の閉じカッコ
+            }} // ← renderItem の関数閉じ
           />
         )}
       </Card>
