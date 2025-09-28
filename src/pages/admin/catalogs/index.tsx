@@ -12,12 +12,12 @@ import {
   Spinner,
 } from "@shopify/polaris";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, Timestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: Timestamp;
+  createdAt?: any; // Firestore Timestamp
   previewUrl?: string;
 }
 
@@ -58,11 +58,7 @@ export default function CatalogList() {
               const { id, title, createdAt, previewUrl } = item;
 
               return (
-                <ResourceItem
-                  id={id}
-                  accessibilityLabel={`View details for ${title}`}
-                  onClick={() => {}}
-                >
+                <ResourceItem id={id}>
                   <div
                     style={{
                       display: "grid",
@@ -72,25 +68,19 @@ export default function CatalogList() {
                     }}
                   >
                     {/* タイトル */}
-                    <Text as="span" variant="bodyMd" fontWeight="bold">
+                    <Text variant="bodyMd" fontWeight="bold">
                       {title}
                     </Text>
 
                     {/* 作成日 */}
-                    <Text as="span" variant="bodyMd">
+                    <Text variant="bodyMd">
                       {createdAt
-                        ? createdAt.toDate().toLocaleString("ja-JP", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                        ? createdAt.toDate().toLocaleString("ja-JP")
                         : "-"}
                     </Text>
 
                     {/* プレビューURL */}
-                    <Text as="span" variant="bodyMd">
+                    <Text variant="bodyMd">
                       {previewUrl ? previewUrl : "-"}
                     </Text>
 
@@ -103,7 +93,7 @@ export default function CatalogList() {
                       "-"}
                   </div>
                 </ResourceItem>
-              ); // ✅ return の正しい閉じ
+              );
             }}
           />
         )}
