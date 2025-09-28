@@ -1,19 +1,7 @@
 // src/pages/api/catalogs.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    }),
-  });
-}
-
-const db = getFirestore();
+import { dbAdmin } from "@/lib/firebaseAdmin";
+import * as admin from "firebase-admin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
@@ -23,10 +11,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: "Missing fields" });
       }
 
-      const docRef = await db.collection("shopify_catalogs_app").add({
+      const docRef = await dbAdmin.collection("shopify_catalogs_app").add({
         title,
         products,
-        createdAt: FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
       return res.status(200).json({ id: docRef.id });
