@@ -68,7 +68,7 @@ function SortableItem({
     setNodeRef,
     transform,
     transition,
-    isDragging, // ✅ dnd-kit から取得
+    isDragging,
   } = useSortable({ id });
 
   const style: React.CSSProperties = {
@@ -84,7 +84,10 @@ function SortableItem({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div className={shakeClass} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div
+        className={shakeClass}
+        style={{ flex: 1, display: "flex", flexDirection: "column" }}
+      >
         {children}
       </div>
     </div>
@@ -200,9 +203,10 @@ export default function NewCatalogPage() {
       setSaveSuccess(true);
       setTitle("");
       setSelectedProducts([]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Firestore 保存エラー:", err);
-      setSaveError("保存に失敗しました。もう一度お試しください。");
+      // ✅ 詳細エラーを UI に表示
+      setSaveError(`保存に失敗しました: ${err.message || String(err)}`);
     } finally {
       setSaving(false);
     }
