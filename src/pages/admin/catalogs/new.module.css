@@ -1,5 +1,4 @@
 /*// src/pages/admin/catalogs/new.module.css */
-
 .previewGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -21,6 +20,19 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
+}
+
+.shakeWrapper {
+  animation: shake 0.2s infinite;
+}
+
+@keyframes shake {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(1px, -1px); }
+  50%  { transform: translate(-1px, 1px); }
+  75%  { transform: translate(1px, 1px); }
+  100% { transform: translate(0, 0); }
 }
 
 @media (max-width: 1024px) {
