@@ -423,10 +423,13 @@ export default function NewCatalogPage() {
                   )}
                 />
               )}
-              {/* ✅ Polaris Button は type を受け取らない */}
+              {/* ✅ クリックログ追加 */}
               <Button
                 variant="primary"
-                onClick={handleSave}
+                onClick={() => {
+                  console.log("🖱 カタログ作成ボタン押下");
+                  handleSave();
+                }}
                 loading={saving}
               >
                 カタログ作成
