@@ -16,9 +16,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <Navigation location={router.pathname}>
           <Navigation.Section
             items={[
-              { label: "TOP", url: "/admin" },
-              { label: "カタログ一覧", url: "/admin/catalogs" },
-              { label: "新規カタログ作成", url: "/admin/catalogs/new" },
+              { 
+                label: "TOP", 
+                url: "/admin",
+                selected: router.pathname === "/admin",
+              },
+              { 
+                label: "カタログ一覧", 
+                url: "/admin/catalogs",
+                // 一覧ページ or 詳細ページの両方で選択状態にする
+                selected: router.pathname.startsWith("/admin/catalogs") &&
+                          router.pathname !== "/admin/catalogs/new",
+              },
+              { 
+                label: "新規カタログ作成", 
+                url: "/admin/catalogs/new",
+                selected: router.pathname === "/admin/catalogs/new",
+              },
             ]}
           />
         </Navigation>
