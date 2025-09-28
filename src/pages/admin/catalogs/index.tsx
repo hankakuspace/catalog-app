@@ -3,10 +3,15 @@ import { useEffect, useState } from "react";
 import { Page, Card, IndexTable, Text, Spinner, EmptyState } from "@shopify/polaris";
 import Link from "next/link";
 
+interface Product {
+  id: string;
+  title: string;
+}
+
 interface Catalog {
   id: string;
   title: string;
-  products?: any[];
+  products?: Product[];
   createdAt?: { seconds: number; nanoseconds: number };
 }
 
@@ -70,11 +75,3 @@ export default function CatalogListPage() {
                   <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
                   <IndexTable.Cell>{catalog.products?.length || 0}</IndexTable.Cell>
                 </IndexTable.Row>
-              );
-            })}
-          </IndexTable>
-        )}
-      </Card>
-    </Page>
-  );
-}
