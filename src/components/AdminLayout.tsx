@@ -16,20 +16,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <Navigation location={router.pathname}>
           <Navigation.Section
             items={[
-              { 
-                label: "TOP", 
+              {
+                label: "TOP",
                 url: "/admin",
                 selected: router.pathname === "/admin",
               },
-              { 
-                label: "カタログ一覧", 
+              {
+                label: "カタログ一覧",
                 url: "/admin/catalogs",
-                // 一覧ページ or 詳細ページの両方で選択状態にする
-                selected: router.pathname.startsWith("/admin/catalogs") &&
-                          router.pathname !== "/admin/catalogs/new",
+                selected:
+                  router.pathname.startsWith("/admin/catalogs") &&
+                  router.pathname !== "/admin/catalogs/new",
               },
-              { 
-                label: "新規カタログ作成", 
+              {
+                label: "新規カタログ作成",
                 url: "/admin/catalogs/new",
                 selected: router.pathname === "/admin/catalogs/new",
               },
@@ -38,10 +38,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </Navigation>
       }
     >
-      {/* 🔹 maxWidth制限を解除してブラウザ幅いっぱいに */}
-      <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
-        {children}
-      </div>
+      {/* 🔹 Polaris Frame 配下にコンテンツを必ず配置 */}
+      <main style={{ padding: "20px" }}>{children}</main>
     </Frame>
   );
 }
