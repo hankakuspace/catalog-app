@@ -111,13 +111,13 @@ export default function NewCatalogPage() {
       let maxHeight = 0;
       cardRefs.current.forEach((el) => {
         if (el) {
-          el.style.height = "auto"; // リセット
+          el.style.height = "auto";
           maxHeight = Math.max(maxHeight, el.offsetHeight);
         }
       });
       cardRefs.current.forEach((el) => {
         if (el) {
-          el.style.height = `${maxHeight}px`; // ✅ 最大高さに揃える
+          el.style.height = `${maxHeight}px`;
         }
       });
     });
@@ -128,6 +128,18 @@ export default function NewCatalogPage() {
       observer.disconnect();
     };
   }, [selectedProducts]);
+
+  // ✅ 検索クエリ監視（復活）
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (searchQuery.trim() !== "") {
+        handleSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -290,7 +302,6 @@ export default function NewCatalogPage() {
                           id={item.id}
                           isReorderMode={isReorderMode}
                         >
-                          {/* ✅ Card を div でラップして ref を付与 */}
                           <div
                             ref={(el) => {
                               cardRefs.current[index] = el;
