@@ -183,6 +183,8 @@ export default function NewCatalogPage() {
   };
 
   const handleSave = async () => {
+    console.log("✅ handleSave 実行");
+
     if (!title.trim()) {
       setSaveError("タイトルを入力してください");
       return;
@@ -195,16 +197,18 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
-      await addDoc(collection(db, "catalogs"), {
+      const docRef = await addDoc(collection(db, "catalogs"), {
         title,
         products: selectedProducts,
         createdAt: serverTimestamp(),
       });
+      console.log("✅ Firestore 保存成功:", docRef.id);
+
       setSaveSuccess(true);
       setTitle("");
       setSelectedProducts([]);
     } catch (err: unknown) {
-      console.error("Firestore 保存エラー:", err);
+      console.error("❌ Firestore 保存エラー:", err);
       if (err instanceof Error) {
         setSaveError(`保存に失敗しました: ${err.message}`);
       } else {
@@ -212,6 +216,7 @@ export default function NewCatalogPage() {
       }
     } finally {
       setSaving(false);
+      console.log("ℹ️ 保存処理終了");
     }
   };
 
