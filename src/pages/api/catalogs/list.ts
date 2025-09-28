@@ -1,10 +1,6 @@
 // src/pages/api/catalogs/list.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getFirestore } from "firebase-admin/firestore";
-import { initFirebase } from "@/lib/firebase";
-
-initFirebase();
-const db = getFirestore();
+import { dbAdmin } from "@/lib/firebaseAdmin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -12,7 +8,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const snapshot = await db.collection("shopify_catalogs_app").orderBy("createdAt", "desc").get();
+    const snapshot = await dbAdmin
+      .collection("shopify_catalogs_app")
+      .orderBy("createdAt", "desc")
+      .get();
 
     const catalogs = snapshot.docs.map((doc) => ({
       id: doc.id,
