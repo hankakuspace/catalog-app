@@ -17,7 +17,7 @@ import { collection, getDocs } from "firebase/firestore";
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: any; // ← 当時は Timestamp 型にしてなかった
+  createdAt?: any;
   previewUrl?: string;
 }
 
@@ -93,7 +93,7 @@ export default function CatalogList() {
                       "-"}
                   </div>
                 </ResourceItem>
-              );
+              ); // ✅ return の正しい閉じ
             }}
           />
         )}
