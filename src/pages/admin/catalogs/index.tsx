@@ -69,9 +69,19 @@ export default function CatalogListPage() {
                 <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
                   <IndexTable.Cell>
                     <Link href={`/admin/catalogs/${catalog.id}`}>
-                      <Text as="span" fontWeight="bold">{catalog.title || "(無題)"}</Text>
+                      <Text as="span" fontWeight="semibold">
+                        {catalog.title || "(無題)"}
+                      </Text>
                     </Link>
                   </IndexTable.Cell>
                   <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
                   <IndexTable.Cell>{catalog.products?.length || 0}</IndexTable.Cell>
                 </IndexTable.Row>
+              );
+            })}
+          </IndexTable>
+        )}
+      </Card>
+    </Page>
+  );
+}
