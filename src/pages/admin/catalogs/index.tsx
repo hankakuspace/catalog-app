@@ -55,7 +55,7 @@ export default function CatalogList() {
             resourceName={{ singular: "catalog", plural: "catalogs" }}
             items={catalogs}
             renderItem={(item) => {
-              const { id, title, createdAt, previewUrl } = item;
+              const { title, createdAt, previewUrl } = item;
 
               return (
                 <ResourceItem>
