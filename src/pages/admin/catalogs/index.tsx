@@ -90,7 +90,9 @@ export default function CatalogList() {
                     </Text>
 
                     {/* プレビューURL */}
-                    <Text variant="bodyMd">{previewUrl ? previewUrl : "-"}</Text>
+                    <Text variant="bodyMd">
+                      {previewUrl ? previewUrl : "-"}
+                    </Text>
 
                     {/* View リンク */}
                     {previewUrl ? (
@@ -98,13 +100,14 @@ export default function CatalogList() {
                         View
                       </Link>
                     ) : (
-                      "-"}
+                      "-"
+                    )}
                   </div>
                 </ResourceItem>
               ); // ← return の閉じカッコ
             }} // ← renderItem の関数閉じ
-          />
-        )}
+          /> // ← ResourceList の閉じタグ
+        )} {/* ← 三項演算子の else ブロック閉じ */}
       </Card>
     </Page>
   );
