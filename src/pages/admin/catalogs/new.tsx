@@ -423,12 +423,11 @@ export default function NewCatalogPage() {
                   )}
                 />
               )}
-              {/* ✅ ボタン型を明示 */}
+              {/* ✅ Polaris Button は type を受け取らない */}
               <Button
                 variant="primary"
                 onClick={handleSave}
                 loading={saving}
-                type="button"
               >
                 カタログ作成
               </Button>
