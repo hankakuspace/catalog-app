@@ -72,12 +72,12 @@ export default function CatalogList() {
                     }}
                   >
                     {/* タイトル */}
-                    <Text variant="bodyMd" fontWeight="bold">
+                    <Text as="span" variant="bodyMd" fontWeight="bold">
                       {title}
                     </Text>
 
                     {/* 作成日 */}
-                    <Text variant="bodyMd">
+                    <Text as="span" variant="bodyMd">
                       {createdAt
                         ? createdAt.toDate().toLocaleString("ja-JP", {
                             year: "numeric",
@@ -90,7 +90,7 @@ export default function CatalogList() {
                     </Text>
 
                     {/* プレビューURL */}
-                    <Text variant="bodyMd">
+                    <Text as="span" variant="bodyMd">
                       {previewUrl ? previewUrl : "-"}
                     </Text>
 
@@ -100,14 +100,13 @@ export default function CatalogList() {
                         View
                       </Link>
                     ) : (
-                      "-"
-                    )}
+                      "-"}
                   </div>
                 </ResourceItem>
-              ); // ← return の閉じカッコ
-            }} // ← renderItem の関数閉じ
-          /> // ← ResourceList の閉じタグ
-        )} {/* ← 三項演算子の else ブロック閉じ */}
+              );
+            }}
+          />
+        )}
       </Card>
     </Page>
   );
