@@ -12,12 +12,12 @@ import {
   Spinner,
 } from "@shopify/polaris";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, Timestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: Timestamp;
+  createdAt?: any; // ← 当時は Timestamp 型にしてなかった
   previewUrl?: string;
 }
 
@@ -58,11 +58,7 @@ export default function CatalogList() {
               const { id, title, createdAt, previewUrl } = item;
 
               return (
-                <ResourceItem
-                  id={id}
-                  accessibilityLabel={`View details for ${title}`}
-                  onClick={() => {}}
-                >
+                <ResourceItem id={id}>
                   <div
                     style={{
                       display: "grid",
@@ -71,33 +67,33 @@ export default function CatalogList() {
                       alignItems: "center",
                     }}
                   >
-                    <Text as="span" variant="bodyMd" fontWeight="bold">
+                    {/* タイトル */}
+                    <Text variant="bodyMd" fontWeight="bold">
                       {title}
                     </Text>
-                    <Text as="span" variant="bodyMd">
+
+                    {/* 作成日 */}
+                    <Text variant="bodyMd">
                       {createdAt
-                        ? createdAt.toDate().toLocaleString("ja-JP", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                        ? createdAt.toDate().toLocaleString("ja-JP")
                         : "-"}
                     </Text>
-                    <Text as="span" variant="bodyMd">
+
+                    {/* プレビューURL */}
+                    <Text variant="bodyMd">
                       {previewUrl ? previewUrl : "-"}
                     </Text>
+
+                    {/* View リンク */}
                     {previewUrl ? (
                       <Link url={previewUrl} external>
                         View
                       </Link>
                     ) : (
-                      "-"
-                    )}
+                      "-"}
                   </div>
                 </ResourceItem>
-              ); // ✅ return の正しい閉じ
+              );
             }}
           />
         )}
