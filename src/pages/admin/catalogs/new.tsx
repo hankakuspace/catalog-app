@@ -1,7 +1,7 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BlockStack,
   Text,
@@ -20,11 +20,11 @@ import { MenuHorizontalIcon } from "@shopify/polaris-icons";
 import AdminLayout from "@/components/AdminLayout";
 import styles from "./new.module.css";
 
-// 🔹 Firestore
+// Firestore
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-// 🔹 dnd-kit
+// dnd-kit
 import {
   DndContext,
   closestCenter,
@@ -96,42 +96,32 @@ export default function NewCatalogPage() {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // ✅ Card をラップする div に ref を付与
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  // ✅ 高さを計算して揃える関数
-  const adjustHeights = useCallback(() => {
-    let maxHeight = 0;
-    cardRefs.current.forEach((el) => {
-      if (el) {
-        el.style.minHeight = "auto"; // リセット
-        maxHeight = Math.max(maxHeight, el.offsetHeight);
-      }
-    });
-    cardRefs.current.forEach((el) => {
-      if (el) {
-        el.style.minHeight = `${maxHeight}px`;
-      }
-    });
-  }, []);
-
-  // ✅ 商品が変わったときに高さを再計算
+  // ✅ 行ごとに高さを揃える
   useEffect(() => {
     if (selectedProducts.length === 0) return;
-    adjustHeights();
-  }, [selectedProducts, adjustHeights]);
 
-  // ✅ リサイズ時にも高さを再計算
-  useEffect(() => {
-    window.addEventListener("resize", adjustHeights);
-    return () => window.removeEventListener("resize", adjustHeights);
-  }, [adjustHeights]);
+    const rowHeight = 1; // grid-auto-rows の値に合わせる
+    const resizeObserver = new ResizeObserver(() => {
+      cardRefs.current.forEach((el) => {
+        if (el) {
+          const rows = Math.ceil(el.offsetHeight / rowHeight);
+          el.style.setProperty("--rows", rows.toString());
+        }
+      });
+    });
 
-  // ✅ 検索クエリ監視
+    cardRefs.current.forEach((el) => el && resizeObserver.observe(el));
+
+    return () => resizeObserver.disconnect();
+  }, [selectedProducts]);
+
+  // 検索監視
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (searchQuery.trim() !== "") {
@@ -308,11 +298,7 @@ export default function NewCatalogPage() {
                             ref={(el) => {
                               cardRefs.current[index] = el;
                             }}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              height: "100%",
-                            }}
+                            className="cardWrapper"
                           >
                             <Card>
                               <div
@@ -381,7 +367,6 @@ export default function NewCatalogPage() {
                                         width: "100%",
                                         borderRadius: "8px",
                                       }}
-                                      onLoad={adjustHeights} // ✅ 画像ロード後に高さ再計算
                                     />
                                   )}
                                   <Text as="p">{item.title}</Text>

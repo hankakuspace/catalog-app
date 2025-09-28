@@ -1,33 +1,24 @@
 
-.previewGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  align-items: stretch;   /* ✅ セルの高さを揃える */
-}
-
 .previewGrid > div {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  grid-row-end: span var(--rows, 1); /* ✅ JSで計算された行数を反映 */
 }
 
 .previewGrid .cardWrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
-.previewGrid .cardWrapper > :global(.Polaris-Card) {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+@media (max-width: 1024px) {
+  .previewGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.previewGrid .cardWrapper > :global(.Polaris-Card) > :global(.Polaris-Card__Section) {
-  flex: 1;                  /* ✅ 内部セクションまで伸ばす */
-  display: flex;
-  flex-direction: column;
+@media (max-width: 600px) {
+  .previewGrid {
+    grid-template-columns: 1fr;
+  }
 }
