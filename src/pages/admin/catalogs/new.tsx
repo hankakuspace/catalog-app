@@ -1,7 +1,7 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   BlockStack,
   Text,
@@ -96,9 +96,54 @@ export default function NewCatalogPage() {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  // ✅ 行ごとに高さを揃える関数
+  const adjustHeightsByRow = useCallback(() => {
+    if (!cardRefs.current.length) return;
+
+    // 一旦リセット
+    cardRefs.current.forEach((el) => {
+      if (el) el.style.minHeight = "auto";
+    });
+
+    // 行ごとにグループ化
+    let rows: { top: number; els: HTMLDivElement[] }[] = [];
+
+    cardRefs.current.forEach((el) => {
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      let row = rows.find((r) => Math.abs(r.top - top) < 5); // 同じ行を判定
+      if (!row) {
+        row = { top, els: [] };
+        rows.push(row);
+      }
+      row.els.push(el);
+    });
+
+    // 各行で最大高さを計算
+    rows.forEach((row) => {
+      let maxH = 0;
+      row.els.forEach((el) => {
+        maxH = Math.max(maxH, el.offsetHeight);
+      });
+      row.els.forEach((el) => {
+        el.style.minHeight = `${maxH}px`;
+      });
+    });
+  }, []);
+
+  // ✅ 商品が追加された時
+  useEffect(() => {
+    if (selectedProducts.length === 0) return;
+    adjustHeightsByRow();
+    window.addEventListener("resize", adjustHeightsByRow);
+    return () => window.removeEventListener("resize", adjustHeightsByRow);
+  }, [selectedProducts, adjustHeightsByRow]);
 
   // ✅ 検索クエリ監視
   useEffect(() => {
@@ -267,13 +312,18 @@ export default function NewCatalogPage() {
                     strategy={rectSortingStrategy}
                   >
                     <div className={styles.previewGrid}>
-                      {selectedProducts.map((item) => (
+                      {selectedProducts.map((item, index) => (
                         <SortableItem
                           key={item.id}
                           id={item.id}
                           isReorderMode={isReorderMode}
                         >
-                          <div className="cardWrapper">
+                          <div
+                            ref={(el) => {
+                              cardRefs.current[index] = el;
+                            }}
+                            className="cardWrapper"
+                          >
                             <Card>
                               <div
                                 style={{
@@ -341,6 +391,7 @@ export default function NewCatalogPage() {
                                         width: "100%",
                                         borderRadius: "8px",
                                       }}
+                                      onLoad={adjustHeightsByRow} // ✅ 画像ロード後に再調整
                                     />
                                   )}
                                   <Text as="p">{item.title}</Text>

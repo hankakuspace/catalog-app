@@ -4,13 +4,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
-  align-items: stretch; /* ✅ 同じ行の高さを揃える */
 }
 
 .previewGrid > div {
   display: flex;
   flex-direction: column;
-  height: 100%; /* ✅ セルを埋める */
 }
 
 .previewGrid .cardWrapper {
@@ -23,7 +21,6 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%; /* ✅ Polaris Card をセルいっぱいに */
 }
 
 @media (max-width: 1024px) {
