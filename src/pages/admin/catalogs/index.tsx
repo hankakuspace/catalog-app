@@ -1,18 +1,21 @@
 // src/pages/admin/catalogs/index.tsx
 import { useEffect, useState } from "react";
-import { Card, IndexTable, Text, Spinner, EmptyState, Page } from "@shopify/polaris";
-import Link from "next/link";
-
-interface Product {
-  id: string;
-  title: string;
-}
+import {
+  Card,
+  IndexTable,
+  Text,
+  Spinner,
+  EmptyState,
+  Page,
+  Link as PolarisLink,
+} from "@shopify/polaris";
 
 interface Catalog {
   id: string;
   title: string;
-  products?: Product[];
-  createdAt?: { seconds: number; nanoseconds: number };
+  createdAt?: { seconds: number; nanoseconds: number; toDate?: () => Date };
+  createdBy?: string;
+  previewUrl?: string;
 }
 
 export default function CatalogListPage() {
@@ -60,26 +63,61 @@ export default function CatalogListPage() {
             headings={[
               { title: "タイトル" },
               { title: "作成日" },
-              { title: "商品数" },
+              { title: "作成者" },
+              { title: "プレビューURL" },
+              { title: "View" },
             ]}
             selectable={false}
           >
             {catalogs.map((catalog, index) => {
-              const createdAtDate = catalog.createdAt
-                ? new Date(catalog.createdAt.seconds * 1000).toLocaleString()
-                : "-";
+              // ✅ Firestore Timestamp を正しい日付に変換
+              let createdAtDate = "-";
+              if (catalog.createdAt) {
+                if (typeof catalog.createdAt.toDate === "function") {
+                  createdAtDate = catalog.createdAt.toDate().toLocaleString();
+                } else if ("seconds" in catalog.createdAt) {
+                  createdAtDate = new Date(
+                    catalog.createdAt.seconds * 1000
+                  ).toLocaleString();
+                }
+              }
 
               return (
                 <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
+                  {/* タイトル */}
                   <IndexTable.Cell>
-                    <Link href={`/admin/catalogs/${catalog.id}`}>
-                      <Text as="span" fontWeight="semibold">
-                        {catalog.title || "(無題)"}
-                      </Text>
-                    </Link>
+                    <Text as="span" fontWeight="semibold">
+                      {catalog.title || "(無題)"}
+                    </Text>
                   </IndexTable.Cell>
+
+                  {/* 作成日 */}
                   <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
-                  <IndexTable.Cell>{catalog.products?.length || 0}</IndexTable.Cell>
+
+                  {/* 作成者 */}
+                  <IndexTable.Cell>{catalog.createdBy || "-"}</IndexTable.Cell>
+
+                  {/* プレビューURL */}
+                  <IndexTable.Cell>
+                    {catalog.previewUrl ? (
+                      <Text as="span" color="subdued">
+                        {catalog.previewUrl}
+                      </Text>
+                    ) : (
+                      "-"
+                    )}
+                  </IndexTable.Cell>
+
+                  {/* View */}
+                  <IndexTable.Cell>
+                    {catalog.previewUrl ? (
+                      <PolarisLink url={catalog.previewUrl} external>
+                        View
+                      </PolarisLink>
+                    ) : (
+                      "-"
+                    )}
+                  </IndexTable.Cell>
                 </IndexTable.Row>
               );
             })}
