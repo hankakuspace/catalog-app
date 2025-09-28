@@ -17,7 +17,7 @@ import { collection, getDocs, Timestamp } from "firebase/firestore";
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: Timestamp; // Firestore Timestamp
+  createdAt?: Timestamp;
   previewUrl?: string;
 }
 
