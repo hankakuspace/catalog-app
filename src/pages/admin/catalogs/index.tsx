@@ -35,13 +35,15 @@ export default function CatalogListPage() {
   }, []);
 
   return (
-    <Page title="保存済みカタログ一覧">
-      <Card>
-        {loading ? (
+    <Page title="保存済みカタログ一覧" fullWidth>
+      {loading ? (
+        <Card>
           <div style={{ padding: "20px", textAlign: "center" }}>
             <Spinner accessibilityLabel="Loading catalogs" size="large" />
           </div>
-        ) : catalogs.length === 0 ? (
+        </Card>
+      ) : catalogs.length === 0 ? (
+        <Card>
           <EmptyState
             heading="保存されたカタログはありません"
             action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
@@ -49,7 +51,9 @@ export default function CatalogListPage() {
           >
             <p>カタログを作成すると、ここに一覧表示されます。</p>
           </EmptyState>
-        ) : (
+        </Card>
+      ) : (
+        <Card>
           <IndexTable
             resourceName={{ singular: "catalog", plural: "catalogs" }}
             itemCount={catalogs.length}
@@ -80,8 +84,8 @@ export default function CatalogListPage() {
               );
             })}
           </IndexTable>
-        )}
-      </Card>
+        </Card>
+      )}
     </Page>
   );
 }
