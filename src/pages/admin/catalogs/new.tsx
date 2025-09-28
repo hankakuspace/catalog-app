@@ -1,7 +1,7 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   BlockStack,
   Text,
@@ -96,32 +96,11 @@ export default function NewCatalogPage() {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  // ✅ 行ごとに高さを揃える
-  useEffect(() => {
-    if (selectedProducts.length === 0) return;
-
-    const rowHeight = 1; // grid-auto-rows の値に合わせる
-    const resizeObserver = new ResizeObserver(() => {
-      cardRefs.current.forEach((el) => {
-        if (el) {
-          const rows = Math.ceil(el.offsetHeight / rowHeight);
-          el.style.setProperty("--rows", rows.toString());
-        }
-      });
-    });
-
-    cardRefs.current.forEach((el) => el && resizeObserver.observe(el));
-
-    return () => resizeObserver.disconnect();
-  }, [selectedProducts]);
-
-  // 検索監視
+  // ✅ 検索クエリ監視
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (searchQuery.trim() !== "") {
@@ -288,18 +267,13 @@ export default function NewCatalogPage() {
                     strategy={rectSortingStrategy}
                   >
                     <div className={styles.previewGrid}>
-                      {selectedProducts.map((item, index) => (
+                      {selectedProducts.map((item) => (
                         <SortableItem
                           key={item.id}
                           id={item.id}
                           isReorderMode={isReorderMode}
                         >
-                          <div
-                            ref={(el) => {
-                              cardRefs.current[index] = el;
-                            }}
-                            className="cardWrapper"
-                          >
+                          <div className="cardWrapper">
                             <Card>
                               <div
                                 style={{
