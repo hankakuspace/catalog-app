@@ -192,7 +192,7 @@ export default function NewCatalogPage() {
       let shop = params.get("shop");
 
       if (!shop && typeof window !== "undefined") {
-        shop = localStorage.getItem("shopify_shop") || undefined;
+        shop = localStorage.getItem("shopify_shop");
       }
 
       if (!shop) {
