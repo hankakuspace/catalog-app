@@ -17,7 +17,6 @@ import {
   ActionList,
 } from "@shopify/polaris";
 import { MenuHorizontalIcon } from "@shopify/polaris-icons";
-import AdminLayout from "@/components/AdminLayout";
 import styles from "./new.module.css";
 
 // dnd-kit
@@ -117,13 +116,11 @@ export default function NewCatalogPage() {
     cardRefs.current.forEach((el, i) => {
       if (el) {
         const h = el.offsetHeight;
-        console.log(`カード${i} の高さ:`, h);
         maxH = Math.max(maxH, h);
       }
     });
 
     maxHeightRef.current = maxH;
-    console.log("最大高さ:", maxH);
 
     cardRefs.current.forEach((el) => {
       if (el) {
@@ -179,8 +176,6 @@ export default function NewCatalogPage() {
   };
 
   const handleSave = async () => {
-    console.log("✅ handleSave 実行");
-
     if (!title.trim()) {
       setSaveError("タイトルを入力してください");
       return;
@@ -207,12 +202,10 @@ export default function NewCatalogPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
-      console.log("✅ Firestore 保存成功:", data.id);
       setSaveSuccess(true);
       setTitle("");
       setSelectedProducts([]);
     } catch (err: unknown) {
-      console.error("❌ Firestore 保存エラー:", err);
       if (err instanceof Error) {
         setSaveError(`保存に失敗しました: ${err.message}`);
       } else {
@@ -220,7 +213,6 @@ export default function NewCatalogPage() {
       }
     } finally {
       setSaving(false);
-      console.log("ℹ️ 保存処理終了");
     }
   };
 
@@ -240,204 +232,202 @@ export default function NewCatalogPage() {
   };
 
   return (
-    <AdminLayout>
-      <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
-        <Text as="h1" variant="headingLg">
-          新規カタログ作成
-        </Text>
+    <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
+      <Text as="h1" variant="headingLg">
+        新規カタログ作成
+      </Text>
 
-        {saveSuccess && (
-          <Banner tone="success" title="保存完了">
-            カタログを保存しました。
-          </Banner>
-        )}
-        {saveError && (
-          <Banner tone="critical" title="エラー">
-            {saveError}
-          </Banner>
-        )}
+      {saveSuccess && (
+        <Banner tone="success" title="保存完了">
+          カタログを保存しました。
+        </Banner>
+      )}
+      {saveError && (
+        <Banner tone="critical" title="エラー">
+          {saveError}
+        </Banner>
+      )}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "3fr 1fr",
-            gap: "20px",
-            marginTop: "20px",
-          }}
-        >
-          {/* 左：プレビュー */}
-          <Card>
-            <BlockStack gap="400">
-              {selectedProducts.length === 0 ? (
-                <Text as="p">まだ商品が追加されていません</Text>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={selectedProducts.map((p) => p.id)}
-                    strategy={rectSortingStrategy}
-                  >
-                    <div className={styles.previewGrid}>
-                      {selectedProducts.map((item, index) => (
-                        <SortableItem
-                          key={item.id}
-                          id={item.id}
-                          isReorderMode={isReorderMode}
-                        >
-                          <div className="cardWrapper">
-                            <Card>
-                              <div
-                                ref={(el) => {
-                                  cardRefs.current[index] = el;
-                                }}
-                                className="cardInner"
-                              >
-                                <BlockStack gap="200">
-                                  {/* タイトル + メニュー */}
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                    }}
-                                  >
-                                    <Text as="h3" variant="headingSm">
-                                      {item.artist}
-                                    </Text>
-                                    <Popover
-                                      active={activePopoverId === item.id}
-                                      activator={
-                                        <Button
-                                          variant="plain"
-                                          icon={MenuHorizontalIcon}
-                                          onClick={() =>
-                                            setActivePopoverId(
-                                              activePopoverId === item.id
-                                                ? null
-                                                : item.id
-                                            )
-                                          }
-                                        />
-                                      }
-                                      onClose={() => setActivePopoverId(null)}
-                                    >
-                                      <ActionList
-                                        items={[
-                                          {
-                                            content: isReorderMode
-                                              ? "Finish move"
-                                              : "Move item",
-                                            onAction: () => {
-                                              setIsReorderMode(!isReorderMode);
-                                              setActivePopoverId(null);
-                                            },
-                                          },
-                                          {
-                                            destructive: true,
-                                            content: "Remove",
-                                            onAction: () =>
-                                              removeItem(item.id),
-                                          },
-                                        ]}
-                                      />
-                                    </Popover>
-                                  </div>
-
-                                  {/* 画像 + 詳細 */}
-                                  {item.imageUrl && (
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      style={{
-                                        width: "100%",
-                                        borderRadius: 8,
-                                      }}
-                                      onLoad={adjustHeights}
-                                    />
-                                  )}
-                                  <Text as="p">{item.title}</Text>
-                                  {item.year && <Text as="p">{item.year}</Text>}
-                                  {item.dimensions && (
-                                    <Text as="p">{item.dimensions}</Text>
-                                  )}
-                                  {item.medium && (
-                                    <Text as="p">{item.medium}</Text>
-                                  )}
-                                  {item.price && (
-                                    <Text as="p">{item.price} 円（税込）</Text>
-                                  )}
-                                </BlockStack>
-                              </div>
-                            </Card>
-                          </div>
-                        </SortableItem>
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              )}
-            </BlockStack>
-          </Card>
-
-          {/* 右：フォーム */}
-          <Card>
-            <BlockStack gap="400">
-              <TextField
-                label="タイトル"
-                value={title}
-                onChange={setTitle}
-                autoComplete="off"
-              />
-              <TextField
-                label="検索キーワード"
-                labelHidden
-                value={searchQuery}
-                onChange={setSearchQuery}
-                autoComplete="off"
-                placeholder="作家名・作品タイトルで検索"
-              />
-              {loading ? (
-                <Spinner accessibilityLabel="検索中" size="large" />
-              ) : (
-                <ResourceList
-                  resourceName={{ singular: "product", plural: "products" }}
-                  items={searchResults}
-                  renderItem={(item) => (
-                    <ResourceItem
-                      id={item.id}
-                      accessibilityLabel={`${item.title} を追加`}
-                      onClick={() => handleAddProduct(item)}
-                      media={
-                        item.imageUrl ? (
-                          <Thumbnail
-                            source={item.imageUrl}
-                            alt={item.title}
-                            size="small"
-                          />
-                        ) : undefined
-                      }
-                    >
-                      <Text as="p">
-                        {item.artist ? `${item.artist}, ` : ""}
-                        {item.title}
-                      </Text>
-                    </ResourceItem>
-                  )}
-                />
-              )}
-              <Button
-                variant="primary"
-                onClick={handleSave}
-                loading={saving}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "3fr 1fr",
+          gap: "20px",
+          marginTop: "20px",
+        }}
+      >
+        {/* 左：プレビュー */}
+        <Card>
+          <BlockStack gap="400">
+            {selectedProducts.length === 0 ? (
+              <Text as="p">まだ商品が追加されていません</Text>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                カタログ作成
-              </Button>
-            </BlockStack>
-          </Card>
-        </div>
+                <SortableContext
+                  items={selectedProducts.map((p) => p.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className={styles.previewGrid}>
+                    {selectedProducts.map((item, index) => (
+                      <SortableItem
+                        key={item.id}
+                        id={item.id}
+                        isReorderMode={isReorderMode}
+                      >
+                        <div className="cardWrapper">
+                          <Card>
+                            <div
+                              ref={(el) => {
+                                cardRefs.current[index] = el;
+                              }}
+                              className="cardInner"
+                            >
+                              <BlockStack gap="200">
+                                {/* タイトル + メニュー */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <Text as="h3" variant="headingSm">
+                                    {item.artist}
+                                  </Text>
+                                  <Popover
+                                    active={activePopoverId === item.id}
+                                    activator={
+                                      <Button
+                                        variant="plain"
+                                        icon={MenuHorizontalIcon}
+                                        onClick={() =>
+                                          setActivePopoverId(
+                                            activePopoverId === item.id
+                                              ? null
+                                              : item.id
+                                          )
+                                        }
+                                      />
+                                    }
+                                    onClose={() => setActivePopoverId(null)}
+                                  >
+                                    <ActionList
+                                      items={[
+                                        {
+                                          content: isReorderMode
+                                            ? "Finish move"
+                                            : "Move item",
+                                          onAction: () => {
+                                            setIsReorderMode(!isReorderMode);
+                                            setActivePopoverId(null);
+                                          },
+                                        },
+                                        {
+                                          destructive: true,
+                                          content: "Remove",
+                                          onAction: () =>
+                                            removeItem(item.id),
+                                        },
+                                      ]}
+                                    />
+                                  </Popover>
+                                </div>
+
+                                {/* 画像 + 詳細 */}
+                                {item.imageUrl && (
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.title}
+                                    style={{
+                                      width: "100%",
+                                      borderRadius: 8,
+                                    }}
+                                    onLoad={adjustHeights}
+                                  />
+                                )}
+                                <Text as="p">{item.title}</Text>
+                                {item.year && <Text as="p">{item.year}</Text>}
+                                {item.dimensions && (
+                                  <Text as="p">{item.dimensions}</Text>
+                                )}
+                                {item.medium && (
+                                  <Text as="p">{item.medium}</Text>
+                                )}
+                                {item.price && (
+                                  <Text as="p">{item.price} 円（税込）</Text>
+                                )}
+                              </BlockStack>
+                            </div>
+                          </Card>
+                        </div>
+                      </SortableItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </BlockStack>
+        </Card>
+
+        {/* 右：フォーム */}
+        <Card>
+          <BlockStack gap="400">
+            <TextField
+              label="タイトル"
+              value={title}
+              onChange={setTitle}
+              autoComplete="off"
+            />
+            <TextField
+              label="検索キーワード"
+              labelHidden
+              value={searchQuery}
+              onChange={setSearchQuery}
+              autoComplete="off"
+              placeholder="作家名・作品タイトルで検索"
+            />
+            {loading ? (
+              <Spinner accessibilityLabel="検索中" size="large" />
+            ) : (
+              <ResourceList
+                resourceName={{ singular: "product", plural: "products" }}
+                items={searchResults}
+                renderItem={(item) => (
+                  <ResourceItem
+                    id={item.id}
+                    accessibilityLabel={`${item.title} を追加`}
+                    onClick={() => handleAddProduct(item)}
+                    media={
+                      item.imageUrl ? (
+                        <Thumbnail
+                          source={item.imageUrl}
+                          alt={item.title}
+                          size="small"
+                        />
+                      ) : undefined
+                    }
+                  >
+                    <Text as="p">
+                      {item.artist ? `${item.artist}, ` : ""}
+                      {item.title}
+                    </Text>
+                  </ResourceItem>
+                )}
+              />
+            )}
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              loading={saving}
+            >
+              カタログ作成
+            </Button>
+          </BlockStack>
+        </Card>
       </div>
-    </AdminLayout>
+    </div>
   );
 }
