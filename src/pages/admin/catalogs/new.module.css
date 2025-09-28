@@ -2,17 +2,19 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
-  align-items: stretch;
+  align-items: stretch; /* 各セルは同じ高さ */
 }
 
 .previewGrid > div {
-  display: flex;
+  display: flex;          /* セルをflexに */
   flex-direction: column;
-  height: 100%;
 }
 
-
-
+.previewGrid > div > div {
+  flex: 1;                /* 内側ラッパーをセル全体に引き伸ばす */
+  display: flex;
+  flex-direction: column;
+}
 
 @media (max-width: 1024px) {
   .previewGrid {
