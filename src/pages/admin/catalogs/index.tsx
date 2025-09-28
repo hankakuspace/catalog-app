@@ -67,33 +67,27 @@ export default function CatalogList() {
                       alignItems: "center",
                     }}
                   >
-                    {/* タイトル */}
                     <Text variant="bodyMd" fontWeight="bold">
                       {title}
                     </Text>
-
-                    {/* 作成日 */}
                     <Text variant="bodyMd">
                       {createdAt
                         ? createdAt.toDate().toLocaleString("ja-JP")
                         : "-"}
                     </Text>
-
-                    {/* プレビューURL */}
                     <Text variant="bodyMd">
                       {previewUrl ? previewUrl : "-"}
                     </Text>
-
-                    {/* View リンク */}
                     {previewUrl ? (
                       <Link url={previewUrl} external>
                         View
                       </Link>
                     ) : (
-                      "-"}
+                      "-"
+                    )}
                   </div>
                 </ResourceItem>
-              ); // ✅ return の正しい閉じ
+              ); // ✅ return の閉じ（必須）
             }}
           />
         )}
