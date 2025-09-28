@@ -17,7 +17,7 @@ import { collection, getDocs, Timestamp } from "firebase/firestore";
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: Timestamp; // ← any を Timestamp に修正
+  createdAt?: Timestamp; // Firestore Timestamp
   previewUrl?: string;
 }
 
@@ -58,7 +58,7 @@ export default function CatalogList() {
               const { id, title, createdAt, previewUrl } = item;
 
               return (
-                <ResourceItem id={id}>
+                <ResourceItem key={id}>
                   <div
                     style={{
                       display: "grid",
@@ -86,9 +86,7 @@ export default function CatalogList() {
                     </Text>
 
                     {/* プレビューURL */}
-                    <Text variant="bodyMd">
-                      {previewUrl ? previewUrl : "-"}
-                    </Text>
+                    <Text variant="bodyMd">{previewUrl ? previewUrl : "-"}</Text>
 
                     {/* View リンク */}
                     {previewUrl ? (
@@ -96,8 +94,7 @@ export default function CatalogList() {
                         View
                       </Link>
                     ) : (
-                      "-"
-                    )}
+                      "-"}
                   </div>
                 </ResourceItem>
               );
