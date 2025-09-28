@@ -17,7 +17,7 @@
   flex-direction: column;
 }
 
-.previewGrid .cardWrapper > :global(.Polaris-Card) {
+.previewGrid .cardInner {
   flex: 1;
   display: flex;
   flex-direction: column;
