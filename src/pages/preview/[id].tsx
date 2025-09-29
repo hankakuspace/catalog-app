@@ -1,6 +1,5 @@
 // src/pages/preview/[id].tsx
 import { useEffect, useState } from "react";
-import styles from "@/styles/preview.module.css";
 
 interface Product {
   id: string;
@@ -47,8 +46,10 @@ export default function PublicCatalog() {
     fetchCatalog();
   }, []);
 
-  if (loading) return <div className="text-center p-10 text-white">Loading...</div>;
-  if (!catalog) return <div className="text-center p-10 text-white">カタログが見つかりませんでした</div>;
+  if (loading)
+    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+  if (!catalog)
+    return <div className="min-h-screen bg-black text-white flex items-center justify-center">カタログが見つかりませんでした</div>;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -58,23 +59,23 @@ export default function PublicCatalog() {
         <h2 className="text-xl font-medium">{catalog.title}</h2>
       </header>
 
-      {/* メインカード一覧 */}
+      {/* メイン */}
       <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {catalog.products?.map((p: Product) => (
             <div
               key={p.id}
-              className={`bg-white text-black rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full ${styles.card}`}
+              className="bg-white text-black rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full"
             >
               {/* 商品画像 */}
               {p.imageUrl ? (
                 <img
                   src={p.imageUrl}
                   alt={p.title}
-                  className="block w-full rounded-t-xl"
+                  className="block w-full h-80 object-contain bg-white border-b border-gray-200 rounded-t-xl"
                 />
               ) : (
-                <div className="w-full bg-gray-200 flex items-center justify-center rounded-t-xl">
+                <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
                   <span className="text-gray-400">No Image</span>
                 </div>
               )}
