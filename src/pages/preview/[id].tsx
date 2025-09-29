@@ -58,24 +58,29 @@ export default function PublicCatalog() {
           {catalog.products?.map((p) => (
             <div
               key={p.id}
-              className="bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col"
+              className="bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full"
             >
+              {/* 画像 */}
               {p.imageUrl ? (
                 <img
                   src={p.imageUrl}
                   alt={p.title}
-                  className="w-full h-64 object-cover rounded-t-xl"
+                  className="w-full aspect-square object-cover rounded-t-xl"
                 />
               ) : (
-                <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-t-xl">
+                <div className="w-full aspect-square bg-gray-200 flex items-center justify-center rounded-t-xl">
                   <span className="text-gray-400">No Image</span>
                 </div>
               )}
+
+              {/* 商品情報 */}
               <div className="p-4 flex flex-col flex-grow">
-                <h2 className="text-lg font-semibold mb-2">{p.title}</h2>
-                {p.artist && <p className="text-sm text-gray-500">{p.artist}</p>}
+                <h2 className="text-lg font-semibold mb-1">{p.title}</h2>
+                {p.artist && <p className="text-sm text-gray-500 mb-2">{p.artist}</p>}
                 {p.price && (
-                  <p className="text-gray-600 mt-auto">{Number(p.price).toLocaleString()}円</p>
+                  <p className="text-base font-medium text-gray-800 mt-auto">
+                    {Number(p.price).toLocaleString()}円
+                  </p>
                 )}
               </div>
             </div>
