@@ -42,11 +42,11 @@ export default function CatalogListPage() {
   }, []);
 
   // ✅ Polaris の選択管理フック
- const {
+const {
   selectedResources,
   allResourcesSelected,
   handleSelectionChange,
-} = useIndexResourceState<Catalog>(catalogs);
+} = useIndexResourceState(catalogs as any);
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
