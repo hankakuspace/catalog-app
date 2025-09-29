@@ -28,6 +28,7 @@ interface Product {
   medium?: string;
   frame?: string;
   image?: string;
+  imageUrl?: string; // ✅ Firestore に合わせて追加
 }
 
 interface Catalog {
@@ -68,19 +69,20 @@ export default function CatalogPreview() {
           // ✅ products を安全に補完
           const products: Product[] = Array.isArray(data.products)
             ? data.products.map((p, index) => ({
-                id: p.id || String(index),
-                title: p.title || "(無題)",
-                price: p.price,
-                year: p.year,
-                credit: p.credit,
-                type: p.type,
-                importance: p.importance,
-                edition: p.edition,
-                signed: p.signed,
-                dimensions: p.dimensions,
-                medium: p.medium,
-                frame: p.frame,
-                image: p.image || p.imageUrl, // imageUrl がある場合も利用
+                id: (p as any).id || String(index),
+                title: (p as any).title || "(無題)",
+                price: (p as any).price,
+                year: (p as any).year,
+                credit: (p as any).credit,
+                type: (p as any).type,
+                importance: (p as any).importance,
+                edition: (p as any).edition,
+                signed: (p as any).signed,
+                dimensions: (p as any).dimensions,
+                medium: (p as any).medium,
+                frame: (p as any).frame,
+                image: (p as any).image || (p as any).imageUrl, // ✅ imageUrl に対応
+                imageUrl: (p as any).imageUrl,
               }))
             : [];
 
