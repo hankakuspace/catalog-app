@@ -35,7 +35,7 @@ export default function CatalogsIndex() {
     allResourcesSelected,
     handleSelectionChange,
     clearSelection,
-  } = useIndexResourceState(catalogs.map((c) => ({ id: c.id }))); // ✅ 修正
+  } = useIndexResourceState(catalogs.map((c) => ({ id: c.id })));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,7 +86,11 @@ export default function CatalogsIndex() {
       <Layout>
         <Layout.Section>
           <BlockStack gap="400">
-            <Button destructive onClick={handleDelete} disabled={!selectedResources.length}>
+            <Button
+              tone="critical" // ✅ 修正: destructive → tone="critical"
+              onClick={handleDelete}
+              disabled={!selectedResources.length}
+            >
               削除
             </Button>
 
@@ -94,7 +98,9 @@ export default function CatalogsIndex() {
               <IndexTable
                 resourceName={resourceName}
                 itemCount={catalogs.length}
-                selectedItemsCount={allResourcesSelected ? "All" : selectedResources.length}
+                selectedItemsCount={
+                  allResourcesSelected ? "All" : selectedResources.length
+                }
                 onSelectionChange={handleSelectionChange}
                 headings={[
                   { title: "タイトル" },
