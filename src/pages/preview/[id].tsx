@@ -28,7 +28,7 @@ interface Product {
   medium?: string;
   frame?: string;
   image?: string;
-  imageUrl?: string; // ✅ Firestore に合わせて追加
+  imageUrl?: string;
 }
 
 interface Catalog {
@@ -68,22 +68,36 @@ export default function CatalogPreview() {
 
           // ✅ products を安全に補完
           const products: Product[] = Array.isArray(data.products)
-            ? data.products.map((p, index) => ({
-                id: (p as any).id || String(index),
-                title: (p as any).title || "(無題)",
-                price: (p as any).price,
-                year: (p as any).year,
-                credit: (p as any).credit,
-                type: (p as any).type,
-                importance: (p as any).importance,
-                edition: (p as any).edition,
-                signed: (p as any).signed,
-                dimensions: (p as any).dimensions,
-                medium: (p as any).medium,
-                frame: (p as any).frame,
-                image: (p as any).image || (p as any).imageUrl, // ✅ imageUrl に対応
-                imageUrl: (p as any).imageUrl,
-              }))
+            ? data.products.map((p, index) => {
+                const obj = p as Record<string, unknown>;
+                return {
+                  id: typeof obj.id === "string" ? obj.id : String(index),
+                  title: typeof obj.title === "string" ? obj.title : "(無題)",
+                  price: typeof obj.price === "string" ? obj.price : undefined,
+                  year: typeof obj.year === "string" ? obj.year : undefined,
+                  credit: typeof obj.credit === "string" ? obj.credit : undefined,
+                  type: typeof obj.type === "string" ? obj.type : undefined,
+                  importance:
+                    typeof obj.importance === "string" ? obj.importance : undefined,
+                  edition:
+                    typeof obj.edition === "string" ? obj.edition : undefined,
+                  signed:
+                    typeof obj.signed === "string" ? obj.signed : undefined,
+                  dimensions:
+                    typeof obj.dimensions === "string" ? obj.dimensions : undefined,
+                  medium:
+                    typeof obj.medium === "string" ? obj.medium : undefined,
+                  frame: typeof obj.frame === "string" ? obj.frame : undefined,
+                  image:
+                    typeof obj.image === "string"
+                      ? obj.image
+                      : typeof obj.imageUrl === "string"
+                      ? obj.imageUrl
+                      : undefined,
+                  imageUrl:
+                    typeof obj.imageUrl === "string" ? obj.imageUrl : undefined,
+                };
+              })
             : [];
 
           setCatalog({
