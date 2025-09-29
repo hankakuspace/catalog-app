@@ -53,7 +53,10 @@ export default function CatalogPreview() {
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
-          const data = snap.data() as Catalog & { createdAt?: any };
+          // createdAt を unknown 型で受ける
+          const data = snap.data() as Omit<Catalog, "createdAt"> & {
+            createdAt?: unknown;
+          };
 
           let createdAt: string | undefined;
           if (data.createdAt instanceof Timestamp) {
@@ -124,7 +127,7 @@ export default function CatalogPreview() {
               {catalog.products?.map((p) => (
                 <Card key={p.id} sectioned>
                   {p.image && (
-                    // ⚠️ Lint 警告が出るが、まずは <img> で維持
+                    // ⚠️ ESLint 警告あり（後で next/image に切り替え予定）
                     <img
                       src={p.image}
                       alt={p.title}
