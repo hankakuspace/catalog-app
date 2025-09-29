@@ -21,11 +21,6 @@ export default function PublicCatalog() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ DOM 描画後に Tailwind CSS を読み込む
-  useEffect(() => {
-    import("@/styles/globals.css");
-  }, []);
-
   useEffect(() => {
     const fetchCatalog = async () => {
       try {
