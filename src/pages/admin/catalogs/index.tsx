@@ -24,7 +24,6 @@ interface Catalog {
 
 export default function CatalogsIndex() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const resourceName = {
     singular: "catalog",
@@ -36,7 +35,7 @@ export default function CatalogsIndex() {
     allResourcesSelected,
     handleSelectionChange,
     clearSelection,
-  } = useIndexResourceState(catalogs.map((c) => c.id));
+  } = useIndexResourceState(catalogs);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,8 +59,6 @@ export default function CatalogsIndex() {
         setCatalogs(items);
       } catch (err) {
         console.error("Failed to fetch catalogs:", err);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -127,7 +124,6 @@ export default function CatalogsIndex() {
                     </IndexTable.Cell>
                     <IndexTable.Cell>
                       <Text as="span" tone="subdued">
-                        {/* 追加操作用に空セルを残す */}
                         -
                       </Text>
                     </IndexTable.Cell>
