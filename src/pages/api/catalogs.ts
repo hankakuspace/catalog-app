@@ -25,10 +25,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // ✅ baseUrl を SHOPIFY_APP_URL に統一
       const baseUrl = process.env.SHOPIFY_APP_URL;
       if (!baseUrl) {
+        console.error("❌ SHOPIFY_APP_URL is not defined");
         throw new Error("SHOPIFY_APP_URL is not defined");
       }
 
       const previewUrl = `${baseUrl}/preview/${docRef.id}`;
+
+      // 🔎 ログ出力（確認用）
+      console.log("📌 Saving catalog:", {
+        shop,
+        title,
+        productsCount: Array.isArray(products) ? products.length : 0,
+        baseUrl,
+        docId: docRef.id,
+        previewUrl,
+      });
 
       await docRef.set({
         title,
@@ -36,6 +47,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         createdAt: FieldValue.serverTimestamp(),
         previewUrl,
       });
+
+      console.log("✅ Catalog saved:", { id: docRef.id, previewUrl });
 
       return res.status(200).json({ id: docRef.id, previewUrl });
     } catch (err) {
