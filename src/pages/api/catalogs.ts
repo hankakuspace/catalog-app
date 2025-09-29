@@ -1,61 +1,64 @@
 // src/pages/api/catalogs.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dbAdmin, FieldValue } from "@/lib/firebaseAdmin";
-import { shopify, sessionStorage } from "@/lib/shopify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "POST") {
-    try {
+  try {
+    if (req.method === "GET") {
+      const { id } = req.query;
+      if (id) {
+        const doc = await dbAdmin.collection("shopify_catalogs_app").doc(String(id)).get();
+        if (!doc.exists) return res.status(404).json({ error: "Not found" });
+        return res.status(200).json({ catalog: { id: doc.id, ...doc.data() } });
+      }
+      const snapshot = await dbAdmin.collection("shopify_catalogs_app")
+        .orderBy("createdAt", "desc")
+        .get();
+      const catalogs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return res.status(200).json({ catalogs });
+    }
+
+    if (req.method === "POST") {
       const { title, products, shop } = req.body;
       if (!title || !products || !shop) {
         return res.status(400).json({ error: "Missing fields" });
       }
 
-      // ✅ セッション確認
-      const sessionId = shopify.session.getOfflineId(shop);
-      const session = await sessionStorage.loadSession(sessionId);
-
-      if (!session || !session.accessToken) {
-        return res.status(401).json({ error: "No active Shopify session" });
-      }
-
-      // ✅ Firestore に保存
       const docRef = dbAdmin.collection("shopify_catalogs_app").doc();
-
-      // ✅ baseUrl を SHOPIFY_APP_URL に統一
       const baseUrl = process.env.SHOPIFY_APP_URL;
-      if (!baseUrl) {
-        console.error("❌ SHOPIFY_APP_URL is not defined");
-        throw new Error("SHOPIFY_APP_URL is not defined");
-      }
+      if (!baseUrl) throw new Error("SHOPIFY_APP_URL is not defined");
 
       const previewUrl = `${baseUrl}/preview/${docRef.id}`;
-
-      // 🔎 ログ出力（確認用）
-      console.log("📌 Saving catalog:", {
-        shop,
-        title,
-        productsCount: Array.isArray(products) ? products.length : 0,
-        baseUrl,
-        docId: docRef.id,
-        previewUrl,
-      });
-
       await docRef.set({
         title,
         products,
+        shop,
         createdAt: FieldValue.serverTimestamp(),
         previewUrl,
       });
 
-      console.log("✅ Catalog saved:", { id: docRef.id, previewUrl });
-
       return res.status(200).json({ id: docRef.id, previewUrl });
-    } catch (err) {
-      console.error("❌ Error saving catalog:", err);
-      return res.status(500).json({ error: "Failed to save catalog" });
     }
-  }
 
-  return res.status(405).json({ error: "Method not allowed" });
+    if (req.method === "PUT") {
+      const { id, title, products } = req.body;
+      if (!id) return res.status(400).json({ error: "Missing id" });
+
+      await dbAdmin.collection("shopify_catalogs_app").doc(id).update({
+        title,
+        products,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      return res.status(200).json({ id });
+    }
+
+    return res.status(405).json({ error: "Method not allowed" });
+  } catch (err: any) {
+    console.error("❌ API error:", err);
+    return res.status(500).json({ error: err.message });
+  }
 }

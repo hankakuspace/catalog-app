@@ -7,7 +7,6 @@ import {
   Spinner,
   EmptyState,
   Page,
-  Link as PolarisLink,
   Button,
   InlineStack,
   BlockStack,
@@ -29,7 +28,7 @@ export default function CatalogListPage() {
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
-        const res = await fetch("/api/catalogs/list");
+        const res = await fetch("/api/catalogs");
         const data = await res.json();
         setCatalogs(data.catalogs || []);
       } catch (err) {
@@ -41,7 +40,6 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ Polaris の選択管理フック
   const { selectedResources, handleSelectionChange } = useIndexResourceState(
     catalogs as unknown as { [key: string]: unknown }[]
   );
@@ -77,10 +75,7 @@ export default function CatalogListPage() {
         <Card>
           <EmptyState
             heading="保存されたカタログはありません"
-            action={{
-              content: "新しいカタログを作成",
-              url: "/admin/catalogs/new",
-            }}
+            action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
             image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
           >
             <p>カタログを作成すると、ここに一覧表示されます。</p>
@@ -88,7 +83,6 @@ export default function CatalogListPage() {
         </Card>
       ) : (
         <BlockStack gap="400">
-          {/* 削除 + 新規作成ボタン */}
           <InlineStack gap="200" align="start" blockAlign="center">
             <Button
               tone="critical"
@@ -103,7 +97,6 @@ export default function CatalogListPage() {
             </Button>
           </InlineStack>
 
-          {/* 一覧テーブル */}
           <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -111,8 +104,7 @@ export default function CatalogListPage() {
               headings={[
                 { title: "タイトル" },
                 { title: "作成日" },
-                { title: "プレビューURL" },
-                { title: "View" },
+                { title: "編集" },
               ]}
               selectable
               selectedItemsCount={selectedResources.length}
@@ -131,41 +123,20 @@ export default function CatalogListPage() {
                     selected={selectedResources.includes(catalog.id)}
                   >
                     <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Text as="span" fontWeight="semibold">
-                          {catalog.title || "(無題)"}
-                        </Text>
-                      </div>
+                      <Text as="span" fontWeight="semibold">
+                        {catalog.title || "(無題)"}
+                      </Text>
                     </IndexTable.Cell>
 
-                    <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        {createdAtDate}
-                      </div>
-                    </IndexTable.Cell>
+                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
                     <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        {catalog.previewUrl ? (
-                          <Text as="span" tone="subdued">
-                            {catalog.previewUrl}
-                          </Text>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                    </IndexTable.Cell>
-
-                    <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        {catalog.previewUrl ? (
-                          <PolarisLink url={catalog.previewUrl} external>
-                            View
-                          </PolarisLink>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
+                      <Button
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        target="_self"
+                      >
+                        編集
+                      </Button>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
@@ -173,7 +144,6 @@ export default function CatalogListPage() {
             </IndexTable>
           </Card>
 
-          {/* 下部の新規作成ボタン */}
           <InlineStack align="end">
             <Button variant="primary" url="/admin/catalogs/new">
               新規カタログ作成
