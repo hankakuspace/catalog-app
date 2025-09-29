@@ -104,7 +104,7 @@ const {
 
           {/* 一覧テーブル */}
           <Card>
-            <IndexTable
+   <IndexTable
   resourceName={{ singular: "catalog", plural: "catalogs" }}
   itemCount={catalogs.length}
   headings={[
@@ -116,7 +116,9 @@ const {
   selectable
   selectedItemsCount={selectedResources.length}
   onSelectionChange={handleSelectionChange}
+  rowSelection="checkboxOnly"   // ✅ セルクリックを無効化し、チェックボックスのみで選択可能にする
 >
+
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
                   ? new Date(catalog.createdAt).toLocaleString()
