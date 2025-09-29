@@ -31,7 +31,7 @@ export default function PreviewPage() {
           return;
         }
 
-        const res = await fetch(`/api/catalogs/get?id=${id}`);
+        const res = await fetch(`/api/catalogs/${id}`);
         if (!res.ok) {
           setCatalog(null);
           setLoading(false);
