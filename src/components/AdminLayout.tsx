@@ -21,6 +21,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 url: "/admin",
                 selected: router.pathname === "/admin",
               },
+            ]}
+          />
+          <div style={{ marginTop: "12px" }} /> {/* ✅ 余白を追加 */}
+          <Navigation.Section
+            items={[
               {
                 label: "カタログ一覧",
                 url: "/admin/catalogs",
@@ -28,6 +33,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   router.pathname.startsWith("/admin/catalogs") &&
                   router.pathname !== "/admin/catalogs/new",
               },
+            ]}
+          />
+          <div style={{ marginTop: "12px" }} /> {/* ✅ 余白を追加 */}
+          <Navigation.Section
+            items={[
               {
                 label: "新規カタログ作成",
                 url: "/admin/catalogs/new",
