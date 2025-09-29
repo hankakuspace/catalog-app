@@ -1,0 +1,5 @@
+/* src/styles/preview.module.css */
+.card img {
+  height: 320px;
+  object-fit: cover;
+}
