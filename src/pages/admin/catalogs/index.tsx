@@ -105,19 +105,18 @@ const {
           {/* 一覧テーブル */}
           <Card>
             <IndexTable
-              resourceName={{ singular: "catalog", plural: "catalogs" }}
-              itemCount={catalogs.length}
-              headings={[
-                { title: "タイトル" },
-                { title: "作成日" },
-                { title: "プレビューURL" },
-                { title: "View" },
-              ]}
-              selectable
-              selectedItemsCount={selectedResources.length}
-              allResourcesSelected={allResourcesSelected}
-              onSelectionChange={handleSelectionChange}
-            >
+  resourceName={{ singular: "catalog", plural: "catalogs" }}
+  itemCount={catalogs.length}
+  headings={[
+    { title: "タイトル" },
+    { title: "作成日" },
+    { title: "プレビューURL" },
+    { title: "View" },
+  ]}
+  selectable
+  selectedItemsCount={selectedResources.length}
+  onSelectionChange={handleSelectionChange}
+>
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
                   ? new Date(catalog.createdAt).toLocaleString()
