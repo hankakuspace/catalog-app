@@ -99,49 +99,53 @@ export default function CatalogListPage() {
 
           <Card>
             <IndexTable
-              resourceName={{ singular: "catalog", plural: "catalogs" }}
-              itemCount={catalogs.length}
-              headings={[
-                { title: "タイトル" },
-                { title: "作成日" },
-                { title: "編集" },
-              ]}
-              selectable
-              selectedItemsCount={selectedResources.length}
-              onSelectionChange={handleSelectionChange}
-            >
-              {catalogs.map((catalog, index) => {
-                const createdAtDate = catalog.createdAt
-                  ? new Date(catalog.createdAt).toLocaleString()
-                  : "-";
+  headings={[
+    { title: "タイトル" },
+    { title: "作成日" },
+    { title: "プレビューURL" },
+    { title: "編集" },
+  ]}
+>
+  {catalogs.map((catalog, index) => {
+    const createdAtDate = catalog.createdAt
+      ? new Date(catalog.createdAt).toLocaleString()
+      : "-";
 
-                return (
-                  <IndexTable.Row
-                    id={catalog.id}
-                    key={catalog.id}
-                    position={index}
-                    selected={selectedResources.includes(catalog.id)}
-                  >
-                    <IndexTable.Cell>
-                      <Text as="span" fontWeight="semibold">
-                        {catalog.title || "(無題)"}
-                      </Text>
-                    </IndexTable.Cell>
+    return (
+      <IndexTable.Row
+        id={catalog.id}
+        key={catalog.id}
+        position={index}
+        selected={selectedResources.includes(catalog.id)}
+      >
+        <IndexTable.Cell>
+          <Text as="span" fontWeight="semibold">
+            {catalog.title || "(無題)"}
+          </Text>
+        </IndexTable.Cell>
 
-                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+        <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-                    <IndexTable.Cell>
-                      <Button
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
-                        target="_self"
-                      >
-                        編集
-                      </Button>
-                    </IndexTable.Cell>
-                  </IndexTable.Row>
-                );
-              })}
-            </IndexTable>
+        <IndexTable.Cell>
+          {catalog.previewUrl ? (
+            <a href={catalog.previewUrl} target="_blank" rel="noopener noreferrer">
+              {catalog.previewUrl}
+            </a>
+          ) : (
+            "-"
+          )}
+        </IndexTable.Cell>
+
+        <IndexTable.Cell>
+          <Button url={`/admin/catalogs/new?id=${catalog.id}`} target="_self">
+            編集
+          </Button>
+        </IndexTable.Cell>
+      </IndexTable.Row>
+    );
+  })}
+</IndexTable>
+
           </Card>
 
           <InlineStack align="end">
