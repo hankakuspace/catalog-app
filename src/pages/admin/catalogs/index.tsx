@@ -8,6 +8,8 @@ import {
   EmptyState,
   Page,
   Link as PolarisLink,
+  Button,
+  InlineStack,
 } from "@shopify/polaris";
 
 interface Catalog {
@@ -20,6 +22,8 @@ interface Catalog {
 export default function CatalogListPage() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchCatalogs = async () => {
@@ -36,8 +40,35 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
+  const handleDelete = async () => {
+    if (selectedResources.length === 0) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/catalogs/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedResources }),
+      });
+      setCatalogs((prev) =>
+        prev.filter((c) => !selectedResources.includes(c.id))
+      );
+      setSelectedResources([]);
+    } catch (err) {
+      console.error("Failed to delete catalogs:", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
-    <Page title="保存済みカタログ一覧" fullWidth>
+    <Page
+      title="保存済みカタログ一覧"
+      fullWidth
+      primaryAction={{
+        content: "新規カタログ作成",
+        url: "/admin/catalogs/new",
+      }}
+    >
       {loading ? (
         <Card>
           <div style={{ padding: "20px", textAlign: "center" }}>
@@ -56,6 +87,16 @@ export default function CatalogListPage() {
         </Card>
       ) : (
         <Card>
+          <InlineStack gap="200" align="start" blockAlign="center">
+            <Button
+              destructive
+              disabled={selectedResources.length === 0 || deleting}
+              onClick={handleDelete}
+              loading={deleting}
+            >
+              削除
+            </Button>
+          </InlineStack>
           <IndexTable
             resourceName={{ singular: "catalog", plural: "catalogs" }}
             itemCount={catalogs.length}
@@ -65,7 +106,19 @@ export default function CatalogListPage() {
               { title: "プレビューURL" },
               { title: "View" },
             ]}
-            selectable={false}
+            selectable
+            selectedItemsCount={
+              selectedResources.length === catalogs.length
+                ? "All"
+                : selectedResources.length
+            }
+            onSelectionChange={(selected) => {
+              if (selected === "All") {
+                setSelectedResources(catalogs.map((c) => c.id));
+              } else {
+                setSelectedResources(selected as string[]);
+              }
+            }}
           >
             {catalogs.map((catalog, index) => {
               const createdAtDate = catalog.createdAt
@@ -73,7 +126,12 @@ export default function CatalogListPage() {
                 : "-";
 
               return (
-                <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
+                <IndexTable.Row
+                  id={catalog.id}
+                  key={catalog.id}
+                  position={index}
+                  selected={selectedResources.includes(catalog.id)}
+                >
                   <IndexTable.Cell>
                     <Text as="span" fontWeight="semibold">
                       {catalog.title || "(無題)"}
@@ -98,7 +156,7 @@ export default function CatalogListPage() {
                         View
                       </PolarisLink>
                     ) : (
-                      "-"   // ← ✅ 修正: 閉じ括弧のズレを解消
+                      "-"
                     )}
                   </IndexTable.Cell>
                 </IndexTable.Row>
