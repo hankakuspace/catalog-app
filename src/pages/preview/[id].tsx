@@ -43,17 +43,12 @@ export default function PublicCatalog() {
     fetchCatalog();
   }, []);
 
-  if (loading) {
-    return <div className="text-center p-10 text-gray-600">Loading...</div>;
-  }
-
-  if (!catalog) {
-    return <div className="text-center p-10 text-gray-600">カタログが見つかりませんでした</div>;
-  }
+  if (loading) return <div className="text-center p-10">Loading...</div>;
+  if (!catalog) return <div className="text-center p-10">カタログが見つかりませんでした</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         {/* タイトル */}
         <h1 className="text-4xl font-bold text-center mb-12">{catalog.title}</h1>
 
@@ -62,26 +57,26 @@ export default function PublicCatalog() {
           {catalog.products?.map((p) => (
             <div
               key={p.id}
-              className="bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1"
+              className="bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col"
             >
               {/* 商品画像 */}
               {p.imageUrl ? (
                 <img
                   src={p.imageUrl}
                   alt={p.title}
-                  className="w-full h-56 object-cover rounded-t-xl"
+                  className="w-full h-64 object-cover rounded-t-xl"
                 />
               ) : (
-                <div className="w-full h-56 bg-gray-200 flex items-center justify-center rounded-t-xl">
+                <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-t-xl">
                   <span className="text-gray-400">No Image</span>
                 </div>
               )}
 
               {/* 商品情報 */}
-              <div className="p-4">
-                <h2 className="text-lg font-semibold truncate">{p.title}</h2>
+              <div className="p-4 flex flex-col flex-grow">
+                <h2 className="text-lg font-semibold mb-2">{p.title}</h2>
                 {p.price && (
-                  <p className="text-gray-600 mt-2">{Number(p.price).toLocaleString()}円</p>
+                  <p className="text-gray-600 mt-auto">{Number(p.price).toLocaleString()}円</p>
                 )}
               </div>
             </div>
