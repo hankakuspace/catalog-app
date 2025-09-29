@@ -115,9 +115,8 @@ export default function CatalogListPage() {
                 { title: "View" },
               ]}
               selectable
-              selectedItemsCount={selectedResources.length}
-              allResourcesSelected={allResourcesSelected}
-              onSelectionChange={handleSelectionChange}
+  selectedItemsCount={selectedResources.length}
+  onSelectionChange={handleSelectionChange}
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
