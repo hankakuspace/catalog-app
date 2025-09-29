@@ -13,8 +13,8 @@ import {
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: { seconds: number; nanoseconds: number; toDate?: () => Date };
-  previewUrl?: string;
+  createdAt?: string | null; // ✅ ISO文字列として受け取る
+  previewUrl?: string | null;
 }
 
 export default function CatalogListPage() {
@@ -68,17 +68,9 @@ export default function CatalogListPage() {
             selectable={false}
           >
             {catalogs.map((catalog, index) => {
-              // ✅ Firestore Timestamp を正しい日付に変換
-              let createdAtDate = "-";
-              if (catalog.createdAt) {
-                if (typeof catalog.createdAt.toDate === "function") {
-                  createdAtDate = catalog.createdAt.toDate().toLocaleString();
-                } else if ("seconds" in catalog.createdAt) {
-                  createdAtDate = new Date(
-                    catalog.createdAt.seconds * 1000
-                  ).toLocaleString();
-                }
-              }
+              const createdAtDate = catalog.createdAt
+                ? new Date(catalog.createdAt).toLocaleString()
+                : "-";
 
               return (
                 <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
@@ -104,21 +96,4 @@ export default function CatalogListPage() {
                   </IndexTable.Cell>
 
                   {/* View */}
-                  <IndexTable.Cell>
-                    {catalog.previewUrl ? (
-                      <PolarisLink url={catalog.previewUrl} external>
-                        View
-                      </PolarisLink>
-                    ) : (
-                      "-"
-                    )}
-                  </IndexTable.Cell>
-                </IndexTable.Row>
-              );
-            })}
-          </IndexTable>
-        </Card>
-      )}
-    </Page>
-  );
-}
+                  <Index
