@@ -13,9 +13,11 @@ import {
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: string | null; // ✅ ISO文字列として受け取る
+  /** ISO文字列で返却される作成日時 */
+  createdAt?: string | null;
   previewUrl?: string | null;
 }
+
 
 export default function CatalogListPage() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
