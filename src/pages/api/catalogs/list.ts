@@ -13,10 +13,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .orderBy("createdAt", "desc")
       .get();
 
-    const catalogs = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const catalogs = snapshot.docs.map((doc) => {
+      const data = doc.data();
+
+      return {
+        id: doc.id,
+        title: data.title || "",
+        previewUrl: data.previewUrl || null,
+        // ✅ Timestamp を ISO 文字列に変換
+        createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null,
+        products: data.products || [],
+      };
+    });
 
     return res.status(200).json({ catalogs });
   } catch (error) {
