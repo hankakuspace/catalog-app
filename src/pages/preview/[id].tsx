@@ -6,14 +6,15 @@ interface Product {
   title: string;
   price?: string;
   imageUrl?: string;
+  artist?: string;
 }
 
 interface Catalog {
   id: string;
   title: string;
   products: Product[];
-  createdAt: string;
   previewUrl: string;
+  createdAt: any;
 }
 
 export default function PublicCatalog() {
@@ -24,17 +25,22 @@ export default function PublicCatalog() {
     const fetchCatalog = async () => {
       try {
         const id = window.location.pathname.split("/").pop();
+        console.log("📌 PreviewPage id:", id);
         if (!id) return;
 
         const res = await fetch(`/api/catalogs/${id}`);
-        if (!res.ok) return;
-
+        console.log("📌 API status:", res.status);
         const data = await res.json();
-        if (data && data.catalog) {
+        console.log("📌 API response:", data);
+
+        if (data?.catalog) {
           setCatalog(data.catalog);
+        } else {
+          setCatalog(null);
         }
       } catch (err) {
-        console.error("Error:", err);
+        console.error("❌ fetch error:", err);
+        setCatalog(null);
       } finally {
         setLoading(false);
       }
@@ -49,17 +55,14 @@ export default function PublicCatalog() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-6">
-        {/* タイトル */}
         <h1 className="text-4xl font-bold text-center mb-12">{catalog.title}</h1>
 
-        {/* 商品グリッド */}
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {catalog.products?.map((p) => (
             <div
               key={p.id}
               className="bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col"
             >
-              {/* 商品画像 */}
               {p.imageUrl ? (
                 <img
                   src={p.imageUrl}
@@ -71,10 +74,9 @@ export default function PublicCatalog() {
                   <span className="text-gray-400">No Image</span>
                 </div>
               )}
-
-              {/* 商品情報 */}
               <div className="p-4 flex flex-col flex-grow">
                 <h2 className="text-lg font-semibold mb-2">{p.title}</h2>
+                {p.artist && <p className="text-sm text-gray-500">{p.artist}</p>}
                 {p.price && (
                   <p className="text-gray-600 mt-auto">{Number(p.price).toLocaleString()}円</p>
                 )}
