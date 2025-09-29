@@ -89,14 +89,13 @@ export default function CatalogListPage() {
         <Card>
           <InlineStack gap="200" align="start" blockAlign="center">
             <Button
-  tone="critical"   // ← destructive の代わり
-  disabled={selectedResources.length === 0 || deleting}
-  onClick={handleDelete}
-  loading={deleting}
->
-  削除
-</Button>
-
+              tone="critical"
+              disabled={selectedResources.length === 0 || deleting}
+              onClick={handleDelete}
+              loading={deleting}
+            >
+              削除
+            </Button>
           </InlineStack>
           <IndexTable
             resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -108,17 +107,9 @@ export default function CatalogListPage() {
               { title: "View" },
             ]}
             selectable
-            selectedItemsCount={
-              selectedResources.length === catalogs.length
-                ? "All"
-                : selectedResources.length
-            }
+            selectedItemsCount={selectedResources.length}
             onSelectionChange={(selected) => {
-              if (selected === "All") {
-                setSelectedResources(catalogs.map((c) => c.id));
-              } else {
-                setSelectedResources(selected as string[]);
-              }
+              setSelectedResources(selected as string[]);
             }}
           >
             {catalogs.map((catalog, index) => {
