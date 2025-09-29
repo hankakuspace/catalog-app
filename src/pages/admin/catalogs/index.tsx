@@ -89,13 +89,14 @@ export default function CatalogListPage() {
         <Card>
           <InlineStack gap="200" align="start" blockAlign="center">
             <Button
-              destructive
-              disabled={selectedResources.length === 0 || deleting}
-              onClick={handleDelete}
-              loading={deleting}
-            >
-              削除
-            </Button>
+  tone="critical"   // ← destructive の代わり
+  disabled={selectedResources.length === 0 || deleting}
+  onClick={handleDelete}
+  loading={deleting}
+>
+  削除
+</Button>
+
           </InlineStack>
           <IndexTable
             resourceName={{ singular: "catalog", plural: "catalogs" }}
