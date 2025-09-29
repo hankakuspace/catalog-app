@@ -87,7 +87,7 @@ export default function CatalogsIndex() {
         <Layout.Section>
           <BlockStack gap="400">
             <Button
-              tone="critical" // ✅ 修正: destructive → tone="critical"
+              tone="critical" // ✅ destructive → tone="critical"
               onClick={handleDelete}
               disabled={!selectedResources.length}
             >
@@ -102,6 +102,7 @@ export default function CatalogsIndex() {
                   allResourcesSelected ? "All" : selectedResources.length
                 }
                 onSelectionChange={handleSelectionChange}
+                selectable // ✅ 行クリック無効化してチェックボックスだけ有効
                 headings={[
                   { title: "タイトル" },
                   { title: "作成日" },
@@ -115,7 +116,6 @@ export default function CatalogsIndex() {
                     key={id}
                     position={index}
                     selected={selectedResources.includes(id)}
-                    rowClickable={false}
                   >
                     <IndexTable.Cell>{title}</IndexTable.Cell>
                     <IndexTable.Cell>{createdAt}</IndexTable.Cell>
