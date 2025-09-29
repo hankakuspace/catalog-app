@@ -35,7 +35,7 @@ export default function CatalogsIndex() {
     allResourcesSelected,
     handleSelectionChange,
     clearSelection,
-  } = useIndexResourceState(catalogs);
+  } = useIndexResourceState(catalogs.map((c) => ({ id: c.id }))); // ✅ 修正
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,7 +109,7 @@ export default function CatalogsIndex() {
                     key={id}
                     position={index}
                     selected={selectedResources.includes(id)}
-                    rowClickable={false} // ✅ 行クリックを無効化
+                    rowClickable={false}
                   >
                     <IndexTable.Cell>{title}</IndexTable.Cell>
                     <IndexTable.Cell>{createdAt}</IndexTable.Cell>
