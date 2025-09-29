@@ -102,7 +102,7 @@ export default function CatalogsIndex() {
                   allResourcesSelected ? "All" : selectedResources.length
                 }
                 onSelectionChange={handleSelectionChange}
-                selectable // ✅ 行クリック無効化してチェックボックスだけ有効
+                selectable
                 headings={[
                   { title: "タイトル" },
                   { title: "作成日" },
@@ -139,7 +139,7 @@ export default function CatalogsIndex() {
             </Card>
 
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button primary url="/admin/catalogs/new">
+              <Button variant="primary" url="/admin/catalogs/new">
                 新規カタログ作成
               </Button>
             </div>
