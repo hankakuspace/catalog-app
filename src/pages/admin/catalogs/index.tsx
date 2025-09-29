@@ -99,11 +99,12 @@ export default function CatalogListPage() {
               削除
             </Button>
             <Button
-              primary
-              url="/admin/catalogs/new"
-            >
-              新規カタログ作成
-            </Button>
+  variant="primary"
+  url="/admin/catalogs/new"
+>
+  新規カタログ作成
+</Button>
+
           </InlineStack>
 
           {/* 一覧テーブル */}
@@ -170,12 +171,13 @@ export default function CatalogListPage() {
 
           {/* 下部にも新規作成ボタン */}
           <InlineStack align="end">
-            <Button
-              primary
-              url="/admin/catalogs/new"
-            >
-              新規カタログ作成
-            </Button>
+           <Button
+  variant="primary"
+  url="/admin/catalogs/new"
+>
+  新規カタログ作成
+</Button>
+
           </InlineStack>
         </BlockStack>
       )}
