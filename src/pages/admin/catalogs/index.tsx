@@ -109,7 +109,7 @@ export default function CatalogListPage() {
             selectable
             selectedItemsCount={selectedResources.length}
             onSelectionChange={(selected) => {
-              setSelectedResources(selected as string[]);
+              setSelectedResources(selected as unknown as string[]);
             }}
           >
             {catalogs.map((catalog, index) => {
