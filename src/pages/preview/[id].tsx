@@ -11,7 +11,7 @@ import {
   Spinner,
   BlockStack,
 } from "@shopify/polaris";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface Product {
@@ -33,7 +33,7 @@ interface Product {
 interface Catalog {
   title: string;
   products: Product[];
-  createdAt?: string;
+  createdAt?: string | Timestamp;
   previewUrl?: string;
 }
 
@@ -54,11 +54,17 @@ export default function CatalogPreview() {
 
         if (snap.exists()) {
           const data = snap.data() as Catalog;
+
+          let createdAt: string | undefined;
+          if (data.createdAt instanceof Timestamp) {
+            createdAt = data.createdAt.toDate().toISOString();
+          } else if (typeof data.createdAt === "string") {
+            createdAt = data.createdAt;
+          }
+
           setCatalog({
             ...data,
-            createdAt: data.createdAt
-              ? new Date(data.createdAt.toDate()).toISOString()
-              : undefined,
+            createdAt,
           });
         }
       } catch (err) {
@@ -103,6 +109,11 @@ export default function CatalogPreview() {
             <Text as="h2" variant="headingMd">
               {catalog.title}
             </Text>
+            {catalog.createdAt && (
+              <Text as="p" tone="subdued">
+                作成日: {catalog.createdAt}
+              </Text>
+            )}
             <div
               style={{
                 display: "grid",
@@ -113,6 +124,7 @@ export default function CatalogPreview() {
               {catalog.products?.map((p) => (
                 <Card key={p.id} sectioned>
                   {p.image && (
+                    // Next.js Lint対策: ここは <Image> に置き換えるのが推奨
                     <img
                       src={p.image}
                       alt={p.title}
