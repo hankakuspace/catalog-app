@@ -13,10 +13,10 @@ import {
 interface Catalog {
   id: string;
   title: string;
-  /** ISO文字列で返却される作成日時 */
-  createdAt?: string | null;
-  previewUrl?: string | null;
+  createdAt?: string;   // ISO文字列 (null は undefined 扱いに寄せる)
+  previewUrl?: string;
 }
+
 
 
 export default function CatalogListPage() {
