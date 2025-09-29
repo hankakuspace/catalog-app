@@ -40,12 +40,10 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ 型指定を明示
-  const {
-    selectedResources,
-    allResourcesSelected,
-    handleSelectionChange,
-  } = useIndexResourceState<Catalog>(catalogs);
+  // ✅ 正常に動いていた時のキャスト方式に戻す
+  const { selectedResources, handleSelectionChange } = useIndexResourceState(
+    catalogs as unknown as { [key: string]: unknown }[]
+  );
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
@@ -86,6 +84,7 @@ export default function CatalogListPage() {
         </Card>
       ) : (
         <BlockStack gap="400">
+          {/* 削除 + 新規作成ボタン */}
           <InlineStack gap="200" align="start" blockAlign="center">
             <Button
               tone="critical"
@@ -100,20 +99,20 @@ export default function CatalogListPage() {
             </Button>
           </InlineStack>
 
+          {/* 一覧テーブル */}
           <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
               itemCount={catalogs.length}
-              selectedItemsCount={
-                allResourcesSelected ? "All" : selectedResources.length
-              }
-              onSelectionChange={handleSelectionChange}
               headings={[
                 { title: "タイトル" },
                 { title: "作成日" },
                 { title: "プレビューURL" },
                 { title: "編集" },
               ]}
+              selectable
+              selectedItemsCount={selectedResources.length}
+              onSelectionChange={handleSelectionChange}
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
@@ -128,34 +127,44 @@ export default function CatalogListPage() {
                     selected={selectedResources.includes(catalog.id)}
                   >
                     <IndexTable.Cell>
-                      <Text as="span" fontWeight="semibold">
-                        {catalog.title || "(無題)"}
-                      </Text>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Text as="span" fontWeight="semibold">
+                          {catalog.title || "(無題)"}
+                        </Text>
+                      </div>
                     </IndexTable.Cell>
 
-                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+                    <IndexTable.Cell>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {createdAtDate}
+                      </div>
+                    </IndexTable.Cell>
 
                     <IndexTable.Cell>
-                      {catalog.previewUrl ? (
-                        <a
-                          href={catalog.previewUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {catalog.previewUrl ? (
+                          <a
+                            href={catalog.previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {catalog.previewUrl}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+                    </IndexTable.Cell>
+
+                    <IndexTable.Cell>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          url={`/admin/catalogs/new?id=${catalog.id}`}
+                          target="_self"
                         >
-                          {catalog.previewUrl}
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </IndexTable.Cell>
-
-                    <IndexTable.Cell>
-                      <Button
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
-                        target="_self"
-                      >
-                        編集
-                      </Button>
+                          編集
+                        </Button>
+                      </div>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
@@ -163,6 +172,7 @@ export default function CatalogListPage() {
             </IndexTable>
           </Card>
 
+          {/* 下部の新規作成ボタン */}
           <InlineStack align="end">
             <Button variant="primary" url="/admin/catalogs/new">
               新規カタログ作成
