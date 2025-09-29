@@ -56,7 +56,7 @@ export default function CatalogPreview() {
         if (snap.exists()) {
           const data = snap.data() as Omit<Catalog, "createdAt"> & {
             createdAt?: unknown;
-            products?: Record<string, unknown>[];
+            products?: unknown[]; // ✅ unknown に修正
           };
 
           let createdAt: string | undefined;
@@ -72,19 +72,27 @@ export default function CatalogPreview() {
                 const obj = p as Record<string, unknown>;
                 return {
                   id: typeof obj.id === "string" ? obj.id : String(index),
-                  title: typeof obj.title === "string" ? obj.title : "(無題)",
-                  price: typeof obj.price === "string" ? obj.price : undefined,
-                  year: typeof obj.year === "string" ? obj.year : undefined,
-                  credit: typeof obj.credit === "string" ? obj.credit : undefined,
+                  title:
+                    typeof obj.title === "string" ? obj.title : "(無題)",
+                  price:
+                    typeof obj.price === "string" ? obj.price : undefined,
+                  year:
+                    typeof obj.year === "string" ? obj.year : undefined,
+                  credit:
+                    typeof obj.credit === "string" ? obj.credit : undefined,
                   type: typeof obj.type === "string" ? obj.type : undefined,
                   importance:
-                    typeof obj.importance === "string" ? obj.importance : undefined,
+                    typeof obj.importance === "string"
+                      ? obj.importance
+                      : undefined,
                   edition:
                     typeof obj.edition === "string" ? obj.edition : undefined,
                   signed:
                     typeof obj.signed === "string" ? obj.signed : undefined,
                   dimensions:
-                    typeof obj.dimensions === "string" ? obj.dimensions : undefined,
+                    typeof obj.dimensions === "string"
+                      ? obj.dimensions
+                      : undefined,
                   medium:
                     typeof obj.medium === "string" ? obj.medium : undefined,
                   frame: typeof obj.frame === "string" ? obj.frame : undefined,
@@ -95,7 +103,9 @@ export default function CatalogPreview() {
                       ? obj.imageUrl
                       : undefined,
                   imageUrl:
-                    typeof obj.imageUrl === "string" ? obj.imageUrl : undefined,
+                    typeof obj.imageUrl === "string"
+                      ? obj.imageUrl
+                      : undefined,
                 };
               })
             : [];
@@ -180,7 +190,9 @@ export default function CatalogPreview() {
                     </Text>
                     {p.price && <Text as="p">価格: ¥{p.price}</Text>}
                     {p.year && <Text as="p">制作年: {p.year}</Text>}
-                    {p.dimensions && <Text as="p">サイズ: {p.dimensions}</Text>}
+                    {p.dimensions && (
+                      <Text as="p">サイズ: {p.dimensions}</Text>
+                    )}
                     {p.medium && <Text as="p">素材: {p.medium}</Text>}
                     {p.frame && <Text as="p">フレーム: {p.frame}</Text>}
                   </BlockStack>
