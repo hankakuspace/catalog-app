@@ -62,14 +62,7 @@ export default function CatalogListPage() {
   };
 
   return (
-    <Page
-      title="保存済みカタログ一覧"
-      fullWidth
-      primaryAction={{
-        content: "新規カタログ作成",
-        url: "/admin/catalogs/new",
-      }}
-    >
+    <Page title="保存済みカタログ一覧" fullWidth>
       {loading ? (
         <Card>
           <div style={{ padding: "20px", textAlign: "center" }}>
@@ -88,7 +81,7 @@ export default function CatalogListPage() {
         </Card>
       ) : (
         <BlockStack gap="400">
-          {/* 操作エリア（削除 & 新規作成ボタン） */}
+          {/* 削除 + 新規作成ボタンを横並びに配置 */}
           <InlineStack gap="200" align="start" blockAlign="center">
             <Button
               tone="critical"
@@ -98,13 +91,9 @@ export default function CatalogListPage() {
             >
               削除
             </Button>
-            <Button
-  variant="primary"
-  url="/admin/catalogs/new"
->
-  新規カタログ作成
-</Button>
-
+            <Button variant="primary" url="/admin/catalogs/new">
+              新規カタログ作成
+            </Button>
           </InlineStack>
 
           {/* 一覧テーブル */}
@@ -121,6 +110,7 @@ export default function CatalogListPage() {
               selectable
               selectedItemsCount={selectedResources.length}
               onSelectionChange={(selected) => {
+                // SelectionType を string[] として処理
                 setSelectedResources(selected as unknown as string[]);
               }}
             >
@@ -169,15 +159,11 @@ export default function CatalogListPage() {
             </IndexTable>
           </Card>
 
-          {/* 下部にも新規作成ボタン */}
+          {/* 下部の新規作成ボタン */}
           <InlineStack align="end">
-           <Button
-  variant="primary"
-  url="/admin/catalogs/new"
->
-  新規カタログ作成
-</Button>
-
+            <Button variant="primary" url="/admin/catalogs/new">
+              新規カタログ作成
+            </Button>
           </InlineStack>
         </BlockStack>
       )}
