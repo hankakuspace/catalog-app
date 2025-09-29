@@ -2,98 +2,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import {
-  Card,
-  Page,
-  Layout,
-  Text,
-  Spinner,
-  BlockStack,
-} from "@shopify/polaris";
-
-interface Product {
-  id: string;
-  title: string;
-  price?: string;
-  year?: string;
-  credit?: string;
-  type?: string;
-  importance?: string;
-  edition?: string;
-  signed?: string;
-  dimensions?: string;
-  medium?: string;
-  frame?: string;
-  image?: string;
-  imageUrl?: string;
-}
 
 interface Catalog {
+  id: string;
   title: string;
-  products: Product[];
-  createdAt?: string;
-  previewUrl?: string;
+  products: any[];
+  createdAt: string;
+  previewUrl: string;
 }
 
-export default function CatalogPreview() {
-  const router = useRouter();
-  const { id } = router.query;
-
+export default function PreviewPage() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id || typeof id !== "string") return;
-
     const fetchCatalog = async () => {
       try {
-        console.log("Fetching catalog with id:", id);
+        const id = window.location.pathname.split("/").pop();
+        if (!id) {
+          setCatalog(null);
+          setLoading(false);
+          return;
+        }
+
         const res = await fetch(`/api/catalogs/get?id=${id}`);
-        if (res.ok) {
-          const data = await res.json();
+        if (!res.ok) {
+          setCatalog(null);
+          setLoading(false);
+          return;
+        }
 
-          const products: Product[] = Array.isArray(data.products)
-            ? data.products.map((p: unknown, index: number) => {
-                const obj = p as Record<string, unknown>;
-                return {
-                  id: typeof obj.id === "string" ? obj.id : String(index),
-                  title: typeof obj.title === "string" ? obj.title : "(無題)",
-                  price: typeof obj.price === "string" ? obj.price : undefined,
-                  year: typeof obj.year === "string" ? obj.year : undefined,
-                  credit: typeof obj.credit === "string" ? obj.credit : undefined,
-                  type: typeof obj.type === "string" ? obj.type : undefined,
-                  importance:
-                    typeof obj.importance === "string" ? obj.importance : undefined,
-                  edition: typeof obj.edition === "string" ? obj.edition : undefined,
-                  signed: typeof obj.signed === "string" ? obj.signed : undefined,
-                  dimensions:
-                    typeof obj.dimensions === "string" ? obj.dimensions : undefined,
-                  medium: typeof obj.medium === "string" ? obj.medium : undefined,
-                  frame: typeof obj.frame === "string" ? obj.frame : undefined,
-                  image:
-                    typeof obj.image === "string"
-                      ? obj.image
-                      : typeof obj.imageUrl === "string"
-                      ? obj.imageUrl
-                      : undefined,
-                  imageUrl: typeof obj.imageUrl === "string" ? obj.imageUrl : undefined,
-                };
-              })
-            : [];
-
-          setCatalog({
-            title: typeof data.title === "string" ? data.title : "(無題)",
-            products,
-            createdAt: typeof data.createdAt === "string" ? data.createdAt : undefined,
-            previewUrl: typeof data.previewUrl === "string" ? data.previewUrl : "",
-          });
+        const data = await res.json();
+        if (data && data.catalog) {
+          setCatalog(data.catalog);
         } else {
-          console.warn("Catalog fetch failed:", res.status);
           setCatalog(null);
         }
-      } catch (err) {
-        console.error("Failed to fetch catalog:", err);
+      } catch (error) {
+        console.error("Error fetching catalog:", error);
         setCatalog(null);
       } finally {
         setLoading(false);
@@ -101,80 +47,25 @@ export default function CatalogPreview() {
     };
 
     fetchCatalog();
-  }, [id]);
+  }, []);
 
-  // ✅ ローディング中は必ずスピナー
+  // ✅ 条件分岐の整理
   if (loading) {
-    return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <Spinner accessibilityLabel="Loading catalog" size="large" />
-      </div>
-    );
+    return <p>Loading...</p>;
   }
 
-  // ✅ API 完了後にカタログが null の場合だけ「見つかりませんでした」
   if (!catalog) {
-    return (
-      <Page>
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <Text as="p" tone="critical">
-                カタログが見つかりませんでした。
-              </Text>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
-    );
+    return <p>カタログが見つかりませんでした</p>;
   }
 
   return (
-    <Page title={catalog.title}>
-      <Layout>
-        <Layout.Section>
-          <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">
-              {catalog.title}
-            </Text>
-            {catalog.createdAt && (
-              <Text as="p" tone="subdued">
-                作成日: {catalog.createdAt}
-              </Text>
-            )}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-                gap: "20px",
-              }}
-            >
-              {catalog.products?.map((p) => (
-                <Card key={p.id}>
-                  <BlockStack gap="200">
-                    {p.image && (
-                      // ⚠️ 後で next/image に切り替え予定
-                      <img
-                        src={p.image}
-                        alt={p.title}
-                        style={{ width: "100%", borderRadius: "8px" }}
-                      />
-                    )}
-                    <Text as="h3" variant="headingSm">
-                      {p.title}
-                    </Text>
-                    {p.price && <Text as="p">価格: ¥{p.price}</Text>}
-                    {p.year && <Text as="p">制作年: {p.year}</Text>}
-                    {p.dimensions && <Text as="p">サイズ: {p.dimensions}</Text>}
-                    {p.medium && <Text as="p">素材: {p.medium}</Text>}
-                    {p.frame && <Text as="p">フレーム: {p.frame}</Text>}
-                  </BlockStack>
-                </Card>
-              ))}
-            </div>
-          </BlockStack>
-        </Layout.Section>
-      </Layout>
-    </Page>
+    <div>
+      <h1>{catalog.title}</h1>
+      <ul>
+        {catalog.products?.map((p, idx) => (
+          <li key={idx}>{p.title}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
