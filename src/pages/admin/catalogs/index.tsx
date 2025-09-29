@@ -89,19 +89,21 @@ export default function CatalogListPage() {
       ) : (
         <BlockStack gap="400">
           {/* 削除 + 新規作成ボタン */}
-          <InlineStack gap="200" align="start" blockAlign="center">
-            <Button
-              tone="critical"
-              disabled={selectedResources.length === 0 || deleting}
-              onClick={handleDelete}
-              loading={deleting}
-            >
-              削除
-            </Button>
-            <Button variant="primary" url="/admin/catalogs/new">
-              新規カタログ作成
-            </Button>
-          </InlineStack>
+          {/* 上部の操作エリア */}
+<InlineStack align="space-between" blockAlign="center">
+  <Button
+    tone="critical"
+    disabled={selectedResources.length === 0 || deleting}
+    onClick={handleDelete}
+    loading={deleting}
+  >
+    削除
+  </Button>
+
+  <Button variant="primary" url="/admin/catalogs/new">
+    新規カタログ作成
+  </Button>
+</InlineStack>
 
           {/* 一覧テーブル */}
           <Card>
