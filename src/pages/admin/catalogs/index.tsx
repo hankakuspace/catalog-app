@@ -24,6 +24,7 @@ interface Catalog {
 
 export default function CatalogsIndex() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const resourceName = {
     singular: "catalog",
@@ -35,7 +36,7 @@ export default function CatalogsIndex() {
     allResourcesSelected,
     handleSelectionChange,
     clearSelection,
-  } = useIndexResourceState(catalogs.map((c) => ({ id: c.id })));
+  } = useIndexResourceState(catalogs.map((c) => c.id)); // ✅ 元の形
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +60,8 @@ export default function CatalogsIndex() {
         setCatalogs(items);
       } catch (err) {
         console.error("Failed to fetch catalogs:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -87,7 +90,7 @@ export default function CatalogsIndex() {
         <Layout.Section>
           <BlockStack gap="400">
             <Button
-              tone="critical" // ✅ destructive → tone="critical"
+              destructive // ✅ 元の形
               onClick={handleDelete}
               disabled={!selectedResources.length}
             >
@@ -138,7 +141,7 @@ export default function CatalogsIndex() {
             </Card>
 
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button variant="primary" url="/admin/catalogs/new">
+              <Button primary url="/admin/catalogs/new">
                 新規カタログ作成
               </Button>
             </div>
