@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/router";
 import {
   BlockStack,
   Text,
@@ -47,7 +48,6 @@ interface Product {
   medium?: string;
 }
 
-// ✅ 並べ替えモード or ドラッグ中は shake 演出
 function SortableItem({
   id,
   isReorderMode,
@@ -57,14 +57,8 @@ function SortableItem({
   isReorderMode: boolean;
   children: React.ReactNode;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -78,10 +72,7 @@ function SortableItem({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div
-        className={shakeClass}
-        style={{ flex: 1, display: "flex", flexDirection: "column" }}
-      >
+      <div className={shakeClass} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {children}
       </div>
     </div>
@@ -89,6 +80,9 @@ function SortableItem({
 }
 
 export default function NewCatalogPage() {
+  const router = useRouter();
+  const { id } = router.query;
+
   const [title, setTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -107,28 +101,37 @@ export default function NewCatalogPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  // ✅ 編集モードなら既存データを読み込み
+  useEffect(() => {
+    if (!router.isReady || !id) return;
+    const fetchCatalog = async () => {
+      try {
+        const res = await fetch(`/api/catalogs?id=${id}`);
+        const data = await res.json();
+        if (res.ok && data.catalog) {
+          setTitle(data.catalog.title || "");
+          setSelectedProducts(data.catalog.products || []);
+        }
+      } catch (err) {
+        console.error("カタログ取得エラー:", err);
+      }
+    };
+    fetchCatalog();
+  }, [router.isReady, id]);
+
   // ✅ 各カードの高さを最大に揃える
   const adjustHeights = useCallback(() => {
     if (!cardRefs.current.length) return;
-
     let maxH = 0;
     cardRefs.current.forEach((el) => {
-      if (el) {
-        const h = el.offsetHeight;
-        maxH = Math.max(maxH, h);
-      }
+      if (el) maxH = Math.max(maxH, el.offsetHeight);
     });
-
     maxHeightRef.current = maxH;
-
     cardRefs.current.forEach((el) => {
-      if (el) {
-        el.style.height = `${maxH}px`;
-      }
+      if (el) el.style.height = `${maxH}px`;
     });
   }, []);
 
-  // ✅ 商品追加時に実行
   useEffect(() => {
     if (selectedProducts.length > 0) {
       adjustHeights();
@@ -137,7 +140,6 @@ export default function NewCatalogPage() {
     }
   }, [selectedProducts, adjustHeights]);
 
-  // ✅ 検索クエリ監視
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (searchQuery.trim() !== "") {
@@ -153,13 +155,11 @@ export default function NewCatalogPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        shop: "catalog-app-dev-2.myshopify.com", // TODO: 環境変数/URLパラメータ化も検討
+        shop: "catalog-app-dev-2.myshopify.com",
         query,
       });
-
       const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
-
       setSearchResults(data.products || []);
     } catch (err) {
       console.error("商品検索エラー:", err);
@@ -175,50 +175,27 @@ export default function NewCatalogPage() {
   };
 
   const handleSave = async () => {
-    if (!title.trim()) {
-      setSaveError("タイトルを入力してください");
-      return;
-    }
-    if (selectedProducts.length === 0) {
-      setSaveError("商品を1つ以上追加してください");
+    if (!title.trim() || selectedProducts.length === 0) {
+      setSaveError("タイトルと商品は必須です");
       return;
     }
 
     setSaving(true);
     setSaveError("");
     try {
-      // ✅ shop を URL か localStorage から取得
-      const params = new URLSearchParams(window.location.search);
-      let shop = params.get("shop");
-
-      if (!shop && typeof window !== "undefined") {
-        shop = localStorage.getItem("shopify_shop");
-      }
-
-      if (!shop) {
-        throw new Error("Shop parameter is missing");
-      }
+      const body = { id, title, products: selectedProducts };
 
       const res = await fetch("/api/catalogs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          products: selectedProducts,
-          shop, // ✅ APIに渡す
-        }),
+        method: id ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
-      console.log("✅ Firestore 保存成功:", data.id, data.createdBy);
       setSaveSuccess(true);
-      setTitle("");
-      setSelectedProducts([]);
-    } catch (err: unknown) {
+    } catch (err) {
       if (err instanceof Error) {
         setSaveError(`保存に失敗しました: ${err.message}`);
       } else {
@@ -247,69 +224,30 @@ export default function NewCatalogPage() {
   return (
     <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
       <Text as="h1" variant="headingLg">
-        新規カタログ作成
+        {id ? "カタログ編集" : "新規カタログ作成"}
       </Text>
 
-      {saveSuccess && (
-        <Banner tone="success" title="保存完了">
-          カタログを保存しました。
-        </Banner>
-      )}
-      {saveError && (
-        <Banner tone="critical" title="エラー">
-          {saveError}
-        </Banner>
-      )}
+      {saveSuccess && <Banner tone="success" title="保存完了">カタログを保存しました。</Banner>}
+      {saveError && <Banner tone="critical" title="エラー">{saveError}</Banner>}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "3fr 1fr",
-          gap: "20px",
-          marginTop: "20px",
-        }}
-      >
+      <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginTop: "20px" }}>
         {/* 左：プレビュー */}
         <Card>
           <BlockStack gap="400">
             {selectedProducts.length === 0 ? (
               <Text as="p">まだ商品が追加されていません</Text>
             ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={selectedProducts.map((p) => p.id)}
-                  strategy={rectSortingStrategy}
-                >
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={selectedProducts.map((p) => p.id)} strategy={rectSortingStrategy}>
                   <div className={styles.previewGrid}>
                     {selectedProducts.map((item, index) => (
-                      <SortableItem
-                        key={item.id}
-                        id={item.id}
-                        isReorderMode={isReorderMode}
-                      >
+                      <SortableItem key={item.id} id={item.id} isReorderMode={isReorderMode}>
                         <div className="cardWrapper">
                           <Card>
-                            <div
-                              ref={(el) => {
-                                cardRefs.current[index] = el;
-                              }}
-                              className="cardInner"
-                            >
+                            <div ref={(el) => { cardRefs.current[index] = el; }} className="cardInner">
                               <BlockStack gap="200">
-                                {/* タイトル + メニュー */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                  }}
-                                >
-                                  <Text as="h3" variant="headingSm">
-                                    {item.artist}
-                                  </Text>
+                                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                  <Text as="h3" variant="headingSm">{item.artist}</Text>
                                   <Popover
                                     active={activePopoverId === item.id}
                                     activator={
@@ -317,11 +255,7 @@ export default function NewCatalogPage() {
                                         variant="plain"
                                         icon={MenuHorizontalIcon}
                                         onClick={() =>
-                                          setActivePopoverId(
-                                            activePopoverId === item.id
-                                              ? null
-                                              : item.id
-                                          )
+                                          setActivePopoverId(activePopoverId === item.id ? null : item.id)
                                         }
                                       />
                                     }
@@ -330,9 +264,7 @@ export default function NewCatalogPage() {
                                     <ActionList
                                       items={[
                                         {
-                                          content: isReorderMode
-                                            ? "Finish move"
-                                            : "Move item",
+                                          content: isReorderMode ? "Finish move" : "Move item",
                                           onAction: () => {
                                             setIsReorderMode(!isReorderMode);
                                             setActivePopoverId(null);
@@ -341,37 +273,25 @@ export default function NewCatalogPage() {
                                         {
                                           destructive: true,
                                           content: "Remove",
-                                          onAction: () =>
-                                            removeItem(item.id),
+                                          onAction: () => removeItem(item.id),
                                         },
                                       ]}
                                     />
                                   </Popover>
                                 </div>
-
-                                {/* 画像 + 詳細 */}
                                 {item.imageUrl && (
                                   <img
                                     src={item.imageUrl}
                                     alt={item.title}
-                                    style={{
-                                      width: "100%",
-                                      borderRadius: 8,
-                                    }}
+                                    style={{ width: "100%", borderRadius: 8 }}
                                     onLoad={adjustHeights}
                                   />
                                 )}
                                 <Text as="p">{item.title}</Text>
                                 {item.year && <Text as="p">{item.year}</Text>}
-                                {item.dimensions && (
-                                  <Text as="p">{item.dimensions}</Text>
-                                )}
-                                {item.medium && (
-                                  <Text as="p">{item.medium}</Text>
-                                )}
-                                {item.price && (
-                                  <Text as="p">{item.price} 円（税込）</Text>
-                                )}
+                                {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                                {item.medium && <Text as="p">{item.medium}</Text>}
+                                {item.price && <Text as="p">{item.price} 円（税込）</Text>}
                               </BlockStack>
                             </div>
                           </Card>
@@ -388,12 +308,7 @@ export default function NewCatalogPage() {
         {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
-            <TextField
-              label="タイトル"
-              value={title}
-              onChange={setTitle}
-              autoComplete="off"
-            />
+            <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
             <TextField
               label="検索キーワード"
               labelHidden
@@ -415,11 +330,7 @@ export default function NewCatalogPage() {
                     onClick={() => handleAddProduct(item)}
                     media={
                       item.imageUrl ? (
-                        <Thumbnail
-                          source={item.imageUrl}
-                          alt={item.title}
-                          size="small"
-                        />
+                        <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
                       ) : undefined
                     }
                   >
@@ -432,7 +343,7 @@ export default function NewCatalogPage() {
               />
             )}
             <Button variant="primary" onClick={handleSave} loading={saving}>
-              カタログ作成
+              {id ? "カタログ更新" : "カタログ作成"}
             </Button>
           </BlockStack>
         </Card>
