@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               },
             ]}
           />
-          <div style={{ marginTop: "2px" }} /> {/* ✅ 2px に調整 */}
+          {/* ✅ 余白を完全になし */}
           <Navigation.Section
             items={[
               {
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               },
             ]}
           />
-          <div style={{ marginTop: "2px" }} /> {/* ✅ 2px に調整 */}
+          {/* ✅ 余白を完全になし */}
           <Navigation.Section
             items={[
               {
