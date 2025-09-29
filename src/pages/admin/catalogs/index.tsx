@@ -10,6 +10,7 @@ import {
   Link as PolarisLink,
   Button,
   InlineStack,
+  BlockStack,
 } from "@shopify/polaris";
 
 interface Catalog {
@@ -86,7 +87,8 @@ export default function CatalogListPage() {
           </EmptyState>
         </Card>
       ) : (
-        <Card>
+        <BlockStack gap="400">
+          {/* 操作エリア（削除 & 新規作成ボタン） */}
           <InlineStack gap="200" align="start" blockAlign="center">
             <Button
               tone="critical"
@@ -96,66 +98,86 @@ export default function CatalogListPage() {
             >
               削除
             </Button>
+            <Button
+              primary
+              url="/admin/catalogs/new"
+            >
+              新規カタログ作成
+            </Button>
           </InlineStack>
-          <IndexTable
-            resourceName={{ singular: "catalog", plural: "catalogs" }}
-            itemCount={catalogs.length}
-            headings={[
-              { title: "タイトル" },
-              { title: "作成日" },
-              { title: "プレビューURL" },
-              { title: "View" },
-            ]}
-            selectable
-            selectedItemsCount={selectedResources.length}
-            onSelectionChange={(selected) => {
-              setSelectedResources(selected as unknown as string[]);
-            }}
-          >
-            {catalogs.map((catalog, index) => {
-              const createdAtDate = catalog.createdAt
-                ? new Date(catalog.createdAt).toLocaleString()
-                : "-";
 
-              return (
-                <IndexTable.Row
-                  id={catalog.id}
-                  key={catalog.id}
-                  position={index}
-                  selected={selectedResources.includes(catalog.id)}
-                >
-                  <IndexTable.Cell>
-                    <Text as="span" fontWeight="semibold">
-                      {catalog.title || "(無題)"}
-                    </Text>
-                  </IndexTable.Cell>
+          {/* 一覧テーブル */}
+          <Card>
+            <IndexTable
+              resourceName={{ singular: "catalog", plural: "catalogs" }}
+              itemCount={catalogs.length}
+              headings={[
+                { title: "タイトル" },
+                { title: "作成日" },
+                { title: "プレビューURL" },
+                { title: "View" },
+              ]}
+              selectable
+              selectedItemsCount={selectedResources.length}
+              onSelectionChange={(selected) => {
+                setSelectedResources(selected as unknown as string[]);
+              }}
+            >
+              {catalogs.map((catalog, index) => {
+                const createdAtDate = catalog.createdAt
+                  ? new Date(catalog.createdAt).toLocaleString()
+                  : "-";
 
-                  <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
-
-                  <IndexTable.Cell>
-                    {catalog.previewUrl ? (
-                      <Text as="span" tone="subdued">
-                        {catalog.previewUrl}
+                return (
+                  <IndexTable.Row
+                    id={catalog.id}
+                    key={catalog.id}
+                    position={index}
+                    selected={selectedResources.includes(catalog.id)}
+                  >
+                    <IndexTable.Cell>
+                      <Text as="span" fontWeight="semibold">
+                        {catalog.title || "(無題)"}
                       </Text>
-                    ) : (
-                      "-"
-                    )}
-                  </IndexTable.Cell>
+                    </IndexTable.Cell>
 
-                  <IndexTable.Cell>
-                    {catalog.previewUrl ? (
-                      <PolarisLink url={catalog.previewUrl} external>
-                        View
-                      </PolarisLink>
-                    ) : (
-                      "-"
-                    )}
-                  </IndexTable.Cell>
-                </IndexTable.Row>
-              );
-            })}
-          </IndexTable>
-        </Card>
+                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+
+                    <IndexTable.Cell>
+                      {catalog.previewUrl ? (
+                        <Text as="span" tone="subdued">
+                          {catalog.previewUrl}
+                        </Text>
+                      ) : (
+                        "-"
+                      )}
+                    </IndexTable.Cell>
+
+                    <IndexTable.Cell>
+                      {catalog.previewUrl ? (
+                        <PolarisLink url={catalog.previewUrl} external>
+                          View
+                        </PolarisLink>
+                      ) : (
+                        "-"
+                      )}
+                    </IndexTable.Cell>
+                  </IndexTable.Row>
+                );
+              })}
+            </IndexTable>
+          </Card>
+
+          {/* 下部にも新規作成ボタン */}
+          <InlineStack align="end">
+            <Button
+              primary
+              url="/admin/catalogs/new"
+            >
+              新規カタログ作成
+            </Button>
+          </InlineStack>
+        </BlockStack>
       )}
     </Page>
   );
