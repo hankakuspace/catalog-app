@@ -1,6 +1,6 @@
 // src/pages/preview/[id].tsx
 import { useEffect, useState } from "react";
-import "@/styles/preview.css"; // ✅ 専用CSSをimport（Head+linkは禁止）
+import styles from "@/styles/preview.module.css"; // ✅ 修正: preview.css → preview.module.css
 
 interface Product {
   id: string;
@@ -59,17 +59,17 @@ export default function PublicCatalog() {
           {catalog.products?.map((p: Product) => (
             <div
               key={p.id}
-              className="card bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full"
+              className={`bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full ${styles.card}`}
             >
               {/* 商品画像 */}
               {p.imageUrl ? (
                 <img
                   src={p.imageUrl}
                   alt={p.title}
-                  className="block w-full !h-80 object-cover rounded-t-xl"
+                  className="block w-full rounded-t-xl"
                 />
               ) : (
-                <div className="w-full !h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
+                <div className="w-full bg-gray-200 flex items-center justify-center rounded-t-xl">
                   <span className="text-gray-400">No Image</span>
                 </div>
               )}
