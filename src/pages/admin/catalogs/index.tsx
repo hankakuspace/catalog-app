@@ -42,11 +42,9 @@ export default function CatalogListPage() {
   }, []);
 
   // ✅ Polaris の選択管理フック
-const {
-  selectedResources,
-  allResourcesSelected,
-  handleSelectionChange,
-} = useIndexResourceState(catalogs as unknown as { [key: string]: unknown }[]);
+  const { selectedResources, handleSelectionChange } = useIndexResourceState(
+    catalogs as unknown as { [key: string]: unknown }[]
+  );
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
@@ -79,7 +77,10 @@ const {
         <Card>
           <EmptyState
             heading="保存されたカタログはありません"
-            action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
+            action={{
+              content: "新しいカタログを作成",
+              url: "/admin/catalogs/new",
+            }}
             image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
           >
             <p>カタログを作成すると、ここに一覧表示されます。</p>
@@ -104,20 +105,19 @@ const {
 
           {/* 一覧テーブル */}
           <Card>
-<IndexTable
-  resourceName={{ singular: "catalog", plural: "catalogs" }}
-  itemCount={catalogs.length}
-  headings={[
-    { title: "タイトル" },
-    { title: "作成日" },
-    { title: "プレビューURL" },
-    { title: "View" },
-  ]}
-  selectable
-  selectedItemsCount={selectedResources.length}
-  onSelectionChange={handleSelectionChange}
->
-
+            <IndexTable
+              resourceName={{ singular: "catalog", plural: "catalogs" }}
+              itemCount={catalogs.length}
+              headings={[
+                { title: "タイトル" },
+                { title: "作成日" },
+                { title: "プレビューURL" },
+                { title: "View" },
+              ]}
+              selectable
+              selectedItemsCount={selectedResources.length}
+              onSelectionChange={handleSelectionChange}
+            >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
                   ? new Date(catalog.createdAt).toLocaleString()
@@ -125,42 +125,49 @@ const {
 
                 return (
                   <IndexTable.Row
-  id={catalog.id}
-  key={catalog.id}
-  position={index}
-  selected={selectedResources.includes(catalog.id)}
->
-  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
-    <Text as="span" fontWeight="semibold">
-      {catalog.title || "(無題)"}
-    </Text>
-  </IndexTable.Cell>
+                    id={catalog.id}
+                    key={catalog.id}
+                    position={index}
+                    selected={selectedResources.includes(catalog.id)}
+                  >
+                    <IndexTable.Cell>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Text as="span" fontWeight="semibold">
+                          {catalog.title || "(無題)"}
+                        </Text>
+                      </div>
+                    </IndexTable.Cell>
 
-  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
-    {createdAtDate}
-  </IndexTable.Cell>
+                    <IndexTable.Cell>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {createdAtDate}
+                      </div>
+                    </IndexTable.Cell>
 
-  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
-    {catalog.previewUrl ? (
-      <Text as="span" tone="subdued">
-        {catalog.previewUrl}
-      </Text>
-    ) : (
-      "-"
-    )}
-  </IndexTable.Cell>
+                    <IndexTable.Cell>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {catalog.previewUrl ? (
+                          <Text as="span" tone="subdued">
+                            {catalog.previewUrl}
+                          </Text>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+                    </IndexTable.Cell>
 
-  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
-    {catalog.previewUrl ? (
-      <PolarisLink url={catalog.previewUrl} external>
-        View
-      </PolarisLink>
-    ) : (
-      "-"
-    )}
-  </IndexTable.Cell>
-</IndexTable.Row>
-
+                    <IndexTable.Cell>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {catalog.previewUrl ? (
+                          <PolarisLink url={catalog.previewUrl} external>
+                            View
+                          </PolarisLink>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+                    </IndexTable.Cell>
+                  </IndexTable.Row>
                 );
               })}
             </IndexTable>
