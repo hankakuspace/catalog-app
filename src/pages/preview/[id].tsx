@@ -7,6 +7,10 @@ interface Product {
   price?: string;
   imageUrl?: string;
   artist?: string;
+  year?: string;
+  dimensions?: string;
+  medium?: string;
+  frame?: string;
 }
 
 interface Catalog {
@@ -46,10 +50,8 @@ export default function PublicCatalog() {
     fetchCatalog();
   }, []);
 
-  if (loading)
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
-  if (!catalog)
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">カタログが見つかりませんでした</div>;
+  if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+  if (!catalog) return <div className="min-h-screen bg-black text-white flex items-center justify-center">カタログが見つかりませんでした</div>;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -83,10 +85,14 @@ export default function PublicCatalog() {
               {/* 商品情報 */}
               <div className="p-4 flex flex-col flex-grow">
                 <h2 className="text-lg font-semibold mb-1">{p.title}</h2>
-                {p.artist && <p className="text-sm text-gray-600 mb-2">{p.artist}</p>}
+                {p.artist && <p className="text-sm text-gray-600 mb-1">{p.artist}</p>}
+                {p.year && <p className="text-sm text-gray-600 mb-1">{p.year}</p>}
+                {p.dimensions && <p className="text-sm text-gray-600 mb-1">{p.dimensions}</p>}
+                {p.medium && <p className="text-sm text-gray-600 mb-1">{p.medium}</p>}
+                {p.frame && <p className="text-sm text-gray-600 mb-1">{p.frame}</p>}
                 {p.price && (
                   <p className="text-base font-medium text-gray-800 mt-auto">
-                    {Number(p.price).toLocaleString()}円
+                    {Number(p.price).toLocaleString()} 円（税込）
                   </p>
                 )}
               </div>
