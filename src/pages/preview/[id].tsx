@@ -21,6 +21,11 @@ export default function PublicCatalog() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ DOM 描画後に Tailwind CSS を読み込む
+  useEffect(() => {
+    import("@/styles/globals.css");
+  }, []);
+
   useEffect(() => {
     const fetchCatalog = async () => {
       try {
@@ -60,15 +65,15 @@ export default function PublicCatalog() {
               key={p.id}
               className="bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full"
             >
-              {/* 画像 */}
+              {/* 商品画像 */}
               {p.imageUrl ? (
-  <img
-  src={p.imageUrl}
-  alt={p.title}
-  className="block w-full !h-80 object-cover rounded-t-xl"
-/>
+                <img
+                  src={p.imageUrl}
+                  alt={p.title}
+                  className="block w-full !h-80 object-cover rounded-t-xl"
+                />
               ) : (
-                <div className="w-full aspect-square bg-gray-200 flex items-center justify-center rounded-t-xl">
+                <div className="w-full !h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
                   <span className="text-gray-400">No Image</span>
                 </div>
               )}
