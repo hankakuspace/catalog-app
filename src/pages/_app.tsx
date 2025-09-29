@@ -4,6 +4,7 @@ import { AppBridgeProvider } from "@/lib/AppBridgeProvider";
 import "@shopify/polaris/build/esm/styles.css";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
 import AdminLayout from "@/components/AdminLayout";
+import "@/styles/globals.css";  // ← Tailwind を有効化
 
 export default function MyApp({ Component, pageProps, router }: AppProps) {
   // ✅ /preview 以下は公開ページ → AppBridge / Polaris / AdminLayout を使わない
