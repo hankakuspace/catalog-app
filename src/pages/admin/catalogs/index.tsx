@@ -19,6 +19,7 @@ interface Catalog {
   title: string;
   createdAt?: string;
   previewUrl?: string;
+  [key: string]: unknown;   // ✅ Polaris hook対応
 }
 
 export default function CatalogListPage() {
