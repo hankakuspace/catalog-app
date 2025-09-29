@@ -55,14 +55,18 @@ export default function CatalogPreview() {
 
           // ✅ products を安全に整形
           const products: Product[] = Array.isArray(data.products)
-            ? data.products.map((p, index) => {
+            ? data.products.map((p: unknown, index: number) => {
                 const obj = p as Record<string, unknown>;
                 return {
                   id: typeof obj.id === "string" ? obj.id : String(index),
-                  title: typeof obj.title === "string" ? obj.title : "(無題)",
-                  price: typeof obj.price === "string" ? obj.price : undefined,
-                  year: typeof obj.year === "string" ? obj.year : undefined,
-                  credit: typeof obj.credit === "string" ? obj.credit : undefined,
+                  title:
+                    typeof obj.title === "string" ? obj.title : "(無題)",
+                  price:
+                    typeof obj.price === "string" ? obj.price : undefined,
+                  year:
+                    typeof obj.year === "string" ? obj.year : undefined,
+                  credit:
+                    typeof obj.credit === "string" ? obj.credit : undefined,
                   type: typeof obj.type === "string" ? obj.type : undefined,
                   importance:
                     typeof obj.importance === "string"
@@ -86,7 +90,9 @@ export default function CatalogPreview() {
                       ? obj.imageUrl
                       : undefined,
                   imageUrl:
-                    typeof obj.imageUrl === "string" ? obj.imageUrl : undefined,
+                    typeof obj.imageUrl === "string"
+                      ? obj.imageUrl
+                      : undefined,
                 };
               })
             : [];
