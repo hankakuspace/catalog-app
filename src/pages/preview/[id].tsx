@@ -33,7 +33,7 @@ interface Product {
 interface Catalog {
   title: string;
   products: Product[];
-  createdAt?: string; // ✅ string のみに統一
+  createdAt?: string;
   previewUrl?: string;
 }
 
@@ -53,7 +53,6 @@ export default function CatalogPreview() {
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
-          // createdAt を unknown 型で受ける
           const data = snap.data() as Omit<Catalog, "createdAt"> & {
             createdAt?: unknown;
           };
@@ -125,16 +124,16 @@ export default function CatalogPreview() {
               }}
             >
               {catalog.products?.map((p) => (
-                <Card key={p.id} sectioned>
-                  {p.image && (
-                    // ⚠️ ESLint 警告あり（後で next/image に切り替え予定）
-                    <img
-                      src={p.image}
-                      alt={p.title}
-                      style={{ width: "100%", borderRadius: "8px" }}
-                    />
-                  )}
+                <Card key={p.id}>
                   <BlockStack gap="200">
+                    {p.image && (
+                      // ⚠️ 後で next/image に切り替え予定
+                      <img
+                        src={p.image}
+                        alt={p.title}
+                        style={{ width: "100%", borderRadius: "8px" }}
+                      />
+                    )}
                     <Text as="h3" variant="headingSm">
                       {p.title}
                     </Text>
