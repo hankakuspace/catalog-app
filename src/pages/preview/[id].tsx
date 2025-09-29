@@ -1,6 +1,6 @@
 // src/pages/preview/[id].tsx
 import { useEffect, useState } from "react";
-import styles from "@/styles/preview.module.css"; // ✅ 修正: preview.css → preview.module.css
+import styles from "@/styles/preview.module.css";
 
 interface Product {
   id: string;
@@ -47,19 +47,24 @@ export default function PublicCatalog() {
     fetchCatalog();
   }, []);
 
-  if (loading) return <div className="text-center p-10">Loading...</div>;
-  if (!catalog) return <div className="text-center p-10">カタログが見つかりませんでした</div>;
+  if (loading) return <div className="text-center p-10 text-white">Loading...</div>;
+  if (!catalog) return <div className="text-center p-10 text-white">カタログが見つかりませんでした</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-6">
-        <h1 className="text-4xl font-bold text-center mb-12">{catalog.title}</h1>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* ヘッダー */}
+      <header className="text-center py-8 border-b border-gray-700">
+        <h1 className="text-3xl font-bold mb-2">AND COLLECTION</h1>
+        <h2 className="text-xl font-medium">{catalog.title}</h2>
+      </header>
 
+      {/* メインカード一覧 */}
+      <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
         <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {catalog.products?.map((p: Product) => (
             <div
               key={p.id}
-              className={`bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full ${styles.card}`}
+              className={`bg-white text-black rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full ${styles.card}`}
             >
               {/* 商品画像 */}
               {p.imageUrl ? (
@@ -77,7 +82,7 @@ export default function PublicCatalog() {
               {/* 商品情報 */}
               <div className="p-4 flex flex-col flex-grow">
                 <h2 className="text-lg font-semibold mb-1">{p.title}</h2>
-                {p.artist && <p className="text-sm text-gray-500 mb-2">{p.artist}</p>}
+                {p.artist && <p className="text-sm text-gray-600 mb-2">{p.artist}</p>}
                 {p.price && (
                   <p className="text-base font-medium text-gray-800 mt-auto">
                     {Number(p.price).toLocaleString()}円
@@ -87,7 +92,12 @@ export default function PublicCatalog() {
             </div>
           ))}
         </div>
-      </div>
+      </main>
+
+      {/* フッター */}
+      <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
+        Copyright © 2025 Clue Co.,Ltd. all rights reserved.
+      </footer>
     </div>
   );
 }
