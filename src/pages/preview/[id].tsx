@@ -3,10 +3,16 @@
 
 import { useEffect, useState } from "react";
 
+interface Product {
+  id: string;
+  title: string;
+  [key: string]: string | number | undefined; // 追加フィールドも許容
+}
+
 interface Catalog {
   id: string;
   title: string;
-  products: any[];
+  products: Product[];
   createdAt: string;
   previewUrl: string;
 }
@@ -62,8 +68,8 @@ export default function PreviewPage() {
     <div>
       <h1>{catalog.title}</h1>
       <ul>
-        {catalog.products?.map((p, idx) => (
-          <li key={idx}>{p.title}</li>
+        {catalog.products?.map((p) => (
+          <li key={p.id}>{p.title}</li>
         ))}
       </ul>
     </div>
