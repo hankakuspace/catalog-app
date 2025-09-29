@@ -40,9 +40,8 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  const { selectedResources, handleSelectionChange } = useIndexResourceState(
-    catalogs as unknown as { [key: string]: unknown }[]
-  );
+  const { selectedResources, allResourcesSelected, handleSelectionChange } =
+    useIndexResourceState(catalogs);
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
@@ -99,53 +98,65 @@ export default function CatalogListPage() {
 
           <Card>
             <IndexTable
-  headings={[
-    { title: "タイトル" },
-    { title: "作成日" },
-    { title: "プレビューURL" },
-    { title: "編集" },
-  ]}
->
-  {catalogs.map((catalog, index) => {
-    const createdAtDate = catalog.createdAt
-      ? new Date(catalog.createdAt).toLocaleString()
-      : "-";
+              resourceName={{ singular: "catalog", plural: "catalogs" }}
+              itemCount={catalogs.length}   // ✅ 必須
+              selectedItemsCount={
+                allResourcesSelected ? "All" : selectedResources.length
+              }
+              onSelectionChange={handleSelectionChange}
+              headings={[
+                { title: "タイトル" },
+                { title: "作成日" },
+                { title: "プレビューURL" },
+                { title: "編集" },
+              ]}
+            >
+              {catalogs.map((catalog, index) => {
+                const createdAtDate = catalog.createdAt
+                  ? new Date(catalog.createdAt).toLocaleString()
+                  : "-";
 
-    return (
-      <IndexTable.Row
-        id={catalog.id}
-        key={catalog.id}
-        position={index}
-        selected={selectedResources.includes(catalog.id)}
-      >
-        <IndexTable.Cell>
-          <Text as="span" fontWeight="semibold">
-            {catalog.title || "(無題)"}
-          </Text>
-        </IndexTable.Cell>
+                return (
+                  <IndexTable.Row
+                    id={catalog.id}
+                    key={catalog.id}
+                    position={index}
+                    selected={selectedResources.includes(catalog.id)}
+                  >
+                    <IndexTable.Cell>
+                      <Text as="span" fontWeight="semibold">
+                        {catalog.title || "(無題)"}
+                      </Text>
+                    </IndexTable.Cell>
 
-        <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-        <IndexTable.Cell>
-          {catalog.previewUrl ? (
-            <a href={catalog.previewUrl} target="_blank" rel="noopener noreferrer">
-              {catalog.previewUrl}
-            </a>
-          ) : (
-            "-"
-          )}
-        </IndexTable.Cell>
+                    <IndexTable.Cell>
+                      {catalog.previewUrl ? (
+                        <a
+                          href={catalog.previewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {catalog.previewUrl}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </IndexTable.Cell>
 
-        <IndexTable.Cell>
-          <Button url={`/admin/catalogs/new?id=${catalog.id}`} target="_self">
-            編集
-          </Button>
-        </IndexTable.Cell>
-      </IndexTable.Row>
-    );
-  })}
-</IndexTable>
-
+                    <IndexTable.Cell>
+                      <Button
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        target="_self"
+                      >
+                        編集
+                      </Button>
+                    </IndexTable.Cell>
+                  </IndexTable.Row>
+                );
+              })}
+            </IndexTable>
           </Card>
 
           <InlineStack align="end">
