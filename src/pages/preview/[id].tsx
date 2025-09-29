@@ -55,6 +55,7 @@ export default function CatalogPreview() {
         if (snap.exists()) {
           const data = snap.data() as Omit<Catalog, "createdAt"> & {
             createdAt?: unknown;
+            products?: any[];
           };
 
           let createdAt: string | undefined;
@@ -64,13 +65,37 @@ export default function CatalogPreview() {
             createdAt = data.createdAt;
           }
 
+          // ✅ products を安全に補完
+          const products: Product[] = Array.isArray(data.products)
+            ? data.products.map((p, index) => ({
+                id: p.id || String(index),
+                title: p.title || "(無題)",
+                price: p.price,
+                year: p.year,
+                credit: p.credit,
+                type: p.type,
+                importance: p.importance,
+                edition: p.edition,
+                signed: p.signed,
+                dimensions: p.dimensions,
+                medium: p.medium,
+                frame: p.frame,
+                image: p.image || p.imageUrl, // imageUrl がある場合も利用
+              }))
+            : [];
+
           setCatalog({
-            ...data,
+            title: data.title || "(無題)",
+            products,
             createdAt,
+            previewUrl: data.previewUrl || "",
           });
+        } else {
+          setCatalog(null);
         }
       } catch (err) {
         console.error("Failed to fetch catalog:", err);
+        setCatalog(null);
       } finally {
         setLoading(false);
       }
@@ -140,6 +165,8 @@ export default function CatalogPreview() {
                     {p.price && <Text as="p">価格: ¥{p.price}</Text>}
                     {p.year && <Text as="p">制作年: {p.year}</Text>}
                     {p.dimensions && <Text as="p">サイズ: {p.dimensions}</Text>}
+                    {p.medium && <Text as="p">素材: {p.medium}</Text>}
+                    {p.frame && <Text as="p">フレーム: {p.frame}</Text>}
                   </BlockStack>
                 </Card>
               ))}
