@@ -53,31 +53,51 @@ export default function CatalogPreview() {
         if (res.ok) {
           const data = await res.json();
 
-          // products を安全に整形
+          // ✅ products を安全に整形
           const products: Product[] = Array.isArray(data.products)
-            ? data.products.map((p: any, index: number) => ({
-                id: typeof p.id === "string" ? p.id : String(index),
-                title: typeof p.title === "string" ? p.title : "(無題)",
-                price: p.price,
-                year: p.year,
-                credit: p.credit,
-                type: p.type,
-                importance: p.importance,
-                edition: p.edition,
-                signed: p.signed,
-                dimensions: p.dimensions,
-                medium: p.medium,
-                frame: p.frame,
-                image: p.image || p.imageUrl,
-                imageUrl: p.imageUrl,
-              }))
+            ? data.products.map((p, index) => {
+                const obj = p as Record<string, unknown>;
+                return {
+                  id: typeof obj.id === "string" ? obj.id : String(index),
+                  title: typeof obj.title === "string" ? obj.title : "(無題)",
+                  price: typeof obj.price === "string" ? obj.price : undefined,
+                  year: typeof obj.year === "string" ? obj.year : undefined,
+                  credit: typeof obj.credit === "string" ? obj.credit : undefined,
+                  type: typeof obj.type === "string" ? obj.type : undefined,
+                  importance:
+                    typeof obj.importance === "string"
+                      ? obj.importance
+                      : undefined,
+                  edition:
+                    typeof obj.edition === "string" ? obj.edition : undefined,
+                  signed:
+                    typeof obj.signed === "string" ? obj.signed : undefined,
+                  dimensions:
+                    typeof obj.dimensions === "string"
+                      ? obj.dimensions
+                      : undefined,
+                  medium:
+                    typeof obj.medium === "string" ? obj.medium : undefined,
+                  frame: typeof obj.frame === "string" ? obj.frame : undefined,
+                  image:
+                    typeof obj.image === "string"
+                      ? obj.image
+                      : typeof obj.imageUrl === "string"
+                      ? obj.imageUrl
+                      : undefined,
+                  imageUrl:
+                    typeof obj.imageUrl === "string" ? obj.imageUrl : undefined,
+                };
+              })
             : [];
 
           setCatalog({
-            title: data.title || "(無題)",
+            title: typeof data.title === "string" ? data.title : "(無題)",
             products,
-            createdAt: data.createdAt || undefined,
-            previewUrl: data.previewUrl || "",
+            createdAt:
+              typeof data.createdAt === "string" ? data.createdAt : undefined,
+            previewUrl:
+              typeof data.previewUrl === "string" ? data.previewUrl : "",
           });
         } else {
           console.warn("Catalog fetch failed:", res.status);
@@ -142,7 +162,7 @@ export default function CatalogPreview() {
                 <Card key={p.id}>
                   <BlockStack gap="200">
                     {p.image && (
-                      // ⚠️ 後で next/image に置き換え予定
+                      // ⚠️ 後で next/image に切り替え予定
                       <img
                         src={p.image}
                         alt={p.title}
@@ -154,7 +174,9 @@ export default function CatalogPreview() {
                     </Text>
                     {p.price && <Text as="p">価格: ¥{p.price}</Text>}
                     {p.year && <Text as="p">制作年: {p.year}</Text>}
-                    {p.dimensions && <Text as="p">サイズ: {p.dimensions}</Text>}
+                    {p.dimensions && (
+                      <Text as="p">サイズ: {p.dimensions}</Text>
+                    )}
                     {p.medium && <Text as="p">素材: {p.medium}</Text>}
                     {p.frame && <Text as="p">フレーム: {p.frame}</Text>}
                   </BlockStack>
