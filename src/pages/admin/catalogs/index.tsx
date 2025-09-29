@@ -125,39 +125,42 @@ const {
 
                 return (
                   <IndexTable.Row
-                    id={catalog.id}
-                    key={catalog.id}
-                    position={index}
-                    selected={selectedResources.includes(catalog.id)}
-                  >
-                    <IndexTable.Cell>
-                      <Text as="span" fontWeight="semibold">
-                        {catalog.title || "(無題)"}
-                      </Text>
-                    </IndexTable.Cell>
+  id={catalog.id}
+  key={catalog.id}
+  position={index}
+  selected={selectedResources.includes(catalog.id)}
+>
+  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
+    <Text as="span" fontWeight="semibold">
+      {catalog.title || "(無題)"}
+    </Text>
+  </IndexTable.Cell>
 
-                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
+    {createdAtDate}
+  </IndexTable.Cell>
 
-                    <IndexTable.Cell>
-                      {catalog.previewUrl ? (
-                        <Text as="span" tone="subdued">
-                          {catalog.previewUrl}
-                        </Text>
-                      ) : (
-                        "-"
-                      )}
-                    </IndexTable.Cell>
+  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
+    {catalog.previewUrl ? (
+      <Text as="span" tone="subdued">
+        {catalog.previewUrl}
+      </Text>
+    ) : (
+      "-"
+    )}
+  </IndexTable.Cell>
 
-                    <IndexTable.Cell>
-                      {catalog.previewUrl ? (
-                        <PolarisLink url={catalog.previewUrl} external>
-                          View
-                        </PolarisLink>
-                      ) : (
-                        "-"
-                      )}
-                    </IndexTable.Cell>
-                  </IndexTable.Row>
+  <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
+    {catalog.previewUrl ? (
+      <PolarisLink url={catalog.previewUrl} external>
+        View
+      </PolarisLink>
+    ) : (
+      "-"
+    )}
+  </IndexTable.Cell>
+</IndexTable.Row>
+
                 );
               })}
             </IndexTable>
