@@ -102,7 +102,6 @@ export default function CatalogsIndex() {
                   allResourcesSelected ? "All" : selectedResources.length
                 }
                 onSelectionChange={handleSelectionChange}
-                selectable
                 headings={[
                   { title: "タイトル" },
                   { title: "作成日" },
