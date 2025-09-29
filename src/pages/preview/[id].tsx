@@ -46,11 +46,15 @@ export default function CatalogPreview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    // ✅ id が string になるまで待つ
+    if (!id || typeof id !== "string") {
+      return;
+    }
 
     const fetchCatalog = async () => {
       try {
-        const ref = doc(db, "shopify_catalogs_app", id as string);
+        console.log("Fetching catalog with id:", id);
+        const ref = doc(db, "shopify_catalogs_app", id);
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
@@ -58,7 +62,7 @@ export default function CatalogPreview() {
             title?: string;
             createdAt?: unknown;
             previewUrl?: string;
-            products?: unknown[]; // ✅ unknown[] にする
+            products?: unknown[];
           };
 
           let createdAt: string | undefined;
@@ -68,7 +72,6 @@ export default function CatalogPreview() {
             createdAt = data.createdAt;
           }
 
-          // ✅ products を安全に補完
           const products: Product[] = Array.isArray(data.products)
             ? data.products.map((p, index) => {
                 const obj = p as Record<string, unknown>;
@@ -119,6 +122,7 @@ export default function CatalogPreview() {
             previewUrl: data.previewUrl || "",
           });
         } else {
+          console.warn("No catalog found for id:", id);
           setCatalog(null);
         }
       } catch (err) {
@@ -180,7 +184,6 @@ export default function CatalogPreview() {
                 <Card key={p.id}>
                   <BlockStack gap="200">
                     {p.image && (
-                      // ⚠️ 後で next/image に切り替え予定
                       <img
                         src={p.image}
                         alt={p.title}
