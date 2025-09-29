@@ -1,12 +1,11 @@
 // src/pages/preview/[id].tsx
-"use client";
-
 import { useEffect, useState } from "react";
 
 interface Product {
   id: string;
   title: string;
-  [key: string]: string | number | undefined; // 追加フィールドも許容
+  price?: string;
+  imageUrl?: string;
 }
 
 interface Catalog {
@@ -17,7 +16,7 @@ interface Catalog {
   previewUrl: string;
 }
 
-export default function PreviewPage() {
+export default function PublicCatalog() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,28 +24,17 @@ export default function PreviewPage() {
     const fetchCatalog = async () => {
       try {
         const id = window.location.pathname.split("/").pop();
-        if (!id) {
-          setCatalog(null);
-          setLoading(false);
-          return;
-        }
+        if (!id) return;
 
         const res = await fetch(`/api/catalogs/${id}`);
-        if (!res.ok) {
-          setCatalog(null);
-          setLoading(false);
-          return;
-        }
+        if (!res.ok) return;
 
         const data = await res.json();
         if (data && data.catalog) {
           setCatalog(data.catalog);
-        } else {
-          setCatalog(null);
         }
-      } catch (error) {
-        console.error("Error fetching catalog:", error);
-        setCatalog(null);
+      } catch (err) {
+        console.error("Error:", err);
       } finally {
         setLoading(false);
       }
@@ -55,23 +43,51 @@ export default function PreviewPage() {
     fetchCatalog();
   }, []);
 
-  // ✅ 条件分岐の整理
   if (loading) {
-    return <p>Loading...</p>;
+    return <div className="text-center p-10 text-gray-600">Loading...</div>;
   }
 
   if (!catalog) {
-    return <p>カタログが見つかりませんでした</p>;
+    return <div className="text-center p-10 text-gray-600">カタログが見つかりませんでした</div>;
   }
 
   return (
-    <div>
-      <h1>{catalog.title}</h1>
-      <ul>
-        {catalog.products?.map((p) => (
-          <li key={p.id}>{p.title}</li>
-        ))}
-      </ul>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-6xl mx-auto px-6">
+        {/* タイトル */}
+        <h1 className="text-4xl font-bold text-center mb-12">{catalog.title}</h1>
+
+        {/* 商品グリッド */}
+        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {catalog.products?.map((p) => (
+            <div
+              key={p.id}
+              className="bg-white rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1"
+            >
+              {/* 商品画像 */}
+              {p.imageUrl ? (
+                <img
+                  src={p.imageUrl}
+                  alt={p.title}
+                  className="w-full h-56 object-cover rounded-t-xl"
+                />
+              ) : (
+                <div className="w-full h-56 bg-gray-200 flex items-center justify-center rounded-t-xl">
+                  <span className="text-gray-400">No Image</span>
+                </div>
+              )}
+
+              {/* 商品情報 */}
+              <div className="p-4">
+                <h2 className="text-lg font-semibold truncate">{p.title}</h2>
+                {p.price && (
+                  <p className="text-gray-600 mt-2">{Number(p.price).toLocaleString()}円</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
