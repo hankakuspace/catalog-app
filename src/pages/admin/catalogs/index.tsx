@@ -1,153 +1,176 @@
 // src/pages/admin/catalogs/index.tsx
-"use client";
-
 import { useEffect, useState } from "react";
 import {
-  Page,
-  Layout,
-  IndexTable,
-  useIndexResourceState,
-  Button,
   Card,
+  IndexTable,
   Text,
+  Spinner,
+  EmptyState,
+  Page,
+  Link as PolarisLink,
+  Button,
+  InlineStack,
   BlockStack,
+  useIndexResourceState,
 } from "@shopify/polaris";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface Catalog {
   id: string;
   title: string;
-  createdAt: string;
+  createdAt?: string;
   previewUrl?: string;
 }
 
-export default function CatalogsIndex() {
+export default function CatalogListPage() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const resourceName = {
-    singular: "catalog",
-    plural: "catalogs",
-  };
-
-  const {
-    selectedResources,
-    allResourcesSelected,
-    handleSelectionChange,
-    clearSelection,
-  } = useIndexResourceState(catalogs.map((c) => c.id)); // ✅ 元の形
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCatalogs = async () => {
       try {
-        const snapshot = await getDocs(collection(db, "shopify_catalogs_app"));
-        const items: Catalog[] = snapshot.docs.map((docSnap) => {
-          const data = docSnap.data();
-          let createdAt = "";
-          if (data.createdAt?.toDate) {
-            createdAt = data.createdAt.toDate().toLocaleString("ja-JP");
-          } else if (typeof data.createdAt === "string") {
-            createdAt = new Date(data.createdAt).toLocaleString("ja-JP");
-          }
-          return {
-            id: docSnap.id,
-            title: data.title || "",
-            createdAt,
-            previewUrl: data.previewUrl || "",
-          };
-        });
-        setCatalogs(items);
+        const res = await fetch("/api/catalogs/list");
+        const data = await res.json();
+        setCatalogs(data.catalogs || []);
       } catch (err) {
-        console.error("Failed to fetch catalogs:", err);
+        console.error("Failed to load catalogs:", err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchData();
+    fetchCatalogs();
   }, []);
+
+  // ✅ Polaris の選択管理フック
+  const {
+    selectedResources,
+    allResourcesSelected,
+    handleSelectionChange,
+  } = useIndexResourceState(catalogs);
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
-
+    setDeleting(true);
     try {
-      for (const id of selectedResources) {
-        await deleteDoc(doc(db, "shopify_catalogs_app", id));
-      }
+      await fetch("/api/catalogs/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedResources }),
+      });
       setCatalogs((prev) =>
-        prev.filter((catalog) => !selectedResources.includes(catalog.id))
+        prev.filter((c) => !selectedResources.includes(c.id))
       );
-      clearSelection();
     } catch (err) {
       console.error("Failed to delete catalogs:", err);
+    } finally {
+      setDeleting(false);
     }
   };
 
   return (
-    <Page title="保存済みカタログ一覧">
-      <Layout>
-        <Layout.Section>
-          <BlockStack gap="400">
+    <Page title="保存済みカタログ一覧" fullWidth>
+      {loading ? (
+        <Card>
+          <div style={{ padding: "20px", textAlign: "center" }}>
+            <Spinner accessibilityLabel="Loading catalogs" size="large" />
+          </div>
+        </Card>
+      ) : catalogs.length === 0 ? (
+        <Card>
+          <EmptyState
+            heading="保存されたカタログはありません"
+            action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
+            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+          >
+            <p>カタログを作成すると、ここに一覧表示されます。</p>
+          </EmptyState>
+        </Card>
+      ) : (
+        <BlockStack gap="400">
+          {/* 削除 + 新規作成ボタン */}
+          <InlineStack gap="200" align="start" blockAlign="center">
             <Button
-              destructive // ✅ 元の形
+              tone="critical"
+              disabled={selectedResources.length === 0 || deleting}
               onClick={handleDelete}
-              disabled={!selectedResources.length}
+              loading={deleting}
             >
               削除
             </Button>
+            <Button variant="primary" url="/admin/catalogs/new">
+              新規カタログ作成
+            </Button>
+          </InlineStack>
 
-            <Card>
-              <IndexTable
-                resourceName={resourceName}
-                itemCount={catalogs.length}
-                selectedItemsCount={
-                  allResourcesSelected ? "All" : selectedResources.length
-                }
-                onSelectionChange={handleSelectionChange}
-                headings={[
-                  { title: "タイトル" },
-                  { title: "作成日" },
-                  { title: "プレビューURL" },
-                  { title: "操作" },
-                ]}
-              >
-                {catalogs.map(({ id, title, createdAt, previewUrl }, index) => (
+          {/* 一覧テーブル */}
+          <Card>
+            <IndexTable
+              resourceName={{ singular: "catalog", plural: "catalogs" }}
+              itemCount={catalogs.length}
+              headings={[
+                { title: "タイトル" },
+                { title: "作成日" },
+                { title: "プレビューURL" },
+                { title: "View" },
+              ]}
+              selectable
+              selectedItemsCount={selectedResources.length}
+              allResourcesSelected={allResourcesSelected}
+              onSelectionChange={handleSelectionChange}
+            >
+              {catalogs.map((catalog, index) => {
+                const createdAtDate = catalog.createdAt
+                  ? new Date(catalog.createdAt).toLocaleString()
+                  : "-";
+
+                return (
                   <IndexTable.Row
-                    id={id}
-                    key={id}
+                    id={catalog.id}
+                    key={catalog.id}
                     position={index}
-                    selected={selectedResources.includes(id)}
+                    selected={selectedResources.includes(catalog.id)}
                   >
-                    <IndexTable.Cell>{title}</IndexTable.Cell>
-                    <IndexTable.Cell>{createdAt}</IndexTable.Cell>
                     <IndexTable.Cell>
-                      {previewUrl ? (
-                        <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-                          View
-                        </a>
+                      <Text as="span" fontWeight="semibold">
+                        {catalog.title || "(無題)"}
+                      </Text>
+                    </IndexTable.Cell>
+
+                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+
+                    <IndexTable.Cell>
+                      {catalog.previewUrl ? (
+                        <Text as="span" tone="subdued">
+                          {catalog.previewUrl}
+                        </Text>
                       ) : (
                         "-"
                       )}
                     </IndexTable.Cell>
+
                     <IndexTable.Cell>
-                      <Text as="span" tone="subdued">
-                        -
-                      </Text>
+                      {catalog.previewUrl ? (
+                        <PolarisLink url={catalog.previewUrl} external>
+                          View
+                        </PolarisLink>
+                      ) : (
+                        "-"
+                      )}
                     </IndexTable.Cell>
                   </IndexTable.Row>
-                ))}
-              </IndexTable>
-            </Card>
+                );
+              })}
+            </IndexTable>
+          </Card>
 
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button primary url="/admin/catalogs/new">
-                新規カタログ作成
-              </Button>
-            </div>
-          </BlockStack>
-        </Layout.Section>
-      </Layout>
+          {/* 下部の新規作成ボタン */}
+          <InlineStack align="end">
+            <Button variant="primary" url="/admin/catalogs/new">
+              新規カタログ作成
+            </Button>
+          </InlineStack>
+        </BlockStack>
+      )}
     </Page>
   );
 }
