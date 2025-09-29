@@ -46,7 +46,7 @@ const {
   selectedResources,
   allResourcesSelected,
   handleSelectionChange,
-} = useIndexResourceState(catalogs as any);
+} = useIndexResourceState(catalogs as unknown as { [key: string]: unknown }[]);
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
