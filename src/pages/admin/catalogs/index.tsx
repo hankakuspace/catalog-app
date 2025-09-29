@@ -40,8 +40,12 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  const { selectedResources, allResourcesSelected, handleSelectionChange } =
-    useIndexResourceState(catalogs);
+  // ✅ 型指定を明示
+  const {
+    selectedResources,
+    allResourcesSelected,
+    handleSelectionChange,
+  } = useIndexResourceState<Catalog>(catalogs);
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
@@ -99,7 +103,7 @@ export default function CatalogListPage() {
           <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
-              itemCount={catalogs.length}   // ✅ 必須
+              itemCount={catalogs.length}
               selectedItemsCount={
                 allResourcesSelected ? "All" : selectedResources.length
               }
