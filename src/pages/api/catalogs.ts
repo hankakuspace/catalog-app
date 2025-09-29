@@ -11,7 +11,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!doc.exists) return res.status(404).json({ error: "Not found" });
         return res.status(200).json({ catalog: { id: doc.id, ...doc.data() } });
       }
-      const snapshot = await dbAdmin.collection("shopify_catalogs_app")
+      const snapshot = await dbAdmin
+        .collection("shopify_catalogs_app")
         .orderBy("createdAt", "desc")
         .get();
       const catalogs = snapshot.docs.map((doc) => ({
@@ -57,8 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(405).json({ error: "Method not allowed" });
-  } catch (err: any) {
+  } catch (err) {
     console.error("❌ API error:", err);
-    return res.status(500).json({ error: err.message });
+    if (err instanceof Error) {
+      return res.status(500).json({ error: err.message });
+    }
+    return res.status(500).json({ error: String(err) });
   }
 }
