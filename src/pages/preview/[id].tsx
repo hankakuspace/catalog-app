@@ -33,7 +33,7 @@ interface Product {
 interface Catalog {
   title: string;
   products: Product[];
-  createdAt?: string | Timestamp;
+  createdAt?: string; // ✅ string のみに統一
   previewUrl?: string;
 }
 
@@ -53,7 +53,7 @@ export default function CatalogPreview() {
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
-          const data = snap.data() as Catalog;
+          const data = snap.data() as Catalog & { createdAt?: any };
 
           let createdAt: string | undefined;
           if (data.createdAt instanceof Timestamp) {
@@ -124,7 +124,7 @@ export default function CatalogPreview() {
               {catalog.products?.map((p) => (
                 <Card key={p.id} sectioned>
                   {p.image && (
-                    // Next.js Lint対策: ここは <Image> に置き換えるのが推奨
+                    // ⚠️ Lint 警告が出るが、まずは <img> で維持
                     <img
                       src={p.image}
                       alt={p.title}
