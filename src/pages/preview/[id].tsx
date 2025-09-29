@@ -54,9 +54,11 @@ export default function CatalogPreview() {
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
-          const data = snap.data() as Omit<Catalog, "createdAt"> & {
+          const data = snap.data() as {
+            title?: string;
             createdAt?: unknown;
-            products?: unknown[]; // ✅ unknown に修正
+            previewUrl?: string;
+            products?: unknown[]; // ✅ unknown[] にする
           };
 
           let createdAt: string | undefined;
