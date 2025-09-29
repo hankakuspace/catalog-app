@@ -14,7 +14,7 @@ interface Catalog {
   title: string;
   products: Product[];
   previewUrl: string;
-  createdAt: any;
+  createdAt: { _seconds: number; _nanoseconds: number } | string;
 }
 
 export default function PublicCatalog() {
@@ -25,13 +25,10 @@ export default function PublicCatalog() {
     const fetchCatalog = async () => {
       try {
         const id = window.location.pathname.split("/").pop();
-        console.log("📌 PreviewPage id:", id);
         if (!id) return;
 
         const res = await fetch(`/api/catalogs/${id}`);
-        console.log("📌 API status:", res.status);
         const data = await res.json();
-        console.log("📌 API response:", data);
 
         if (data?.catalog) {
           setCatalog(data.catalog);
