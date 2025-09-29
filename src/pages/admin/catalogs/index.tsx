@@ -13,7 +13,7 @@ import {
 interface Catalog {
   id: string;
   title: string;
-  createdAt?: string; // ISO文字列で返却される
+  createdAt?: string;
   previewUrl?: string;
 }
 
@@ -98,7 +98,8 @@ export default function CatalogListPage() {
                         View
                       </PolarisLink>
                     ) : (
-                      "-"}
+                      "-"   // ← ✅ 修正: 閉じ括弧のズレを解消
+                    )}
                   </IndexTable.Cell>
                 </IndexTable.Row>
               );
