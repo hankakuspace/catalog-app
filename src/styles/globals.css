@@ -2,8 +2,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* テスト用 */
-body {
-  background: red !important;
-}
