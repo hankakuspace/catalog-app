@@ -50,8 +50,19 @@ export default function PublicCatalog() {
     fetchCatalog();
   }, []);
 
-  if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
-  if (!catalog) return <div className="min-h-screen bg-black text-white flex items-center justify-center">カタログが見つかりませんでした</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading...
+      </div>
+    );
+
+  if (!catalog)
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        カタログが見つかりませんでした
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -74,7 +85,7 @@ export default function PublicCatalog() {
                 <img
                   src={p.imageUrl}
                   alt={p.title}
-                  className="block w-full h-80 object-contain bg-white border-b border-gray-200 rounded-t-xl"
+                  className="block w-full h-80 object-contain bg-gray-100 border-b border-gray-200 rounded-t-xl"
                 />
               ) : (
                 <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
@@ -85,11 +96,21 @@ export default function PublicCatalog() {
               {/* 商品情報 */}
               <div className="p-4 flex flex-col flex-grow">
                 <h2 className="text-lg font-semibold mb-1">{p.title}</h2>
-                {p.artist && <p className="text-sm text-gray-600 mb-1">{p.artist}</p>}
-                {p.year && <p className="text-sm text-gray-600 mb-1">{p.year}</p>}
-                {p.dimensions && <p className="text-sm text-gray-600 mb-1">{p.dimensions}</p>}
-                {p.medium && <p className="text-sm text-gray-600 mb-1">{p.medium}</p>}
-                {p.frame && <p className="text-sm text-gray-600 mb-1">{p.frame}</p>}
+                {p.artist && (
+                  <p className="text-sm text-gray-600 mb-1">{p.artist}</p>
+                )}
+                {p.year && (
+                  <p className="text-sm text-gray-600 mb-1">{p.year}</p>
+                )}
+                {p.dimensions && (
+                  <p className="text-sm text-gray-600 mb-1">{p.dimensions}</p>
+                )}
+                {p.medium && (
+                  <p className="text-sm text-gray-600 mb-1">{p.medium}</p>
+                )}
+                {p.frame && (
+                  <p className="text-sm text-gray-600 mb-1">{p.frame}</p>
+                )}
                 {p.price && (
                   <p className="text-base font-medium text-gray-800 mt-auto">
                     {Number(p.price).toLocaleString()} 円（税込）
