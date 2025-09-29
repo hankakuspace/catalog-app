@@ -11,6 +11,7 @@ import {
   Button,
   InlineStack,
   BlockStack,
+  useIndexResourceState,
 } from "@shopify/polaris";
 
 interface Catalog {
@@ -23,7 +24,6 @@ interface Catalog {
 export default function CatalogListPage() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -41,6 +41,13 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
+  // ✅ Polaris の選択管理フック
+  const {
+    selectedResources,
+    allResourcesSelected,
+    handleSelectionChange,
+  } = useIndexResourceState(catalogs);
+
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     setDeleting(true);
@@ -53,7 +60,6 @@ export default function CatalogListPage() {
       setCatalogs((prev) =>
         prev.filter((c) => !selectedResources.includes(c.id))
       );
-      setSelectedResources([]);
     } catch (err) {
       console.error("Failed to delete catalogs:", err);
     } finally {
@@ -81,7 +87,7 @@ export default function CatalogListPage() {
         </Card>
       ) : (
         <BlockStack gap="400">
-          {/* 削除 + 新規作成ボタンを横並びに配置 */}
+          {/* 削除 + 新規作成ボタン */}
           <InlineStack gap="200" align="start" blockAlign="center">
             <Button
               tone="critical"
@@ -109,10 +115,8 @@ export default function CatalogListPage() {
               ]}
               selectable
               selectedItemsCount={selectedResources.length}
-              onSelectionChange={(selected) => {
-                // SelectionType を string[] として処理
-                setSelectedResources(selected as unknown as string[]);
-              }}
+              allResourcesSelected={allResourcesSelected}
+              onSelectionChange={handleSelectionChange}
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
