@@ -55,7 +55,7 @@ export default function CatalogPreview() {
         if (snap.exists()) {
           const data = snap.data() as Omit<Catalog, "createdAt"> & {
             createdAt?: unknown;
-            products?: any[];
+            products?: Record<string, unknown>[];
           };
 
           let createdAt: string | undefined;
