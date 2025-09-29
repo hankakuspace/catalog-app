@@ -63,10 +63,10 @@ export default function PublicCatalog() {
               {/* 画像 */}
               {p.imageUrl ? (
                 <img
-                  src={p.imageUrl}
-                  alt={p.title}
-                  className="w-full aspect-square object-cover rounded-t-xl"
-                />
+  src={p.imageUrl}
+  alt={p.title}
+  className="block w-full h-auto aspect-square object-cover rounded-t-xl"
+/>
               ) : (
                 <div className="w-full aspect-square bg-gray-200 flex items-center justify-center rounded-t-xl">
                   <span className="text-gray-400">No Image</span>
