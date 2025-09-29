@@ -14,42 +14,40 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <Frame
       navigation={
         <Navigation location={router.pathname}>
-  <Navigation.Section
-    items={[
-      {
-        label: "TOP",
-        url: "/admin",
-        selected: router.pathname === "/admin",
-      },
-    ]}
-  />
-  <div style={{ marginTop: "6px" }} /> {/* ✅ 適度な余白 */}
-  <Navigation.Section
-    items={[
-      {
-        label: "カタログ一覧",
-        url: "/admin/catalogs",
-        selected:
-          router.pathname.startsWith("/admin/catalogs") &&
-          router.pathname !== "/admin/catalogs/new",
-      },
-    ]}
-  />
-  <div style={{ marginTop: "6px" }} /> {/* ✅ 適度な余白 */}
-  <Navigation.Section
-    items={[
-      {
-        label: "新規カタログ作成",
-        url: "/admin/catalogs/new",
-        selected: router.pathname === "/admin/catalogs/new",
-      },
-    ]}
-  />
-</Navigation>
-
+          <Navigation.Section
+            items={[
+              {
+                label: "TOP",
+                url: "/admin",
+                selected: router.pathname === "/admin",
+              },
+            ]}
+          />
+          <div style={{ marginTop: "2px" }} /> {/* ✅ 2px に調整 */}
+          <Navigation.Section
+            items={[
+              {
+                label: "カタログ一覧",
+                url: "/admin/catalogs",
+                selected:
+                  router.pathname.startsWith("/admin/catalogs") &&
+                  router.pathname !== "/admin/catalogs/new",
+              },
+            ]}
+          />
+          <div style={{ marginTop: "2px" }} /> {/* ✅ 2px に調整 */}
+          <Navigation.Section
+            items={[
+              {
+                label: "新規カタログ作成",
+                url: "/admin/catalogs/new",
+                selected: router.pathname === "/admin/catalogs/new",
+              },
+            ]}
+          />
+        </Navigation>
       }
     >
-      {/* 🔹 Polaris Frame 配下にコンテンツを必ず配置 */}
       <main style={{ padding: "20px" }}>{children}</main>
     </Frame>
   );
