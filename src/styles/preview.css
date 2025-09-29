@@ -1,0 +1,8 @@
+/* src/styles/preview.css */
+body {
+  font-family: sans-serif;
+}
+img {
+  height: 320px;
+  object-fit: cover;
+}

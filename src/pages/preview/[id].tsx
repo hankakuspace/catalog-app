@@ -1,6 +1,8 @@
 // src/pages/preview/[id].tsx
 import { useEffect, useState } from "react";
 import Head from "next/head";
+import "@/styles/preview.css";
+
 
 export default function PublicCatalog() {
   const [catalog, setCatalog] = useState<any>(null);
