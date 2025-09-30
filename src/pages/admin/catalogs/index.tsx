@@ -78,7 +78,7 @@ export default function CatalogListPage() {
                 { title: "プレビューURL" },
                 { title: "編集" },
               ]}
-              selectable={false} // ✅ 選択機能を完全オフ
+              selectable={false}
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
@@ -101,10 +101,14 @@ export default function CatalogListPage() {
                           href={catalog.previewUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sky-600 hover:underline"
+                          className="text-sky-600 hover:underline inline-flex items-center"
                         >
                           {catalog.previewUrl}
-                          <Icon source={ExternalIcon} tone="base" />
+                          <Icon
+                            source={ExternalIcon}
+                            tone="base"
+                            style={{ marginLeft: "15px" }}
+                          />
                         </a>
                       ) : (
                         "-"
