@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "POST") {
-      const { title, leadText, products, shop } = req.body;
+      const { title, leadText, products, shop, columnCount } = req.body;
       if (!title || !products || !shop) {
         return res.status(400).json({ error: "Missing fields" });
       }
@@ -48,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         leadText: leadText || "",
         products,
         shop,
+        columnCount: columnCount || 3, // ✅ 列数も保存
         createdAt: FieldValue.serverTimestamp(),
         previewUrl,
       });
@@ -56,13 +57,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "PUT") {
-      const { id, title, leadText, products } = req.body;
+      const { id, title, leadText, products, columnCount } = req.body;
       if (!id) return res.status(400).json({ error: "Missing id" });
 
       await dbAdmin.collection("shopify_catalogs_app").doc(id).update({
         title,
         leadText: leadText || "",
         products,
+        columnCount: columnCount || 3, // ✅ 列数を更新
         updatedAt: FieldValue.serverTimestamp(),
       });
 
