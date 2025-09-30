@@ -16,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ...data,
             createdAt: data?.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
             updatedAt: data?.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : null,
+            expiresAt: data?.expiresAt?.toDate ? data.expiresAt.toDate().toISOString() : null,
           },
         });
       }
@@ -27,13 +28,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ...data,
           createdAt: data?.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
           updatedAt: data?.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : null,
+          expiresAt: data?.expiresAt?.toDate ? data.expiresAt.toDate().toISOString() : null,
         };
       });
       return res.status(200).json({ catalogs });
     }
 
     if (req.method === "POST") {
-      const { title, leadText, products, shop, columnCount } = req.body;
+      const { title, leadText, products, shop, columnCount, passwordEnabled, username, password, expiresAt } = req.body;
       if (!title || !products || !shop) {
         return res.status(400).json({ error: "Missing fields" });
       }
@@ -48,7 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         leadText: leadText || "",
         products,
         shop,
-        columnCount: columnCount || 3, // ✅ 列数も保存
+        columnCount: columnCount || 3,
+        passwordEnabled: passwordEnabled || false,
+        username: username || "",
+        password: password || "",
+        expiresAt: expiresAt ? new Date(expiresAt) : null, // ✅ 有効期限を保存
         createdAt: FieldValue.serverTimestamp(),
         previewUrl,
       });
@@ -57,14 +63,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "PUT") {
-      const { id, title, leadText, products, columnCount } = req.body;
+      const { id, title, leadText, products, columnCount, passwordEnabled, username, password, expiresAt } = req.body;
       if (!id) return res.status(400).json({ error: "Missing id" });
 
       await dbAdmin.collection("shopify_catalogs_app").doc(id).update({
         title,
         leadText: leadText || "",
         products,
-        columnCount: columnCount || 3, // ✅ 列数を更新
+        columnCount: columnCount || 3,
+        passwordEnabled: passwordEnabled || false,
+        username: username || "",
+        password: password || "",
+        expiresAt: expiresAt ? new Date(expiresAt) : null, // ✅ 有効期限を更新
         updatedAt: FieldValue.serverTimestamp(),
       });
 
