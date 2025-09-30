@@ -204,33 +204,36 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
-            {/* ログイン認証 */}
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingSm">
-                ログイン認証
-              </Text>
-              <InlineStack gap="200" blockAlign="center">
-                <TextField
-                  label="ユーザー名"
-                  labelHidden
-                  placeholder="ユーザー名"
-                  value={username}
-                  onChange={setUsername}
-                  autoComplete="off"
-                  style={{ flex: 1 }}
-                />
-                <TextField
-                  label="パスワード"
-                  labelHidden
-                  placeholder="パスワード"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  autoComplete="off"
-                  style={{ flex: 1 }}
-                />
-              </InlineStack>
-            </BlockStack>
+           {/* ログイン認証 */}
+<BlockStack gap="200">
+  <Text as="h2" variant="headingSm">
+    ログイン認証
+  </Text>
+  <InlineStack gap="200" blockAlign="center">
+    <div style={{ flex: 1 }}>
+      <TextField
+        label="ユーザー名"
+        labelHidden
+        placeholder="ユーザー名"
+        value={username}
+        onChange={setUsername}
+        autoComplete="off"
+      />
+    </div>
+    <div style={{ flex: 1 }}>
+      <TextField
+        label="パスワード"
+        labelHidden
+        placeholder="パスワード"
+        type="password"
+        value={password}
+        onChange={setPassword}
+        autoComplete="off"
+      />
+    </div>
+  </InlineStack>
+</BlockStack>
+
 
             {/* 有効期限 */}
             <Popover
