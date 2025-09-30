@@ -104,11 +104,9 @@ export default function CatalogListPage() {
                           className="text-sky-600 hover:underline inline-flex items-center"
                         >
                           {catalog.previewUrl}
-                          <Icon
-                            source={ExternalIcon}
-                            tone="base"
-                            style={{ marginLeft: "15px" }}
-                          />
+                          <span style={{ marginLeft: "15px" }}>
+                            <Icon source={ExternalIcon} tone="base" />
+                          </span>
                         </a>
                       ) : (
                         "-"
