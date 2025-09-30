@@ -18,6 +18,16 @@ import {
   Banner,
 } from "@shopify/polaris";
 import PreviewCatalog from "@/components/PreviewCatalog";
+import Quill from "quill";
+
+// ✅ Quill のフォントホワイトリストを拡張
+const Font = Quill.import("formats/font");
+Font.whitelist = [
+  "sans", "serif", "monospace",
+  "noto-sans", "noto-serif", "noto-sans-jp", "noto-serif-jp",
+  "yu-gothic", "hiragino-kaku-gothic"
+];
+Quill.register(Font, true);
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -127,10 +137,25 @@ export default function NewCatalogPage() {
         {id ? "カタログ編集" : "新規カタログ作成"}
       </Text>
 
-      {saveSuccess && <Banner tone="success" title="保存完了">カタログを保存しました。</Banner>}
-      {saveError && <Banner tone="critical" title="エラー">{saveError}</Banner>}
+      {saveSuccess && (
+        <Banner tone="success" title="保存完了">
+          カタログを保存しました。
+        </Banner>
+      )}
+      {saveError && (
+        <Banner tone="critical" title="エラー">
+          {saveError}
+        </Banner>
+      )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginTop: "20px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "3fr 1fr",
+          gap: "20px",
+          marginTop: "20px",
+        }}
+      >
         {/* 左：公開プレビュー */}
         <Card>
           <PreviewCatalog title={title} leadText={leadText} products={selectedProducts} />
@@ -139,17 +164,25 @@ export default function NewCatalogPage() {
         {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
-            <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
+            <TextField
+              label="タイトル"
+              value={title}
+              onChange={setTitle}
+              autoComplete="off"
+            />
 
             <div>
-            <Text as="h2" variant="headingSm">リード文</Text>
+              <Text as="h2" variant="headingSm">
+                リード文
+              </Text>
               <ReactQuill
                 theme="snow"
                 value={leadText}
                 onChange={setLeadText}
                 modules={{
                   toolbar: [
-                    [{ font: [] }, { size: [] }],
+                    [{ font: Font.whitelist }], // ✅ 拡張フォント
+                    [{ size: [] }],
                     ["bold", "italic", "underline", "strike"],
                     [{ color: [] }, { background: [] }],
                     [{ align: [] }],
@@ -170,7 +203,9 @@ export default function NewCatalogPage() {
               />
             </div>
 
-           <Text as="h2" variant="headingSm">作品検索</Text>
+            <Text as="h2" variant="headingSm">
+              作品検索
+            </Text>
             <TextField
               label="検索キーワード"
               labelHidden
@@ -196,7 +231,11 @@ export default function NewCatalogPage() {
                     onClick={() => handleAddProduct(item)}
                     media={
                       item.imageUrl ? (
-                        <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
+                        <Thumbnail
+                          source={item.imageUrl}
+                          alt={item.title}
+                          size="small"
+                        />
                       ) : undefined
                     }
                   >
