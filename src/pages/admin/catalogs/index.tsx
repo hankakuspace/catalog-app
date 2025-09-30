@@ -125,39 +125,46 @@ export default function CatalogListPage() {
                     key={catalog.id}
                     position={index}
                     selected={selectedResources.includes(catalog.id)}
-                    className="cursor-default" // ✅ ハンドカーソルを無効化
                   >
                     <IndexTable.Cell>
-                      <Text as="span" fontWeight="semibold">
-                        {catalog.title || "(無題)"}
-                      </Text>
+                      <div className="cursor-default">
+                        <Text as="span" fontWeight="semibold">
+                          {catalog.title || "(無題)"}
+                        </Text>
+                      </div>
                     </IndexTable.Cell>
 
-                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+                    <IndexTable.Cell>
+                      <div className="cursor-default">{createdAtDate}</div>
+                    </IndexTable.Cell>
 
                     <IndexTable.Cell>
-                      {catalog.previewUrl ? (
-                        <a
-                          href={catalog.previewUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sky-600 hover:underline"
+                      <div className="cursor-default">
+                        {catalog.previewUrl ? (
+                          <a
+                            href={catalog.previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sky-600 hover:underline"
+                          >
+                            {catalog.previewUrl}
+                            <ExternalIcon />
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </div>
+                    </IndexTable.Cell>
+
+                    <IndexTable.Cell>
+                      <div className="cursor-default">
+                        <Button
+                          url={`/admin/catalogs/new?id=${catalog.id}`}
+                          target="_self"
                         >
-                          {catalog.previewUrl}
-                          <ExternalIcon />
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </IndexTable.Cell>
-
-                    <IndexTable.Cell>
-                      <Button
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
-                        target="_self"
-                      >
-                        編集
-                      </Button>
+                          編集
+                        </Button>
+                      </div>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
