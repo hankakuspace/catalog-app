@@ -1,7 +1,7 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import {
   BlockStack,
@@ -14,28 +14,8 @@ import {
   Thumbnail,
   Button,
   Banner,
-  Popover,
-  ActionList,
 } from "@shopify/polaris";
-import { MenuHorizontalIcon } from "@shopify/polaris-icons";
-import styles from "./new.module.css";
-
-// dnd-kit
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-  rectSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import PreviewCatalog from "@/components/PreviewCatalog";
 
 interface Product {
   id: string;
@@ -46,37 +26,7 @@ interface Product {
   year?: string;
   dimensions?: string;
   medium?: string;
-}
-
-function SortableItem({
-  id,
-  isReorderMode,
-  children,
-}: {
-  id: string;
-  isReorderMode: boolean;
-  children: React.ReactNode;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-  };
-
-  const shakeClass = isReorderMode || isDragging ? styles.shakeWrapper : "";
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div className={shakeClass} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {children}
-      </div>
-    </div>
-  );
+  frame?: string;
 }
 
 export default function NewCatalogPage() {
@@ -91,17 +41,8 @@ export default function NewCatalogPage() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
-  const [isReorderMode, setIsReorderMode] = useState(false);
 
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const maxHeightRef = useRef(0);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
-
-  // ✅ 編集モードなら既存データを読み込み
+  // 編集モードでデータ読込
   useEffect(() => {
     if (!router.isReady || !id) return;
     const fetchCatalog = async () => {
@@ -118,38 +59,6 @@ export default function NewCatalogPage() {
     };
     fetchCatalog();
   }, [router.isReady, id]);
-
-  // ✅ 各カードの高さを最大に揃える
-  const adjustHeights = useCallback(() => {
-    if (!cardRefs.current.length) return;
-    let maxH = 0;
-    cardRefs.current.forEach((el) => {
-      if (el) maxH = Math.max(maxH, el.offsetHeight);
-    });
-    maxHeightRef.current = maxH;
-    cardRefs.current.forEach((el) => {
-      if (el) el.style.height = `${maxH}px`;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (selectedProducts.length > 0) {
-      adjustHeights();
-      window.addEventListener("resize", adjustHeights);
-      return () => window.removeEventListener("resize", adjustHeights);
-    }
-  }, [selectedProducts, adjustHeights]);
-
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      if (searchQuery.trim() !== "") {
-        handleSearch(searchQuery);
-      } else {
-        setSearchResults([]);
-      }
-    }, 300);
-    return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -206,21 +115,6 @@ export default function NewCatalogPage() {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (active.id !== over?.id) {
-      setSelectedProducts((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over?.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
-  const removeItem = (id: string) => {
-    setSelectedProducts(selectedProducts.filter((p) => p.id !== id));
-  };
-
   return (
     <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
       <Text as="h1" variant="headingLg">
@@ -231,78 +125,9 @@ export default function NewCatalogPage() {
       {saveError && <Banner tone="critical" title="エラー">{saveError}</Banner>}
 
       <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginTop: "20px" }}>
-        {/* 左：プレビュー */}
+        {/* 左：公開プレビューと同じ見た目 */}
         <Card>
-          <BlockStack gap="400">
-            {selectedProducts.length === 0 ? (
-              <Text as="p">まだ商品が追加されていません</Text>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={selectedProducts.map((p) => p.id)} strategy={rectSortingStrategy}>
-                  <div className={styles.previewGrid}>
-                    {selectedProducts.map((item, index) => (
-                      <SortableItem key={item.id} id={item.id} isReorderMode={isReorderMode}>
-                        <div className="cardWrapper">
-                          <Card>
-                            <div ref={(el) => { cardRefs.current[index] = el; }} className="cardInner">
-                              <BlockStack gap="200">
-                                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                  <Text as="h3" variant="headingSm">{item.artist}</Text>
-                                  <Popover
-                                    active={activePopoverId === item.id}
-                                    activator={
-                                      <Button
-                                        variant="plain"
-                                        icon={MenuHorizontalIcon}
-                                        onClick={() =>
-                                          setActivePopoverId(activePopoverId === item.id ? null : item.id)
-                                        }
-                                      />
-                                    }
-                                    onClose={() => setActivePopoverId(null)}
-                                  >
-                                    <ActionList
-                                      items={[
-                                        {
-                                          content: isReorderMode ? "Finish move" : "Move item",
-                                          onAction: () => {
-                                            setIsReorderMode(!isReorderMode);
-                                            setActivePopoverId(null);
-                                          },
-                                        },
-                                        {
-                                          destructive: true,
-                                          content: "Remove",
-                                          onAction: () => removeItem(item.id),
-                                        },
-                                      ]}
-                                    />
-                                  </Popover>
-                                </div>
-                                {item.imageUrl && (
-                                  <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
-                                    style={{ width: "100%", borderRadius: 8 }}
-                                    onLoad={adjustHeights}
-                                  />
-                                )}
-                                <Text as="p">{item.title}</Text>
-                                {item.year && <Text as="p">{item.year}</Text>}
-                                {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                                {item.medium && <Text as="p">{item.medium}</Text>}
-                                {item.price && <Text as="p">{item.price} 円（税込）</Text>}
-                              </BlockStack>
-                            </div>
-                          </Card>
-                        </div>
-                      </SortableItem>
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            )}
-          </BlockStack>
+          <PreviewCatalog title={title} products={selectedProducts} />
         </Card>
 
         {/* 右：フォーム */}
@@ -313,7 +138,11 @@ export default function NewCatalogPage() {
               label="検索キーワード"
               labelHidden
               value={searchQuery}
-              onChange={setSearchQuery}
+              onChange={(value) => {
+                setSearchQuery(value);
+                if (value.trim() !== "") handleSearch(value);
+                else setSearchResults([]);
+              }}
               autoComplete="off"
               placeholder="作家名・作品タイトルで検索"
             />
