@@ -18,7 +18,6 @@ import {
   Banner,
   Select,
   Checkbox,
-  DatePicker,
 } from "@shopify/polaris";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
@@ -68,6 +67,23 @@ export default function NewCatalogPage() {
     };
     fetchCatalog();
   }, [router.isReady, id]);
+
+  const handleSearch = async (query: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        shop: "catalog-app-dev-2.myshopify.com",
+        query,
+      });
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const data = await res.json();
+      setSearchResults(data.products || []);
+    } catch (err) {
+      console.error("商品検索エラー:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
@@ -181,12 +197,14 @@ export default function NewCatalogPage() {
                   label="ユーザー名"
                   value={username}
                   onChange={setUsername}
+                  autoComplete="off"   // ✅ 必須追加
                 />
                 <TextField
                   label="パスワード"
                   type="password"
                   value={password}
                   onChange={setPassword}
+                  autoComplete="off"   // ✅ 必須追加
                 />
               </>
             )}
@@ -200,7 +218,6 @@ export default function NewCatalogPage() {
               placeholder="2025-10-10 23:59"
             />
 
-            {/* 検索 & リード文は従来通り */}
             <Text as="h2" variant="headingSm">
               作品検索
             </Text>
