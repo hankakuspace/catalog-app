@@ -23,6 +23,18 @@
   font-size: 2.5rem;
 }
 
+/* ReactQuill ドロップダウン対策 */
+.Polaris-Card {
+  overflow: visible !important;
+}
+
+.ql-picker-options {
+  z-index: 9999 !important;
+  position: absolute !important;
+}
+
+
+
 /* Quill ドロップダウンに表示されるラベルを正しくする */
 .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-sans"]::before,
 .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-sans"]::before {
