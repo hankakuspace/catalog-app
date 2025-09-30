@@ -171,7 +171,9 @@ export default function PreviewCatalog({
                                       destructive: true,
                                       content: "Remove",
                                       onAction: () => {
-                                        onRemove && onRemove(item.id);
+                                        if (onRemove) {
+                                          onRemove(item.id);
+                                        }
                                         setActivePopoverId(null);
                                       },
                                     },
