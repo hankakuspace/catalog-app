@@ -34,7 +34,7 @@ interface Props {
   title: string;
   leadText?: string; // HTML文字列
   products: Product[];
-  onReorder: (products: Product[]) => void; // 並び替え更新を親に通知
+  onReorder?: (products: Product[]) => void; // ← optional に修正
 }
 
 function SortableProductCard({ product }: { product: Product }) {
@@ -92,6 +92,7 @@ export default function PreviewCatalog({ title, leadText, products, onReorder }:
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (!onReorder) return; // 公開プレビューではDnD無効
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = products.findIndex((p) => p.id === active.id);
@@ -124,7 +125,11 @@ export default function PreviewCatalog({ title, leadText, products, onReorder }:
 
       {/* メイン */}
       <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
           <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
             <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {products.map((p) => (
