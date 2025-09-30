@@ -204,10 +204,10 @@ export default function NewCatalogPage() {
             />
 
             {/* ログイン認証 */}
-            <Text as="h2" variant="headingSm">
+            <Text as="h2" variant="headingSm" style={{ marginBottom: "8px" }}>
               ログイン認証
             </Text>
-            <InlineStack gap="200">
+            <InlineStack gap="200" blockAlign="center">
               <TextField
                 label="ユーザー名"
                 labelHidden
@@ -266,8 +266,8 @@ export default function NewCatalogPage() {
               />
             </Popover>
 
-            {/* 検索 */}
-            <Text as="h2" variant="headingSm">
+            {/* 作品検索 */}
+            <Text as="h2" variant="headingSm" style={{ marginBottom: "8px" }}>
               作品検索
             </Text>
             <TextField
@@ -316,7 +316,8 @@ export default function NewCatalogPage() {
               />
             )}
 
-            <Text as="h2" variant="headingSm">
+            {/* リード文 */}
+            <Text as="h2" variant="headingSm" style={{ marginBottom: "8px" }}>
               リード文
             </Text>
             <ReactQuill
