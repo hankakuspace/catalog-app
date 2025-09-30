@@ -10,7 +10,6 @@ import {
   Button,
   InlineStack,
   BlockStack,
-  useIndexResourceState,
 } from "@shopify/polaris";
 import { ExternalIcon } from "@shopify/polaris-icons";
 
@@ -24,7 +23,6 @@ interface Catalog {
 export default function CatalogListPage() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchCatalogs = async () => {
@@ -40,29 +38,6 @@ export default function CatalogListPage() {
     };
     fetchCatalogs();
   }, []);
-
-  const { selectedResources, handleSelectionChange } = useIndexResourceState(
-    catalogs as unknown as { [key: string]: unknown }[]
-  );
-
-  const handleDelete = async () => {
-    if (selectedResources.length === 0) return;
-    setDeleting(true);
-    try {
-      await fetch("/api/catalogs/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selectedResources }),
-      });
-      setCatalogs((prev) =>
-        prev.filter((c) => !selectedResources.includes(c.id))
-      );
-    } catch (err) {
-      console.error("Failed to delete catalogs:", err);
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   return (
     <Page title="保存済みカタログ一覧" fullWidth>
@@ -84,16 +59,8 @@ export default function CatalogListPage() {
         </Card>
       ) : (
         <BlockStack gap="400">
-          {/* 削除 + 新規作成ボタン */}
+          {/* 新規作成ボタン */}
           <InlineStack gap="200" align="start" blockAlign="center">
-            <Button
-              tone="critical"
-              disabled={selectedResources.length === 0 || deleting}
-              onClick={handleDelete}
-              loading={deleting}
-            >
-              削除
-            </Button>
             <Button variant="primary" url="/admin/catalogs/new">
               新規カタログ作成
             </Button>
@@ -110,9 +77,7 @@ export default function CatalogListPage() {
                 { title: "プレビューURL" },
                 { title: "編集" },
               ]}
-              selectable
-              selectedItemsCount={selectedResources.length}
-              onSelectionChange={handleSelectionChange}
+              selectable={false} // ✅ 選択（背景色変化）を無効化
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
@@ -120,51 +85,38 @@ export default function CatalogListPage() {
                   : "-";
 
                 return (
-                  <IndexTable.Row
-                    id={catalog.id}
-                    key={catalog.id}
-                    position={index}
-                    selected={selectedResources.includes(catalog.id)}
-                  >
+                  <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
                     <IndexTable.Cell>
-                      <div className="cursor-default">
-                        <Text as="span" fontWeight="semibold">
-                          {catalog.title || "(無題)"}
-                        </Text>
-                      </div>
+                      <Text as="span" fontWeight="semibold">
+                        {catalog.title || "(無題)"}
+                      </Text>
                     </IndexTable.Cell>
 
-                    <IndexTable.Cell>
-                      <div className="cursor-default">{createdAtDate}</div>
-                    </IndexTable.Cell>
+                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
                     <IndexTable.Cell>
-                      <div className="cursor-default">
-                        {catalog.previewUrl ? (
-                          <a
-                            href={catalog.previewUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sky-600 hover:underline"
-                          >
-                            {catalog.previewUrl}
-                            <ExternalIcon />
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                    </IndexTable.Cell>
-
-                    <IndexTable.Cell>
-                      <div className="cursor-default">
-                        <Button
-                          url={`/admin/catalogs/new?id=${catalog.id}`}
-                          target="_self"
+                      {catalog.previewUrl ? (
+                        <a
+                          href={catalog.previewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sky-600 hover:underline"
                         >
-                          編集
-                        </Button>
-                      </div>
+                          {catalog.previewUrl}
+                          <ExternalIcon />
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </IndexTable.Cell>
+
+                    <IndexTable.Cell>
+                      <Button
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        target="_self"
+                      >
+                        編集
+                      </Button>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
