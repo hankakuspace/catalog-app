@@ -71,3 +71,20 @@
   content: "Hiragino Kaku Gothic";
   font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
 }
+
+/* Quillフォント定義 */
+.ql-font-noto-serif {
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif !important;
+}
+.ql-font-noto-sans-jp {
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif !important;
+}
+.ql-font-noto-serif-jp {
+  font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif !important;
+}
+.ql-font-yu-gothic {
+  font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif !important;
+}
+.ql-font-hiragino-kaku-gothic {
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif !important;
+}
