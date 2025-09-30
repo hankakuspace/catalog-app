@@ -23,20 +23,6 @@ import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
-// ✅ ヘルパー: 日付と時刻を結合して ISO 文字列にする
-function combineDateAndTime(date: Date | null, time: string): string | null {
-  if (!date) return null;
-  if (!time) return date.toISOString();
-
-  const [hh, mm] = time.split(":").map(Number);
-  const combined = new Date(date);
-  if (!isNaN(hh)) combined.setHours(hh);
-  if (!isNaN(mm)) combined.setMinutes(mm);
-  combined.setSeconds(0);
-  combined.setMilliseconds(0);
-  return combined.toISOString();
-}
-
 export default function NewCatalogPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -52,15 +38,17 @@ export default function NewCatalogPage() {
   const [saveError, setSaveError] = useState("");
   const [columnCount, setColumnCount] = useState(3);
 
-  // ✅ 新しいフィールド
+  // ✅ 認証関連フィールド
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [expiresDate, setExpiresDate] = useState<Date | null>(null);
-  const [expireTime, setExpireTime] = useState("");
 
-  // DatePicker 用 state
+  // ✅ 有効期限（日付のみ）
+  const [expiresDate, setExpiresDate] = useState<Date | null>(null);
   const today = new Date();
-  const [{ month, year }, setDate] = useState({ month: today.getMonth(), year: today.getFullYear() });
+  const [{ month, year }, setDate] = useState({
+    month: today.getMonth(),
+    year: today.getFullYear(),
+  });
 
   // 編集モードでデータ読込
   useEffect(() => {
@@ -78,8 +66,8 @@ export default function NewCatalogPage() {
           setPassword(data.catalog.password || "");
           if (data.catalog.expiresAt) {
             const d = new Date(data.catalog.expiresAt);
+            d.setHours(0, 0, 0, 0);
             setExpiresDate(d);
-            setExpireTime(d.toISOString().substring(11, 16)); // HH:mm
             setDate({ month: d.getMonth(), year: d.getFullYear() });
           }
         }
@@ -128,7 +116,7 @@ export default function NewCatalogPage() {
         columnCount,
         username,
         password,
-        expiresAt: combineDateAndTime(expiresDate, expireTime),
+        expiresAt: expiresDate ? expiresDate.toISOString() : null, // ✅ 00:00固定で保存
       };
 
       const res = await fetch("/api/catalogs", {
@@ -211,6 +199,9 @@ export default function NewCatalogPage() {
             />
 
             {/* ユーザー名 / パスワード */}
+            <Text as="h2" variant="headingSm">
+              ログイン認証
+            </Text>
             <TextField
               label="ユーザー名"
               value={username}
@@ -233,19 +224,22 @@ export default function NewCatalogPage() {
               month={month}
               year={year}
               onChange={({ start }) => {
-                setExpiresDate(start);
-                setDate({ month: start.getMonth(), year: start.getFullYear() });
+                const d = new Date(start);
+                d.setHours(0, 0, 0, 0); // ✅ 時間は常に0:00固定
+                setExpiresDate(d);
+                setDate({ month: d.getMonth(), year: d.getFullYear() });
               }}
               selected={expiresDate || new Date()}
             />
-            <TextField
-              label="有効期限（時間 HH:mm）"
-              value={expireTime}
-              onChange={setExpireTime}
-              autoComplete="off"
-              placeholder="23:59"
-            />
+            {expiresDate && (
+              <Text as="p" tone="subdued">
+                {expiresDate.getFullYear()}/
+                {String(expiresDate.getMonth() + 1).padStart(2, "0")}/
+                {String(expiresDate.getDate()).padStart(2, "0")}
+              </Text>
+            )}
 
+            {/* 検索とリード文は従来通り */}
             <Text as="h2" variant="headingSm">
               作品検索
             </Text>
