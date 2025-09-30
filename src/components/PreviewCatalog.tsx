@@ -169,7 +169,7 @@ export default function PreviewCatalog({
                             cardRefs.current[index] = el;
                           }}
                         >
-                          <BlockStack gap="200" className="text-black">
+                          <BlockStack gap="200">
                             {/* タイトル + メニュー */}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                               <Text as="h3" variant="headingSm" className="text-black">
@@ -253,7 +253,7 @@ export default function PreviewCatalog({
                       cardRefs.current[index] = el;
                     }}
                   >
-                    <BlockStack gap="200" className="text-black">
+                    <BlockStack gap="200">
                       <Text as="h3" variant="headingSm" className="text-black">
                         {item.artist}
                       </Text>
