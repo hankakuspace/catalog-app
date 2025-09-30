@@ -12,6 +12,7 @@ import {
   BlockStack,
   useIndexResourceState,
 } from "@shopify/polaris";
+import { ExternalIcon } from "@shopify/polaris-icons";
 
 interface Catalog {
   id: string;
@@ -40,7 +41,6 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ 正常に動いていた時のキャスト方式に戻す
   const { selectedResources, handleSelectionChange } = useIndexResourceState(
     catalogs as unknown as { [key: string]: unknown }[]
   );
@@ -125,46 +125,39 @@ export default function CatalogListPage() {
                     key={catalog.id}
                     position={index}
                     selected={selectedResources.includes(catalog.id)}
+                    className="cursor-default" // ✅ ハンドカーソルを無効化
                   >
                     <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Text as="span" fontWeight="semibold">
-                          {catalog.title || "(無題)"}
-                        </Text>
-                      </div>
+                      <Text as="span" fontWeight="semibold">
+                        {catalog.title || "(無題)"}
+                      </Text>
                     </IndexTable.Cell>
 
-                    <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        {createdAtDate}
-                      </div>
-                    </IndexTable.Cell>
+                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
                     <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        {catalog.previewUrl ? (
-                          <a
-                            href={catalog.previewUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {catalog.previewUrl}
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                    </IndexTable.Cell>
-
-                    <IndexTable.Cell>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          url={`/admin/catalogs/new?id=${catalog.id}`}
-                          target="_self"
+                      {catalog.previewUrl ? (
+                        <a
+                          href={catalog.previewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sky-600 hover:underline"
                         >
-                          編集
-                        </Button>
-                      </div>
+                          {catalog.previewUrl}
+                          <ExternalIcon />
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </IndexTable.Cell>
+
+                    <IndexTable.Cell>
+                      <Button
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        target="_self"
+                      >
+                        編集
+                      </Button>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
