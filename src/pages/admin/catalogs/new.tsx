@@ -170,7 +170,7 @@ export default function NewCatalogPage() {
               />
             </div>
 
-            <Text variant="headingSm">作品検索</Text>
+           <Text as="h2" variant="headingSm">作品検索</Text>
             <TextField
               label="検索キーワード"
               labelHidden
