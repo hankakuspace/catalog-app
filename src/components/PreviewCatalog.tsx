@@ -15,7 +15,7 @@ export interface Product {
 
 interface Props {
   title: string;
-  leadText?: string;
+  leadText?: string; // HTML文字列
   products: Product[];
 }
 
@@ -24,7 +24,6 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* ヘッダー */}
       <header className="text-center py-8 border-b border-gray-700">
-        {/* 白化したロゴ */}
         <img
           src="/andcollection.svg"
           alt="AND COLLECTION"
@@ -32,15 +31,16 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
         />
 
         {/* タイトル */}
-        <h2 className="text-2xl font-medium mt-16 mb-16">
+        <h2 className="text-2xl font-medium mt-5 mb-5">
           {title || "（タイトル未設定）"}
         </h2>
 
-        {/* リード文 */}
+        {/* リード文（HTMLをそのまま反映） */}
         {leadText && (
-          <p className="max-w-3xl mx-auto whitespace-pre-line text-center text-lg leading-relaxed">
-            {leadText}
-          </p>
+          <div
+            className="max-w-3xl mx-auto text-center mt-5 mb-5"
+            dangerouslySetInnerHTML={{ __html: leadText }}
+          />
         )}
       </header>
 

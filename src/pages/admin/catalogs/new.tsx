@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
+import "react-quill/dist/quill.snow.css";
 import {
   BlockStack,
   Text,
@@ -16,6 +18,8 @@ import {
   Banner,
 } from "@shopify/polaris";
 import PreviewCatalog from "@/components/PreviewCatalog";
+
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 interface Product {
   id: string;
@@ -34,7 +38,7 @@ export default function NewCatalogPage() {
   const { id } = router.query;
 
   const [title, setTitle] = useState("");
-  const [leadText, setLeadText] = useState("");
+  const [leadText, setLeadText] = useState(""); // HTML文字列
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
@@ -127,7 +131,7 @@ export default function NewCatalogPage() {
       {saveError && <Banner tone="critical" title="エラー">{saveError}</Banner>}
 
       <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginTop: "20px" }}>
-        {/* 左：公開プレビューと同じ見た目 */}
+        {/* 左：公開プレビュー */}
         <Card>
           <PreviewCatalog title={title} leadText={leadText} products={selectedProducts} />
         </Card>
@@ -136,14 +140,37 @@ export default function NewCatalogPage() {
         <Card>
           <BlockStack gap="400">
             <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
-            <TextField
-              label="リード文"
-              value={leadText}
-              onChange={setLeadText}
-              multiline={4}
-              autoComplete="off"
-              placeholder="複数行のリード文を入力"
-            />
+
+            <div>
+              <Text variant="headingSm">リード文</Text>
+              <ReactQuill
+                theme="snow"
+                value={leadText}
+                onChange={setLeadText}
+                modules={{
+                  toolbar: [
+                    [{ font: [] }, { size: [] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ color: [] }, { background: [] }],
+                    [{ align: [] }],
+                    ["clean"],
+                  ],
+                }}
+                formats={[
+                  "font",
+                  "size",
+                  "bold",
+                  "italic",
+                  "underline",
+                  "strike",
+                  "color",
+                  "background",
+                  "align",
+                ]}
+              />
+            </div>
+
+            <Text variant="headingSm">作品検索</Text>
             <TextField
               label="検索キーワード"
               labelHidden
