@@ -17,28 +17,16 @@ import {
   Button,
   Banner,
 } from "@shopify/polaris";
-import PreviewCatalog from "@/components/PreviewCatalog";
+import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
-
-interface Product {
-  id: string;
-  title: string;
-  artist?: string;
-  imageUrl?: string;
-  price?: string;
-  year?: string;
-  dimensions?: string;
-  medium?: string;
-  frame?: string;
-}
 
 export default function NewCatalogPage() {
   const router = useRouter();
   const { id } = router.query;
 
   const [title, setTitle] = useState("");
-  const [leadText, setLeadText] = useState(""); // HTML文字列
+  const [leadText, setLeadText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
@@ -111,11 +99,7 @@ export default function NewCatalogPage() {
 
       setSaveSuccess(true);
     } catch (err) {
-      if (err instanceof Error) {
-        setSaveError(`保存に失敗しました: ${err.message}`);
-      } else {
-        setSaveError(`保存に失敗しました: ${String(err)}`);
-      }
+      setSaveError(`保存に失敗しました: ${String(err)}`);
     } finally {
       setSaving(false);
     }
@@ -146,13 +130,17 @@ export default function NewCatalogPage() {
           marginTop: "20px",
         }}
       >
-        {/* 左：公開プレビュー（DnD対応） */}
+        {/* 左：プレビュー */}
         <Card>
           <PreviewCatalog
             title={title}
             leadText={leadText}
             products={selectedProducts}
-            onReorder={setSelectedProducts} // 並び替え反映
+            editable={true}
+            onReorder={setSelectedProducts}
+            onRemove={(id) =>
+              setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
+            }
           />
         </Card>
 

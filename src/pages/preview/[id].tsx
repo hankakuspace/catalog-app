@@ -1,57 +1,30 @@
 // src/pages/preview/[id].tsx
-import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import useSWR from "swr";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
-interface Catalog {
-  id: string;
-  title: string;
-  products: Product[];
-  previewUrl: string;
-  createdAt: { _seconds: number; _nanoseconds: number } | string;
-}
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export default function PublicCatalog() {
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function CatalogPreviewPage() {
+  const router = useRouter();
+  const { id } = router.query;
 
-  useEffect(() => {
-    const fetchCatalog = async () => {
-      try {
-        const id = window.location.pathname.split("/").pop();
-        if (!id) return;
+  const { data, error } = useSWR(
+    id ? `/api/catalogs?id=${id}` : null,
+    fetcher
+  );
 
-        const res = await fetch(`/api/catalogs/${id}`);
-        const data = await res.json();
+  if (error) return <div>エラーが発生しました</div>;
+  if (!data) return <div>読み込み中...</div>;
 
-        if (data?.catalog) {
-          setCatalog(data.catalog);
-        } else {
-          setCatalog(null);
-        }
-      } catch (err) {
-        console.error("❌ fetch error:", err);
-        setCatalog(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const catalog = data.catalog;
 
-    fetchCatalog();
-  }, []);
-
-  if (loading)
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        Loading...
-      </div>
-    );
-
-  if (!catalog)
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        カタログが見つかりませんでした
-      </div>
-    );
-
-  return <PreviewCatalog title={catalog.title} products={catalog.products || []} />;
+  return (
+    <PreviewCatalog
+      title={catalog.title}
+      leadText={catalog.leadText}
+      products={catalog.products as Product[]}
+      editable={false}
+    />
+  );
 }
