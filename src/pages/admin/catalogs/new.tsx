@@ -142,7 +142,7 @@ export default function NewCatalogPage() {
             <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
 
             <div>
-              <Text variant="headingSm">リード文</Text>
+            <Text as="h2" variant="headingSm">リード文</Text>
               <ReactQuill
                 theme="snow"
                 value={leadText}
