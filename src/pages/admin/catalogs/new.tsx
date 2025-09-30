@@ -156,111 +156,113 @@ export default function NewCatalogPage() {
         </Card>
 
         {/* 右：フォーム */}
-        <Card>
-          <BlockStack gap="400">
-            <TextField
-              label="タイトル"
-              value={title}
-              onChange={setTitle}
-              autoComplete="off"
-            />
-
-            <Text as="h2" variant="headingSm">
-              作品検索
-            </Text>
-            <TextField
-              label="検索キーワード"
-              labelHidden
-              value={searchQuery}
-              onChange={(value) => {
-                setSearchQuery(value);
-                if (value.trim() !== "") handleSearch(value);
-                else setSearchResults([]);
-              }}
-              autoComplete="off"
-              placeholder="作家名・作品タイトルで検索"
-            />
-            {loading ? (
-              <Spinner accessibilityLabel="検索中" size="large" />
-            ) : (
-              <ResourceList
-                resourceName={{ singular: "product", plural: "products" }}
-                items={searchResults}
-                renderItem={(item) => (
-                  <ResourceItem
-                    id={item.id}
-                    accessibilityLabel={`${item.title} を追加`}
-                    onClick={() => handleAddProduct(item)}
-                    media={
-                      item.imageUrl ? (
-                        <Thumbnail
-                          source={item.imageUrl}
-                          alt={item.title}
-                          size="small"
-                        />
-                      ) : undefined
-                    }
-                  >
-                    <Text as="p">
-                      {item.artist ? `${item.artist}, ` : ""}
-                      {item.title}
-                    </Text>
-                  </ResourceItem>
-                )}
+        <div>
+          <Card>
+            <BlockStack gap="400">
+              <TextField
+                label="タイトル"
+                value={title}
+                onChange={setTitle}
+                autoComplete="off"
               />
-            )}
-            <Button variant="primary" onClick={handleSave} loading={saving}>
-              {id ? "カタログ更新" : "カタログ作成"}
-            </Button>
-          </BlockStack>
-        </Card>
-      </div>
 
-      {/* ✅ Quill は Card の外に移動 */}
-      <div style={{ marginTop: "20px" }}>
-        <Text as="h2" variant="headingSm">
-          リード文
-        </Text>
-        <ReactQuill
-          theme="snow"
-          value={leadText}
-          onChange={setLeadText}
-          modules={{
-            toolbar: [
-              [
-                {
-                  font: [
-                    "sans",
-                    "serif",
-                    "monospace",
-                    "noto-sans",
-                    "noto-serif",
-                    "noto-sans-jp",
-                    "noto-serif-jp",
-                    "yu-gothic",
-                    "hiragino-kaku-gothic",
+              <Text as="h2" variant="headingSm">
+                作品検索
+              </Text>
+              <TextField
+                label="検索キーワード"
+                labelHidden
+                value={searchQuery}
+                onChange={(value) => {
+                  setSearchQuery(value);
+                  if (value.trim() !== "") handleSearch(value);
+                  else setSearchResults([]);
+                }}
+                autoComplete="off"
+                placeholder="作家名・作品タイトルで検索"
+              />
+              {loading ? (
+                <Spinner accessibilityLabel="検索中" size="large" />
+              ) : (
+                <ResourceList
+                  resourceName={{ singular: "product", plural: "products" }}
+                  items={searchResults}
+                  renderItem={(item) => (
+                    <ResourceItem
+                      id={item.id}
+                      accessibilityLabel={`${item.title} を追加`}
+                      onClick={() => handleAddProduct(item)}
+                      media={
+                        item.imageUrl ? (
+                          <Thumbnail
+                            source={item.imageUrl}
+                            alt={item.title}
+                            size="small"
+                          />
+                        ) : undefined
+                      }
+                    >
+                      <Text as="p">
+                        {item.artist ? `${item.artist}, ` : ""}
+                        {item.title}
+                      </Text>
+                    </ResourceItem>
+                  )}
+                />
+              )}
+              <Button variant="primary" onClick={handleSave} loading={saving}>
+                {id ? "カタログ更新" : "カタログ作成"}
+              </Button>
+            </BlockStack>
+          </Card>
+
+          {/* ✅ リード文エディタは Card の外 */}
+          <div style={{ marginTop: "20px" }}>
+            <Text as="h2" variant="headingSm">
+              リード文
+            </Text>
+            <ReactQuill
+              theme="snow"
+              value={leadText}
+              onChange={setLeadText}
+              modules={{
+                toolbar: [
+                  [
+                    {
+                      font: [
+                        "sans",
+                        "serif",
+                        "monospace",
+                        "noto-sans",
+                        "noto-serif",
+                        "noto-sans-jp",
+                        "noto-serif-jp",
+                        "yu-gothic",
+                        "hiragino-kaku-gothic",
+                      ],
+                    },
                   ],
-                },
-              ],
-              [{ size: [] }],
-              ["bold", "italic", "underline", "strike"],
-              [{ color: [] }, { background: [] }],
-              [{ align: [] }],
-              ["clean"],
-            ],
-          }}
-          formats={[
-            "font",
-            "size",
-            "bold",
-            "italic",
-            "underline",
-            "strike",
-            "color",
-            "background",
-            "align",
-          ]}
-        />
+                  [{ size: [] }],
+                  ["bold", "italic", "underline", "strike"],
+                  [{ color: [] }, { background: [] }],
+                  [{ align: [] }],
+                  ["clean"],
+                ],
+              }}
+              formats={[
+                "font",
+                "size",
+                "bold",
+                "italic",
+                "underline",
+                "strike",
+                "color",
+                "background",
+                "align",
+              ]}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
