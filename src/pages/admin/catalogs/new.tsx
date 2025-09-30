@@ -19,7 +19,10 @@ import {
   Select,
   DatePicker,
   Popover,
+  InlineStack,
+  Icon,
 } from "@shopify/polaris";
+import { CalendarIcon } from "@shopify/polaris-icons";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
@@ -200,33 +203,37 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
-            {/* ユーザー名 / パスワード */}
+            {/* ログイン認証 */}
             <Text as="h2" variant="headingSm">
               ログイン認証
             </Text>
-            <TextField
-              label="ユーザー名"
-              value={username}
-              onChange={setUsername}
-              autoComplete="off"
-            />
-            <TextField
-              label="パスワード"
-              type="password"
-              value={password}
-              onChange={setPassword}
-              autoComplete="off"
-            />
+            <InlineStack gap="200">
+              <TextField
+                label="ユーザー名"
+                labelHidden
+                placeholder="ユーザー名"
+                value={username}
+                onChange={setUsername}
+                autoComplete="off"
+              />
+              <TextField
+                label="パスワード"
+                labelHidden
+                placeholder="パスワード"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                autoComplete="off"
+              />
+            </InlineStack>
 
             {/* 有効期限 */}
-            <Text as="h2" variant="headingSm">
-              有効期限
-            </Text>
             <Popover
               active={datePickerActive}
               activator={
                 <TextField
                   label="有効期限"
+                  labelHidden
                   value={
                     expiresDate
                       ? `${expiresDate.getFullYear()}/${String(
@@ -236,8 +243,10 @@ export default function NewCatalogPage() {
                         ).padStart(2, "0")}`
                       : ""
                   }
+                  prefix={<Icon source={CalendarIcon} />}
+                  placeholder="yyyy/mm/dd"
                   onFocus={() => setDatePickerActive(true)}
-                  onChange={() => {}} // 手入力はさせない
+                  onChange={() => {}}
                   autoComplete="off"
                 />
               }
@@ -248,10 +257,10 @@ export default function NewCatalogPage() {
                 year={year}
                 onChange={({ start }) => {
                   const d = new Date(start);
-                  d.setHours(0, 0, 0, 0); // ✅ 00:00固定
+                  d.setHours(0, 0, 0, 0);
                   setExpiresDate(d);
                   setDate({ month: d.getMonth(), year: d.getFullYear() });
-                  setDatePickerActive(false); // 選択後に閉じる
+                  setDatePickerActive(false);
                 }}
                 selected={expiresDate || new Date()}
               />
