@@ -19,6 +19,23 @@ import {
 } from "@shopify/polaris";
 import PreviewCatalog from "@/components/PreviewCatalog";
 
+// dnd-kit
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 interface Product {
@@ -31,6 +48,39 @@ interface Product {
   dimensions?: string;
   medium?: string;
   frame?: string;
+}
+
+function SortableProductCard({
+  product,
+}: {
+  product: Product;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: product.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: "grab",
+    animation: isDragging ? "shake 0.3s ease-in-out infinite" : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Card>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px" }}>
+          {product.imageUrl && (
+            <Thumbnail source={product.imageUrl} alt={product.title} size="small" />
+          )}
+          <Text as="p">
+            {product.artist ? `${product.artist}, ` : ""}
+            {product.title}
+          </Text>
+        </div>
+      </Card>
+    </div>
+  );
 }
 
 export default function NewCatalogPage() {
@@ -46,6 +96,9 @@ export default function NewCatalogPage() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  // dnd-kit sensor
+  const sensors = useSensors(useSensor(PointerSensor));
 
   // 編集モードでデータ読込
   useEffect(() => {
@@ -86,6 +139,15 @@ export default function NewCatalogPage() {
   const handleAddProduct = (product: Product) => {
     if (!selectedProducts.find((p) => p.id === product.id)) {
       setSelectedProducts([...selectedProducts, product]);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = selectedProducts.findIndex((p) => p.id === active.id);
+      const newIndex = selectedProducts.findIndex((p) => p.id === over.id);
+      setSelectedProducts(arrayMove(selectedProducts, oldIndex, newIndex));
     }
   };
 
@@ -155,7 +217,7 @@ export default function NewCatalogPage() {
           />
         </Card>
 
-        {/* 右：フォーム（Card内にタイトル、作品検索、リード文をまとめる） */}
+        {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
             <TextField
@@ -211,6 +273,22 @@ export default function NewCatalogPage() {
             )}
 
             <Text as="h2" variant="headingSm">
+              選択済み作品（ドラッグで並び替え）
+            </Text>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={selectedProducts.map((p) => p.id)}
+                strategy={rectSortingStrategy}
+              >
+                <BlockStack gap="200">
+                  {selectedProducts.map((product) => (
+                    <SortableProductCard key={product.id} product={product} />
+                  ))}
+                </BlockStack>
+              </SortableContext>
+            </DndContext>
+
+            <Text as="h2" variant="headingSm">
               リード文
             </Text>
             <ReactQuill
@@ -246,6 +324,17 @@ export default function NewCatalogPage() {
           </BlockStack>
         </Card>
       </div>
+
+      {/* shake animation */}
+      <style jsx global>{`
+        @keyframes shake {
+          0% { transform: translateX(0); }
+          25% { transform: translateX(-2px); }
+          50% { transform: translateX(2px); }
+          75% { transform: translateX(-2px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }
