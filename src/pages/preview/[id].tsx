@@ -1,16 +1,9 @@
 // src/pages/preview/[id].tsx
+"use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import {
-  Card,
-  Text,
-  TextField,
-  Button,
-  BlockStack,
-  Banner,
-  Spinner,
-} from "@shopify/polaris";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -48,10 +41,7 @@ export default function CatalogPreviewPage() {
   const handleLogin = () => {
     const catalog = data?.catalog;
     if (!catalog) return;
-    if (
-      inputUser === catalog.username &&
-      inputPass === catalog.password
-    ) {
+    if (inputUser === catalog.username && inputPass === catalog.password) {
       localStorage.setItem(`catalog-auth-${id}`, "ok");
       setIsAuthed(true);
       setLoginError("");
@@ -60,21 +50,15 @@ export default function CatalogPreviewPage() {
     }
   };
 
-  if (error) return <div>エラーが発生しました</div>;
-  if (!data) {
-    return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <Spinner accessibilityLabel="読み込み中" size="large" />
-      </div>
-    );
-  }
+  if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
+  if (!data) return <div className="p-6">読み込み中...</div>;
 
   const catalog = data.catalog;
 
   if (!catalog) {
     return (
-      <div style={{ padding: "40px" }}>
-        <Banner tone="critical" title="カタログが見つかりませんでした" />
+      <div className="p-6 bg-red-100 text-red-700 rounded">
+        カタログが見つかりませんでした
       </div>
     );
   }
@@ -85,8 +69,8 @@ export default function CatalogPreviewPage() {
     const now = new Date();
     if (exp.getTime() < now.getTime()) {
       return (
-        <div style={{ padding: "40px" }}>
-          <Banner tone="critical" title="このカタログの有効期限は終了しました" />
+        <div className="p-6 bg-red-100 text-red-700 rounded">
+          このカタログの有効期限は終了しました
         </div>
       );
     }
@@ -95,45 +79,49 @@ export default function CatalogPreviewPage() {
   // 認証必要で未ログイン
   if (authChecked && !isAuthed) {
     return (
-      <div style={{ maxWidth: "400px", margin: "60px auto" }}>
-        <Card>
-          <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">
-              ログイン認証
-            </Text>
-            <TextField
-              label="ユーザー名"
-              value={inputUser}
-              onChange={setInputUser}
-              autoComplete="off"
-            />
-            <TextField
-              label="パスワード"
-              type="password"
-              value={inputPass}
-              onChange={setInputPass}
-              autoComplete="off"
-            />
-            {loginError && (
-              <Banner tone="critical">{loginError}</Banner>
-            )}
-            <Button onClick={handleLogin} variant="primary">
-              ログイン
-            </Button>
-          </BlockStack>
-        </Card>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-sm">
+          <h2 className="text-lg font-bold mb-4">ログイン認証</h2>
+          <input
+            type="text"
+            placeholder="ユーザー名"
+            value={inputUser}
+            onChange={(e) => setInputUser(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={inputPass}
+            onChange={(e) => setInputPass(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {loginError && (
+            <div className="bg-red-100 text-red-700 text-sm px-3 py-2 rounded mb-3">
+              {loginError}
+            </div>
+          )}
+          <button
+            onClick={handleLogin}
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          >
+            ログイン
+          </button>
+        </div>
       </div>
     );
   }
 
   // 認証済み or 認証不要 → プレビュー表示
   return (
-    <PreviewCatalog
-      title={catalog.title}
-      leadText={catalog.leadText}
-      products={catalog.products as Product[]}
-      columnCount={catalog.columnCount || 3}
-      editable={false}
-    />
+    <div className="p-4">
+      <PreviewCatalog
+        title={catalog.title}
+        leadText={catalog.leadText}
+        products={catalog.products as Product[]}
+        columnCount={catalog.columnCount || 3}
+        editable={false}
+      />
+    </div>
   );
 }
