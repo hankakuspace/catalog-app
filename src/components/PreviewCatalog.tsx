@@ -1,6 +1,6 @@
 // src/components/PreviewCatalog.tsx
 /* eslint-disable @next/next/no-img-element */
-import React from "react";
+import React, { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -16,7 +16,16 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import "react-quill/dist/quill.snow.css"; // ReactQuillのスタイルをプレビューでも反映
+import {
+  Card,
+  BlockStack,
+  Text,
+  Popover,
+  ActionList,
+  Button,
+} from "@shopify/polaris";
+import { MenuHorizontalIcon } from "@shopify/polaris-icons";
+import styles from "@/pages/admin/catalogs/new.module.css";
 
 export interface Product {
   id: string;
@@ -34,65 +43,59 @@ interface Props {
   title: string;
   leadText?: string; // HTML文字列
   products: Product[];
-  onReorder?: (products: Product[]) => void; // ← optional に修正
+  editable?: boolean; // 管理画面なら true
+  onReorder?: (products: Product[]) => void;
+  onRemove?: (id: string) => void;
 }
 
-function SortableProductCard({ product }: { product: Product }) {
+function SortableItem({
+  id,
+  isReorderMode,
+  editable,
+  children,
+}: {
+  id: string;
+  isReorderMode: boolean;
+  editable: boolean;
+  children: React.ReactNode;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: product.id });
+    useSortable({ id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    cursor: "grab",
-    opacity: isDragging ? 0.5 : 1,
-    animation: isDragging ? "shake 0.3s ease-in-out infinite" : undefined,
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
   };
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="bg-white text-black rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full"
-    >
-      {/* 商品画像 */}
-      {product.imageUrl ? (
-        <img
-          src={product.imageUrl}
-          alt={product.title}
-          className="block w-full h-80 object-contain bg-gray-100 border-b border-gray-200 rounded-t-xl"
-        />
-      ) : (
-        <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
-          <span className="text-gray-400">No Image</span>
-        </div>
-      )}
+  const shakeClass =
+    editable && (isReorderMode || isDragging) ? styles.shakeWrapper : "";
 
-      {/* 商品情報 */}
-      <div className="p-4 flex flex-col flex-grow">
-        <h2 className="text-lg font-semibold mb-1">{product.title}</h2>
-        {product.artist && <p className="text-sm text-gray-600 mb-1">{product.artist}</p>}
-        {product.year && <p className="text-sm text-gray-600 mb-1">{product.year}</p>}
-        {product.dimensions && <p className="text-sm text-gray-600 mb-1">{product.dimensions}</p>}
-        {product.medium && <p className="text-sm text-gray-600 mb-1">{product.medium}</p>}
-        {product.frame && <p className="text-sm text-gray-600 mb-1">{product.frame}</p>}
-        {product.price && (
-          <p className="text-base font-medium text-gray-800 mt-auto">
-            {Number(product.price).toLocaleString()} 円（税込）
-          </p>
-        )}
+  return (
+    <div ref={setNodeRef} style={style} {...(editable ? attributes : {})} {...(editable ? listeners : {})}>
+      <div className={`${shakeClass}`} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {children}
       </div>
     </div>
   );
 }
 
-export default function PreviewCatalog({ title, leadText, products, onReorder }: Props) {
-  const sensors = useSensors(useSensor(PointerSensor));
+export default function PreviewCatalog({
+  title,
+  leadText,
+  products,
+  editable = false,
+  onReorder,
+  onRemove,
+}: Props) {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
+  const [isReorderMode, setIsReorderMode] = useState(false);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    if (!onReorder) return; // 公開プレビューではDnD無効
+    if (!editable || !onReorder) return;
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = products.findIndex((p) => p.id === active.id);
@@ -125,36 +128,124 @@ export default function PreviewCatalog({ title, leadText, products, onReorder }:
 
       {/* メイン */}
       <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
-            <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => (
-                <SortableProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        {editable ? (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
+              <div className={styles.previewGrid}>
+                {products.map((item) => (
+                  <SortableItem key={item.id} id={item.id} isReorderMode={isReorderMode} editable={editable}>
+                    <div className={styles.cardWrapper}>
+                      <Card>
+                        <div className={styles.cardInner}>
+                          <BlockStack gap="200">
+                            {/* タイトル + メニュー */}
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <Text as="h3" variant="headingSm">
+                                {item.artist}
+                              </Text>
+                              <Popover
+                                active={activePopoverId === item.id}
+                                activator={
+                                  <Button
+                                    variant="plain"
+                                    icon={MenuHorizontalIcon}
+                                    onClick={() =>
+                                      setActivePopoverId(
+                                        activePopoverId === item.id ? null : item.id
+                                      )
+                                    }
+                                  />
+                                }
+                                onClose={() => setActivePopoverId(null)}
+                              >
+                                <ActionList
+                                  items={[
+                                    {
+                                      content: isReorderMode ? "Finish move" : "Move item",
+                                      onAction: () => {
+                                        setIsReorderMode(!isReorderMode);
+                                        setActivePopoverId(null);
+                                      },
+                                    },
+                                    {
+                                      destructive: true,
+                                      content: "Remove",
+                                      onAction: () => {
+                                        onRemove && onRemove(item.id);
+                                        setActivePopoverId(null);
+                                      },
+                                    },
+                                  ]}
+                                />
+                              </Popover>
+                            </div>
+
+                            {/* 画像 + 詳細 */}
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                className="block w-full h-80 object-contain bg-gray-100 border-b border-gray-200 rounded-t-xl"
+                              />
+                            ) : (
+                              <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
+                                <span className="text-gray-400">No Image</span>
+                              </div>
+                            )}
+                            <Text as="p">{item.title}</Text>
+                            {item.year && <Text as="p">{item.year}</Text>}
+                            {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                            {item.medium && <Text as="p">{item.medium}</Text>}
+                            {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                          </BlockStack>
+                        </div>
+                      </Card>
+                    </div>
+                  </SortableItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        ) : (
+          // 公開モード（DnD無効化）
+          <div className={styles.previewGrid}>
+            {products.map((item) => (
+              <div key={item.id} className={styles.cardWrapper}>
+                <Card>
+                  <div className={styles.cardInner}>
+                    <BlockStack gap="200">
+                      <Text as="h3" variant="headingSm">
+                        {item.artist}
+                      </Text>
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="block w-full h-80 object-contain bg-gray-100 border-b border-gray-200 rounded-t-xl"
+                        />
+                      ) : (
+                        <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
+                          <span className="text-gray-400">No Image</span>
+                        </div>
+                      )}
+                      <Text as="p">{item.title}</Text>
+                      {item.year && <Text as="p">{item.year}</Text>}
+                      {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                      {item.medium && <Text as="p">{item.medium}</Text>}
+                      {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                    </BlockStack>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
 
       {/* フッター */}
       <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
         Copyright © 2025 Clue Co.,Ltd. all rights reserved.
       </footer>
-
-      {/* shake animation */}
-      <style jsx global>{`
-        @keyframes shake {
-          0% { transform: translateX(0); }
-          25% { transform: translateX(-2px); }
-          50% { transform: translateX(2px); }
-          75% { transform: translateX(-2px); }
-          100% { transform: translateX(0); }
-        }
-      `}</style>
     </div>
   );
 }
