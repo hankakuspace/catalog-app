@@ -1,17 +1,20 @@
+/* src/pages/admin/catalogs/new.module.css */
 .previewGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
+  justify-content: center; /* ✅ 常に中央寄せ */
 }
 
-/* 1行目だけ中央寄せ */
-.previewGrid > div:nth-child(-n+4) {
-  justify-self: center;
+.cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* 5枚目以降（2行目〜）は左寄せ */
-.previewGrid > div:nth-child(n+5) {
-  justify-self: start;
+.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .previewGrid > div {
@@ -44,16 +47,16 @@
   100% { transform: translate(0, 0); }
 }
 
-/* タブレット: 2列 */
+/* タブレット: 2列固定 */
 @media (max-width: 1024px) {
   .previewGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
-/* スマホ: 1列 */
+/* スマホ: 1列固定 */
 @media (max-width: 600px) {
   .previewGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 }
