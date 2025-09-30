@@ -15,20 +15,33 @@ export interface Product {
 
 interface Props {
   title: string;
+  leadText?: string;
   products: Product[];
 }
 
-export default function PreviewCatalog({ title, products }: Props) {
+export default function PreviewCatalog({ title, leadText, products }: Props) {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* ヘッダー */}
       <header className="text-center py-8 border-b border-gray-700">
+        {/* 白化したロゴ */}
         <img
           src="/andcollection.svg"
           alt="AND COLLECTION"
-          className="mx-auto mb-2 h-10 w-auto"
+          className="mx-auto h-12 w-auto filter invert"
         />
-        <h2 className="text-xl font-medium">{title || "（タイトル未設定）"}</h2>
+
+        {/* タイトル */}
+        <h2 className="text-2xl font-medium mt-16 mb-16">
+          {title || "（タイトル未設定）"}
+        </h2>
+
+        {/* リード文 */}
+        {leadText && (
+          <p className="max-w-3xl mx-auto whitespace-pre-line text-center text-lg leading-relaxed">
+            {leadText}
+          </p>
+        )}
       </header>
 
       {/* メイン */}
@@ -39,7 +52,6 @@ export default function PreviewCatalog({ title, products }: Props) {
               key={p.id}
               className="bg-white text-black rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full"
             >
-              {/* 商品画像 */}
               {p.imageUrl ? (
                 <img
                   src={p.imageUrl}
@@ -52,7 +64,6 @@ export default function PreviewCatalog({ title, products }: Props) {
                 </div>
               )}
 
-              {/* 商品情報 */}
               <div className="p-4 flex flex-col flex-grow">
                 <h2 className="text-lg font-semibold mb-1">{p.title}</h2>
                 {p.artist && <p className="text-sm text-gray-600 mb-1">{p.artist}</p>}

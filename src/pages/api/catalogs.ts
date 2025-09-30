@@ -9,21 +9,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (id) {
         const doc = await dbAdmin.collection("shopify_catalogs_app").doc(String(id)).get();
         if (!doc.exists) return res.status(404).json({ error: "Not found" });
-        return res.status(200).json({ catalog: { id: doc.id, ...doc.data() } });
+        const data = doc.data();
+        return res.status(200).json({
+          catalog: {
+            id: doc.id,
+            ...data,
+            createdAt: data?.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
+            updatedAt: data?.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : null,
+          },
+        });
       }
-      const snapshot = await dbAdmin
-        .collection("shopify_catalogs_app")
-        .orderBy("createdAt", "desc")
-        .get();
-      const catalogs = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const snapshot = await dbAdmin.collection("shopify_catalogs_app").orderBy("createdAt", "desc").get();
+      const catalogs = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data?.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
+          updatedAt: data?.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : null,
+        };
+      });
       return res.status(200).json({ catalogs });
     }
 
     if (req.method === "POST") {
-      const { title, products, shop } = req.body;
+      const { title, leadText, products, shop } = req.body;
       if (!title || !products || !shop) {
         return res.status(400).json({ error: "Missing fields" });
       }
@@ -35,6 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const previewUrl = `${baseUrl}/preview/${docRef.id}`;
       await docRef.set({
         title,
+        leadText: leadText || "",
         products,
         shop,
         createdAt: FieldValue.serverTimestamp(),
@@ -45,11 +56,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "PUT") {
-      const { id, title, products } = req.body;
+      const { id, title, leadText, products } = req.body;
       if (!id) return res.status(400).json({ error: "Missing id" });
 
       await dbAdmin.collection("shopify_catalogs_app").doc(id).update({
         title,
+        leadText: leadText || "",
         products,
         updatedAt: FieldValue.serverTimestamp(),
       });

@@ -34,6 +34,7 @@ export default function NewCatalogPage() {
   const { id } = router.query;
 
   const [title, setTitle] = useState("");
+  const [leadText, setLeadText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
@@ -51,6 +52,7 @@ export default function NewCatalogPage() {
         const data = await res.json();
         if (res.ok && data.catalog) {
           setTitle(data.catalog.title || "");
+          setLeadText(data.catalog.leadText || "");
           setSelectedProducts(data.catalog.products || []);
         }
       } catch (err) {
@@ -92,7 +94,7 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
-      const body = { id, title, products: selectedProducts };
+      const body = { id, title, leadText, products: selectedProducts };
 
       const res = await fetch("/api/catalogs", {
         method: id ? "PUT" : "POST",
@@ -127,13 +129,21 @@ export default function NewCatalogPage() {
       <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px", marginTop: "20px" }}>
         {/* 左：公開プレビューと同じ見た目 */}
         <Card>
-          <PreviewCatalog title={title} products={selectedProducts} />
+          <PreviewCatalog title={title} leadText={leadText} products={selectedProducts} />
         </Card>
 
         {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
             <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
+            <TextField
+              label="リード文"
+              value={leadText}
+              onChange={setLeadText}
+              multiline={4}
+              autoComplete="off"
+              placeholder="複数行のリード文を入力"
+            />
             <TextField
               label="検索キーワード"
               labelHidden
