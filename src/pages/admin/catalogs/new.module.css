@@ -1,7 +1,7 @@
 .previewGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 最大4列 */
-  justify-content: center; /* 中央寄せ */
+  grid-template-columns: repeat(4, 25%); /* 常に4列の枠を作る */
+  justify-content: center; /* 枠ごと中央寄せ */
   gap: 20px;
 }
 
@@ -38,13 +38,13 @@
 /* タブレット以下は2列 */
 @media (max-width: 1024px) {
   .previewGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 50%);
   }
 }
 
 /* スマホは1列 */
 @media (max-width: 600px) {
   .previewGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 100%;
   }
 }
