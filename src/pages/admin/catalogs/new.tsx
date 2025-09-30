@@ -17,11 +17,25 @@ import {
   Button,
   Banner,
   Select,
-  Checkbox,
+  DatePicker,
 } from "@shopify/polaris";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+
+// ✅ ヘルパー: 日付と時刻を結合して ISO 文字列にする
+function combineDateAndTime(date: Date | null, time: string): string | null {
+  if (!date) return null;
+  if (!time) return date.toISOString();
+
+  const [hh, mm] = time.split(":").map(Number);
+  const combined = new Date(date);
+  if (!isNaN(hh)) combined.setHours(hh);
+  if (!isNaN(mm)) combined.setMinutes(mm);
+  combined.setSeconds(0);
+  combined.setMilliseconds(0);
+  return combined.toISOString();
+}
 
 export default function NewCatalogPage() {
   const router = useRouter();
@@ -39,10 +53,14 @@ export default function NewCatalogPage() {
   const [columnCount, setColumnCount] = useState(3);
 
   // ✅ 新しいフィールド
-  const [passwordEnabled, setPasswordEnabled] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [expiresDate, setExpiresDate] = useState<Date | null>(null);
+  const [expireTime, setExpireTime] = useState("");
+
+  // DatePicker 用 state
+  const today = new Date();
+  const [{ month, year }, setDate] = useState({ month: today.getMonth(), year: today.getFullYear() });
 
   // 編集モードでデータ読込
   useEffect(() => {
@@ -56,10 +74,14 @@ export default function NewCatalogPage() {
           setLeadText(data.catalog.leadText || "");
           setSelectedProducts(data.catalog.products || []);
           setColumnCount(data.catalog.columnCount || 3);
-          setPasswordEnabled(data.catalog.passwordEnabled || false);
           setUsername(data.catalog.username || "");
           setPassword(data.catalog.password || "");
-          setExpiresAt(data.catalog.expiresAt || null);
+          if (data.catalog.expiresAt) {
+            const d = new Date(data.catalog.expiresAt);
+            setExpiresDate(d);
+            setExpireTime(d.toISOString().substring(11, 16)); // HH:mm
+            setDate({ month: d.getMonth(), year: d.getFullYear() });
+          }
         }
       } catch (err) {
         console.error("カタログ取得エラー:", err);
@@ -90,6 +112,10 @@ export default function NewCatalogPage() {
       setSaveError("タイトルと商品は必須です");
       return;
     }
+    if (username && !password) {
+      setSaveError("ユーザー名を入力した場合はパスワードも必須です");
+      return;
+    }
 
     setSaving(true);
     setSaveError("");
@@ -100,10 +126,9 @@ export default function NewCatalogPage() {
         leadText,
         products: selectedProducts,
         columnCount,
-        passwordEnabled,
         username,
         password,
-        expiresAt,
+        expiresAt: combineDateAndTime(expiresDate, expireTime),
       };
 
       const res = await fetch("/api/catalogs", {
@@ -185,37 +210,40 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
-            {/* 認証設定 */}
-            <Checkbox
-              label="認証を有効にする"
-              checked={passwordEnabled}
-              onChange={(val) => setPasswordEnabled(val)}
+            {/* ユーザー名 / パスワード */}
+            <TextField
+              label="ユーザー名"
+              value={username}
+              onChange={setUsername}
+              autoComplete="off"
             />
-            {passwordEnabled && (
-              <>
-                <TextField
-                  label="ユーザー名"
-                  value={username}
-                  onChange={setUsername}
-                  autoComplete="off"   // ✅ 必須追加
-                />
-                <TextField
-                  label="パスワード"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  autoComplete="off"   // ✅ 必須追加
-                />
-              </>
-            )}
+            <TextField
+              label="パスワード"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              autoComplete="off"
+            />
 
             {/* 有効期限 */}
+            <Text as="h2" variant="headingSm">
+              有効期限
+            </Text>
+            <DatePicker
+              month={month}
+              year={year}
+              onChange={({ start }) => {
+                setExpiresDate(start);
+                setDate({ month: start.getMonth(), year: start.getFullYear() });
+              }}
+              selected={expiresDate || new Date()}
+            />
             <TextField
-              label="有効期限 (YYYY-MM-DD HH:mm)"
-              value={expiresAt || ""}
-              onChange={(val) => setExpiresAt(val)}
+              label="有効期限（時間 HH:mm）"
+              value={expireTime}
+              onChange={setExpireTime}
               autoComplete="off"
-              placeholder="2025-10-10 23:59"
+              placeholder="23:59"
             />
 
             <Text as="h2" variant="headingSm">
