@@ -16,6 +16,7 @@ import {
   Thumbnail,
   Button,
   Banner,
+  Select,
 } from "@shopify/polaris";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
@@ -34,6 +35,7 @@ export default function NewCatalogPage() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [columnCount, setColumnCount] = useState(3);
 
   // 編集モードでデータ読込
   useEffect(() => {
@@ -46,6 +48,7 @@ export default function NewCatalogPage() {
           setTitle(data.catalog.title || "");
           setLeadText(data.catalog.leadText || "");
           setSelectedProducts(data.catalog.products || []);
+          setColumnCount(data.catalog.columnCount || 3);
         }
       } catch (err) {
         console.error("カタログ取得エラー:", err);
@@ -86,7 +89,7 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
-      const body = { id, title, leadText, products: selectedProducts };
+      const body = { id, title, leadText, products: selectedProducts, columnCount };
 
       const res = await fetch("/api/catalogs", {
         method: id ? "PUT" : "POST",
@@ -141,6 +144,7 @@ export default function NewCatalogPage() {
             onRemove={(id) =>
               setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
             }
+            columnCount={columnCount}
           />
         </Card>
 
@@ -152,6 +156,18 @@ export default function NewCatalogPage() {
               value={title}
               onChange={setTitle}
               autoComplete="off"
+            />
+
+            {/* ✅ 列数選択 */}
+            <Select
+              label="列数"
+              options={[
+                { label: "2列", value: "2" },
+                { label: "3列", value: "3" },
+                { label: "4列", value: "4" },
+              ]}
+              value={String(columnCount)}
+              onChange={(val) => setColumnCount(Number(val))}
             />
 
             <Text as="h2" variant="headingSm">

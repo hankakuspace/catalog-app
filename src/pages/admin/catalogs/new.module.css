@@ -47,14 +47,14 @@
   100% { transform: translate(0, 0); }
 }
 
-/* タブレット: 2列固定 */
+/* タブレット: 2列 */
 @media (max-width: 1024px) {
   .previewGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
-/* スマホ: 1列固定 */
+/* スマホ: 1列 */
 @media (max-width: 600px) {
   .previewGrid {
     grid-template-columns: 1fr !important;
