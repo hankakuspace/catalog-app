@@ -1,11 +1,13 @@
 .previewGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)); /* 最大4列 */
-  justify-content: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* カードを中央寄せ */
   gap: 20px;
 }
 
 .previewGrid > div {
+  flex: 0 0 calc(25% - 20px); /* gapを差し引いた幅で常に4列 */
+  max-width: calc(25% - 20px);
   display: flex;
   flex-direction: column;
 }
@@ -35,16 +37,18 @@
   100% { transform: translate(0, 0); }
 }
 
-/* タブレット以下は2列 */
+/* タブレットは2列 */
 @media (max-width: 1024px) {
-  .previewGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .previewGrid > div {
+    flex: 0 0 calc(50% - 20px);
+    max-width: calc(50% - 20px);
   }
 }
 
 /* スマホは1列 */
 @media (max-width: 600px) {
-  .previewGrid {
-    grid-template-columns: 1fr;
+  .previewGrid > div {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 }
