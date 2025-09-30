@@ -18,6 +18,7 @@ import {
   Banner,
   Select,
   DatePicker,
+  Popover,
 } from "@shopify/polaris";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
@@ -49,6 +50,7 @@ export default function NewCatalogPage() {
     month: today.getMonth(),
     year: today.getFullYear(),
   });
+  const [datePickerActive, setDatePickerActive] = useState(false);
 
   // 編集モードでデータ読込
   useEffect(() => {
@@ -220,26 +222,42 @@ export default function NewCatalogPage() {
             <Text as="h2" variant="headingSm">
               有効期限
             </Text>
-            <DatePicker
-              month={month}
-              year={year}
-              onChange={({ start }) => {
-                const d = new Date(start);
-                d.setHours(0, 0, 0, 0); // ✅ 時間は常に0:00固定
-                setExpiresDate(d);
-                setDate({ month: d.getMonth(), year: d.getFullYear() });
-              }}
-              selected={expiresDate || new Date()}
-            />
-            {expiresDate && (
-              <Text as="p" tone="subdued">
-                {expiresDate.getFullYear()}/
-                {String(expiresDate.getMonth() + 1).padStart(2, "0")}/
-                {String(expiresDate.getDate()).padStart(2, "0")}
-              </Text>
-            )}
+            <Popover
+              active={datePickerActive}
+              activator={
+                <TextField
+                  label="有効期限"
+                  value={
+                    expiresDate
+                      ? `${expiresDate.getFullYear()}/${String(
+                          expiresDate.getMonth() + 1
+                        ).padStart(2, "0")}/${String(
+                          expiresDate.getDate()
+                        ).padStart(2, "0")}`
+                      : ""
+                  }
+                  onFocus={() => setDatePickerActive(true)}
+                  onChange={() => {}} // 手入力はさせない
+                  autoComplete="off"
+                />
+              }
+              onClose={() => setDatePickerActive(false)}
+            >
+              <DatePicker
+                month={month}
+                year={year}
+                onChange={({ start }) => {
+                  const d = new Date(start);
+                  d.setHours(0, 0, 0, 0); // ✅ 00:00固定
+                  setExpiresDate(d);
+                  setDate({ month: d.getMonth(), year: d.getFullYear() });
+                  setDatePickerActive(false); // 選択後に閉じる
+                }}
+                selected={expiresDate || new Date()}
+              />
+            </Popover>
 
-            {/* 検索とリード文は従来通り */}
+            {/* 検索 */}
             <Text as="h2" variant="headingSm">
               作品検索
             </Text>
