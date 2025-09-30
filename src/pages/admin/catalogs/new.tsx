@@ -18,16 +18,6 @@ import {
   Banner,
 } from "@shopify/polaris";
 import PreviewCatalog from "@/components/PreviewCatalog";
-import Quill from "quill";
-
-// ✅ Quill のフォントホワイトリストを拡張
-const Font = Quill.import("formats/font");
-Font.whitelist = [
-  "sans", "serif", "monospace",
-  "noto-sans", "noto-serif", "noto-sans-jp", "noto-serif-jp",
-  "yu-gothic", "hiragino-kaku-gothic"
-];
-Quill.register(Font, true);
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -181,7 +171,21 @@ export default function NewCatalogPage() {
                 onChange={setLeadText}
                 modules={{
                   toolbar: [
-                    [{ font: Font.whitelist }], // ✅ 拡張フォント
+                    [
+                      {
+                        font: [
+                          "sans",
+                          "serif",
+                          "monospace",
+                          "noto-sans",
+                          "noto-serif",
+                          "noto-sans-jp",
+                          "noto-serif-jp",
+                          "yu-gothic",
+                          "hiragino-kaku-gothic",
+                        ],
+                      },
+                    ],
                     [{ size: [] }],
                     ["bold", "italic", "underline", "strike"],
                     [{ color: [] }, { background: [] }],
