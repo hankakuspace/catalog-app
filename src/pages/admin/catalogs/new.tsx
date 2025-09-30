@@ -204,75 +204,6 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
-           {/* ログイン認証 */}
-<BlockStack gap="200">
-  <Text as="h2" variant="headingSm">
-    ログイン認証
-  </Text>
-  <InlineStack gap="200" blockAlign="center">
-    <div style={{ flex: 1 }}>
-      <TextField
-        label="ユーザー名"
-        labelHidden
-        placeholder="ユーザー名"
-        value={username}
-        onChange={setUsername}
-        autoComplete="off"
-      />
-    </div>
-    <div style={{ flex: 1 }}>
-      <TextField
-        label="パスワード"
-        labelHidden
-        placeholder="パスワード"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        autoComplete="off"
-      />
-    </div>
-  </InlineStack>
-</BlockStack>
-
-
-            {/* 有効期限 */}
-            <Popover
-              active={datePickerActive}
-              activator={
-                <TextField
-                  label="有効期限"
-                  labelHidden
-                  value={
-                    expiresDate
-                      ? `${expiresDate.getFullYear()}/${String(
-                          expiresDate.getMonth() + 1
-                        ).padStart(2, "0")}/${String(
-                          expiresDate.getDate()
-                        ).padStart(2, "0")}`
-                      : ""
-                  }
-                  prefix={<Icon source={CalendarIcon} />}
-                  placeholder="yyyy/mm/dd"
-                  onFocus={() => setDatePickerActive(true)}
-                  onChange={() => {}}
-                  autoComplete="off"
-                />
-              }
-              onClose={() => setDatePickerActive(false)}
-            >
-              <DatePicker
-                month={month}
-                year={year}
-                onChange={({ start }) => {
-                  const d = new Date(start);
-                  d.setHours(0, 0, 0, 0);
-                  setExpiresDate(d);
-                  setDate({ month: d.getMonth(), year: d.getFullYear() });
-                  setDatePickerActive(false);
-                }}
-                selected={expiresDate || new Date()}
-              />
-            </Popover>
 
             {/* 作品検索 */}
             <BlockStack gap="200">
@@ -358,6 +289,77 @@ export default function NewCatalogPage() {
                 ]}
               />
             </BlockStack>
+
+                       {/* ログイン認証 */}
+<BlockStack gap="200">
+  <Text as="h2" variant="headingSm">
+    ログイン認証
+  </Text>
+  <InlineStack gap="200" blockAlign="center">
+    <div style={{ flex: 1 }}>
+      <TextField
+        label="ユーザー名"
+        labelHidden
+        placeholder="ユーザー名"
+        value={username}
+        onChange={setUsername}
+        autoComplete="off"
+      />
+    </div>
+    <div style={{ flex: 1 }}>
+      <TextField
+        label="パスワード"
+        labelHidden
+        placeholder="パスワード"
+        type="password"
+        value={password}
+        onChange={setPassword}
+        autoComplete="off"
+      />
+    </div>
+  </InlineStack>
+</BlockStack>
+
+
+            {/* 有効期限 */}
+            <Popover
+              active={datePickerActive}
+              activator={
+                <TextField
+                  label="有効期限"
+                  labelHidden
+                  value={
+                    expiresDate
+                      ? `${expiresDate.getFullYear()}/${String(
+                          expiresDate.getMonth() + 1
+                        ).padStart(2, "0")}/${String(
+                          expiresDate.getDate()
+                        ).padStart(2, "0")}`
+                      : ""
+                  }
+                  prefix={<Icon source={CalendarIcon} />}
+                  placeholder="yyyy/mm/dd"
+                  onFocus={() => setDatePickerActive(true)}
+                  onChange={() => {}}
+                  autoComplete="off"
+                />
+              }
+              onClose={() => setDatePickerActive(false)}
+            >
+              <DatePicker
+                month={month}
+                year={year}
+                onChange={({ start }) => {
+                  const d = new Date(start);
+                  d.setHours(0, 0, 0, 0);
+                  setExpiresDate(d);
+                  setDate({ month: d.getMonth(), year: d.getFullYear() });
+                  setDatePickerActive(false);
+                }}
+                selected={expiresDate || new Date()}
+              />
+            </Popover>
+
 
             {/* 保存ボタン */}
             <Button variant="primary" onClick={handleSave} loading={saving}>
