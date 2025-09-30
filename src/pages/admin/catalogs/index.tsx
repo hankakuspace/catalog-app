@@ -10,6 +10,7 @@ import {
   Button,
   InlineStack,
   BlockStack,
+  Icon,
 } from "@shopify/polaris";
 import { ExternalIcon } from "@shopify/polaris-icons";
 
@@ -77,7 +78,7 @@ export default function CatalogListPage() {
                 { title: "プレビューURL" },
                 { title: "編集" },
               ]}
-              selectable={false} // ✅ 選択（背景色変化）を無効化
+              selectable={false} // ✅ 選択機能を完全オフ
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
@@ -103,7 +104,7 @@ export default function CatalogListPage() {
                           className="flex items-center gap-1 text-sky-600 hover:underline"
                         >
                           {catalog.previewUrl}
-                          <ExternalIcon />
+                          <Icon source={ExternalIcon} tone="base" />
                         </a>
                       ) : (
                         "-"
