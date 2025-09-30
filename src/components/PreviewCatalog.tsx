@@ -1,6 +1,7 @@
 // src/components/PreviewCatalog.tsx
+/* eslint-disable @next/next/no-img-element */
 import React from "react";
-import "react-quill/dist/quill.snow.css"; // ← 追加（リード文のスタイル反映用）
+import "react-quill/dist/quill.snow.css"; // ReactQuillのスタイルをプレビューでも反映
 
 export interface Product {
   id: string;
@@ -31,18 +32,18 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
           className="mx-auto h-12 w-auto filter invert"
         />
 
-        {/* タイトル（余白調整） */}
+        {/* タイトル（余白調整：上 2倍、下 1/2） */}
         <h2 className="text-2xl font-medium mt-10 mb-2">
           {title || "（タイトル未設定）"}
         </h2>
 
         {/* リード文（ReactQuillで編集したHTMLをそのまま表示） */}
-      {leadText && (
-  <div
-    className="max-w-3xl mx-auto text-center mt-5 mb-5"
-    dangerouslySetInnerHTML={{ __html: leadText }}
-  />
-)}
+        {leadText && (
+          <div
+            className="max-w-3xl mx-auto text-center mt-5 mb-5"
+            dangerouslySetInnerHTML={{ __html: leadText }}
+          />
+        )}
       </header>
 
       {/* メイン */}
@@ -53,6 +54,7 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
               key={p.id}
               className="bg-white text-black rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full"
             >
+              {/* 商品画像 */}
               {p.imageUrl ? (
                 <img
                   src={p.imageUrl}
@@ -65,6 +67,7 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
                 </div>
               )}
 
+              {/* 商品情報 */}
               <div className="p-4 flex flex-col flex-grow">
                 <h2 className="text-lg font-semibold mb-1">{p.title}</h2>
                 {p.artist && <p className="text-sm text-gray-600 mb-1">{p.artist}</p>}
@@ -84,4 +87,9 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
       </main>
 
       {/* フッター */}
-      <footer className="text-center py-6
+      <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
+        Copyright © 2025 Clue Co.,Ltd. all rights reserved.
+      </footer>
+    </div>
+  );
+}
