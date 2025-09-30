@@ -1,11 +1,14 @@
-/*// src/pages/admin/catalogs/new.module.css */
+/* // src/pages/admin/catalogs/new.module.css */
 .previewGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* 中央寄せ */
   gap: 20px;
 }
 
 .previewGrid > div {
+  flex: 0 0 25%;   /* 常に25%幅 */
+  max-width: 25%;
   display: flex;
   flex-direction: column;
 }
@@ -35,14 +38,13 @@
   100% { transform: translate(0, 0); }
 }
 
+/* スマホ対応：2列 → 1列 */
 @media (max-width: 1024px) {
-  .previewGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .previewGrid > div {
+    flex: 0 0 50%;
+    max-width: 50%;
   }
 }
 
 @media (max-width: 600px) {
-  .previewGrid {
-    grid-template-columns: 1fr;
-  }
-}
+  .pr
