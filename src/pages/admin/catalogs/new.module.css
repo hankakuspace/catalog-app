@@ -47,4 +47,8 @@
 }
 
 @media (max-width: 600px) {
-  .pr
+  .previewGrid > div {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
