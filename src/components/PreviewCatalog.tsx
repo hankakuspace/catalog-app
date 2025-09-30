@@ -37,12 +37,12 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
         </h2>
 
         {/* リード文（ReactQuillで編集したHTMLをそのまま表示） */}
-        {leadText && (
-          <div
-            className="max-w-3xl mx-auto text-center mt-5 mb-5 quill"
-            dangerouslySetInnerHTML={{ __html: leadText }}
-          />
-        )}
+      {leadText && (
+  <div
+    className="max-w-3xl mx-auto text-center mt-5 mb-5"
+    dangerouslySetInnerHTML={{ __html: leadText }}
+  />
+)}
       </header>
 
       {/* メイン */}
