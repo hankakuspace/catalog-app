@@ -23,48 +23,39 @@
   font-size: 2.5rem;
 }
 
-/* 英語系フォント */
-.ql-font-sans {
-  font-family: Arial, Helvetica, sans-serif;
-}
-.ql-font-serif {
-  font-family: Georgia, "Times New Roman", serif;
-}
-.ql-font-monospace {
-  font-family: Menlo, Monaco, monospace;
-}
-
-/* 日本語フォント */
-.ql-font-noto-sans {
+/* Quill ドロップダウンに表示されるラベルを正しくする */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-sans"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-sans"]::before {
+  content: "Noto Sans";
   font-family: "Noto Sans", Arial, Helvetica, sans-serif;
 }
-.ql-font-noto-serif {
-  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-serif"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-serif"]::before {
+  content: "Noto Serif";
+  font-family: "Noto Serif", Georgia, serif;
 }
-.ql-font-noto-sans-jp {
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-sans-jp"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-sans-jp"]::before {
+  content: "Noto Sans JP";
   font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
 }
-.ql-font-noto-serif-jp {
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-serif-jp"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-serif-jp"]::before {
+  content: "Noto Serif JP";
   font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
 
-
-/* 日本語フォント対応 */
-.ql-font-noto-sans {
-  font-family: "Noto Sans", Arial, Helvetica, sans-serif;
-}
-.ql-font-noto-serif {
-  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
-}
-.ql-font-noto-sans-jp {
-  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
-}
-.ql-font-noto-serif-jp {
-  font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif;
-}
-.ql-font-yu-gothic {
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="yu-gothic"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="yu-gothic"]::before {
+  content: "Yu Gothic";
   font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
 }
-.ql-font-hiragino-kaku-gothic {
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="hiragino-kaku-gothic"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="hiragino-kaku-gothic"]::before {
+  content: "Hiragino Kaku Gothic";
   font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
 }
