@@ -1,14 +1,11 @@
-/* // src/pages/admin/catalogs/new.module.css */
 .previewGrid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 最大4列 */
   justify-content: center; /* 中央寄せ */
   gap: 20px;
 }
 
 .previewGrid > div {
-  flex: 0 0 25%;   /* 常に25%幅 */
-  max-width: 25%;
   display: flex;
   flex-direction: column;
 }
@@ -38,17 +35,16 @@
   100% { transform: translate(0, 0); }
 }
 
-/* スマホ対応：2列 → 1列 */
+/* タブレット以下は2列 */
 @media (max-width: 1024px) {
-  .previewGrid > div {
-    flex: 0 0 50%;
-    max-width: 50%;
+  .previewGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* スマホは1列 */
 @media (max-width: 600px) {
-  .previewGrid > div {
-    flex: 0 0 100%;
-    max-width: 100%;
+  .previewGrid {
+    grid-template-columns: 1fr;
   }
 }
