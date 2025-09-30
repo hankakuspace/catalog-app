@@ -17,6 +17,8 @@ import {
   Button,
   Banner,
   Select,
+  Checkbox,
+  DatePicker,
 } from "@shopify/polaris";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
@@ -37,6 +39,12 @@ export default function NewCatalogPage() {
   const [saveError, setSaveError] = useState("");
   const [columnCount, setColumnCount] = useState(3);
 
+  // ✅ 新しいフィールド
+  const [passwordEnabled, setPasswordEnabled] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+
   // 編集モードでデータ読込
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -49,6 +57,10 @@ export default function NewCatalogPage() {
           setLeadText(data.catalog.leadText || "");
           setSelectedProducts(data.catalog.products || []);
           setColumnCount(data.catalog.columnCount || 3);
+          setPasswordEnabled(data.catalog.passwordEnabled || false);
+          setUsername(data.catalog.username || "");
+          setPassword(data.catalog.password || "");
+          setExpiresAt(data.catalog.expiresAt || null);
         }
       } catch (err) {
         console.error("カタログ取得エラー:", err);
@@ -56,29 +68,6 @@ export default function NewCatalogPage() {
     };
     fetchCatalog();
   }, [router.isReady, id]);
-
-  const handleSearch = async (query: string) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        shop: "catalog-app-dev-2.myshopify.com",
-        query,
-      });
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const data = await res.json();
-      setSearchResults(data.products || []);
-    } catch (err) {
-      console.error("商品検索エラー:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddProduct = (product: Product) => {
-    if (!selectedProducts.find((p) => p.id === product.id)) {
-      setSelectedProducts([...selectedProducts, product]);
-    }
-  };
 
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
@@ -89,7 +78,17 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
-      const body = { id, title, leadText, products: selectedProducts, columnCount };
+      const body = {
+        id,
+        title,
+        leadText,
+        products: selectedProducts,
+        columnCount,
+        passwordEnabled,
+        username,
+        password,
+        expiresAt,
+      };
 
       const res = await fetch("/api/catalogs", {
         method: id ? "PUT" : "POST",
@@ -158,7 +157,7 @@ export default function NewCatalogPage() {
               autoComplete="off"
             />
 
-            {/* ✅ 列数選択 */}
+            {/* 列数選択 */}
             <Select
               label="列数"
               options={[
@@ -170,6 +169,38 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
+            {/* 認証設定 */}
+            <Checkbox
+              label="認証を有効にする"
+              checked={passwordEnabled}
+              onChange={(val) => setPasswordEnabled(val)}
+            />
+            {passwordEnabled && (
+              <>
+                <TextField
+                  label="ユーザー名"
+                  value={username}
+                  onChange={setUsername}
+                />
+                <TextField
+                  label="パスワード"
+                  type="password"
+                  value={password}
+                  onChange={setPassword}
+                />
+              </>
+            )}
+
+            {/* 有効期限 */}
+            <TextField
+              label="有効期限 (YYYY-MM-DD HH:mm)"
+              value={expiresAt || ""}
+              onChange={(val) => setExpiresAt(val)}
+              autoComplete="off"
+              placeholder="2025-10-10 23:59"
+            />
+
+            {/* 検索 & リード文は従来通り */}
             <Text as="h2" variant="headingSm">
               作品検索
             </Text>
@@ -195,7 +226,11 @@ export default function NewCatalogPage() {
                   <ResourceItem
                     id={item.id}
                     accessibilityLabel={`${item.title} を追加`}
-                    onClick={() => handleAddProduct(item)}
+                    onClick={() => {
+                      if (!selectedProducts.find((p) => p.id === item.id)) {
+                        setSelectedProducts([...selectedProducts, item]);
+                      }
+                    }}
                     media={
                       item.imageUrl ? (
                         <Thumbnail
