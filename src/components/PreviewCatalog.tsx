@@ -46,7 +46,7 @@ interface Props {
   editable?: boolean;
   onReorder?: (products: Product[]) => void;
   onRemove?: (id: string) => void;
-  columnCount?: number; // ✅ ← これを追加
+  columnCount?: number;
 }
 
 function SortableItem({
@@ -75,8 +75,16 @@ function SortableItem({
     editable && (isReorderMode || isDragging) ? styles.shakeWrapper : "";
 
   return (
-    <div ref={setNodeRef} style={style} {...(editable ? attributes : {})} {...(editable ? listeners : {})}>
-      <div className={`${shakeClass}`} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...(editable ? attributes : {})}
+      {...(editable ? listeners : {})}
+    >
+      <div
+        className={`${shakeClass}`}
+        style={{ flex: 1, display: "flex", flexDirection: "column" }}
+      >
         {children}
       </div>
     </div>
@@ -90,9 +98,11 @@ export default function PreviewCatalog({
   editable = false,
   onReorder,
   onRemove,
-  columnCount = 3, // ✅ 受け取れるようにする
+  columnCount = 3,
 }: Props) {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
@@ -130,7 +140,7 @@ export default function PreviewCatalog({
     }
   };
 
-  // ✅ 列数に応じてクラス切替
+  // ✅ 列数クラス切り替え
   const gridClass =
     columnCount === 2
       ? `${styles.previewGrid} ${styles["cols-2"]}`
@@ -141,7 +151,11 @@ export default function PreviewCatalog({
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <header className="text-center py-8 border-b border-gray-700">
-        <img src="/andcollection.svg" alt="AND COLLECTION" className="mx-auto h-12 w-auto filter invert" />
+        <img
+          src="/andcollection.svg"
+          alt="AND COLLECTION"
+          className="mx-auto h-12 w-auto filter invert"
+        />
         <h2 className="text-2xl font-medium mt-10 mb-2 text-white">
           {title || "（タイトル未設定）"}
         </h2>
@@ -155,12 +169,23 @@ export default function PreviewCatalog({
 
       <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
         {editable ? (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={products.map((p) => p.id)}
+              strategy={rectSortingStrategy}
+            >
               <div className={gridClass}>
-                {/* ✅ カード描画部分は既存のまま */}
                 {products.map((item, index) => (
-                  <SortableItem key={item.id} id={item.id} isReorderMode={isReorderMode} editable={editable}>
+                  <SortableItem
+                    key={item.id}
+                    id={item.id}
+                    isReorderMode={isReorderMode}
+                    editable={editable}
+                  >
                     <div className={styles.cardWrapper}>
                       <Card>
                         <div
@@ -170,12 +195,13 @@ export default function PreviewCatalog({
                           }}
                         >
                           <BlockStack gap="200">
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <div className="text-black">
-                                <Text as="h3" variant="headingSm">
-                                  {item.artist}
-                                </Text>
-                              </div>
+                            {/* メニューだけ上部に残す */}
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                              }}
+                            >
                               <Popover
                                 active={activePopoverId === item.id}
                                 activator={
@@ -184,7 +210,9 @@ export default function PreviewCatalog({
                                     icon={MenuHorizontalIcon}
                                     onClick={() =>
                                       setActivePopoverId(
-                                        activePopoverId === item.id ? null : item.id
+                                        activePopoverId === item.id
+                                          ? null
+                                          : item.id
                                       )
                                     }
                                   />
@@ -194,7 +222,9 @@ export default function PreviewCatalog({
                                 <ActionList
                                   items={[
                                     {
-                                      content: isReorderMode ? "Finish move" : "Move item",
+                                      content: isReorderMode
+                                        ? "Finish move"
+                                        : "Move item",
                                       onAction: () => {
                                         setIsReorderMode(!isReorderMode);
                                         setActivePopoverId(null);
@@ -212,7 +242,8 @@ export default function PreviewCatalog({
                                 />
                               </Popover>
                             </div>
-                            {/* 画像 + 詳細 */}
+
+                            {/* 画像 */}
                             {item.imageUrl ? (
                               <img
                                 src={item.imageUrl}
@@ -225,12 +256,21 @@ export default function PreviewCatalog({
                                 <span className="text-gray-400">No Image</span>
                               </div>
                             )}
-                            <div className="text-black">
-                              <Text as="p">{item.title}</Text>
+
+                            {/* ✅ 画像下にまとめて情報を表示 */}
+                            <div className="text-black mt-2 px-2">
+                              {item.artist && <Text as="p">{item.artist}</Text>}
+                              {item.title && <Text as="p">{item.title}</Text>}
                               {item.year && <Text as="p">{item.year}</Text>}
-                              {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                              {item.medium && <Text as="p">{item.medium}</Text>}
-                              {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                              {item.dimensions && (
+                                <Text as="p">{item.dimensions}</Text>
+                              )}
+                              {item.medium && (
+                                <Text as="p">{item.medium}</Text>
+                              )}
+                              {item.price && (
+                                <Text as="p">{item.price} 円（税込）</Text>
+                              )}
                             </div>
                           </BlockStack>
                         </div>
@@ -243,7 +283,6 @@ export default function PreviewCatalog({
           </DndContext>
         ) : (
           <div className={gridClass}>
-            {/* 公開モード */}
             {products.map((item, index) => (
               <div key={item.id} className={styles.cardWrapper}>
                 <Card>
@@ -254,11 +293,7 @@ export default function PreviewCatalog({
                     }}
                   >
                     <BlockStack gap="200">
-                      <div className="text-black">
-                        <Text as="h3" variant="headingSm">
-                          {item.artist}
-                        </Text>
-                      </div>
+                      {/* 画像 */}
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
@@ -271,12 +306,19 @@ export default function PreviewCatalog({
                           <span className="text-gray-400">No Image</span>
                         </div>
                       )}
-                      <div className="text-black">
-                        <Text as="p">{item.title}</Text>
+
+                      {/* ✅ 公開モードも画像下にまとめて */}
+                      <div className="text-black mt-2 px-2">
+                        {item.artist && <Text as="p">{item.artist}</Text>}
+                        {item.title && <Text as="p">{item.title}</Text>}
                         {item.year && <Text as="p">{item.year}</Text>}
-                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                        {item.dimensions && (
+                          <Text as="p">{item.dimensions}</Text>
+                        )}
                         {item.medium && <Text as="p">{item.medium}</Text>}
-                        {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                        {item.price && (
+                          <Text as="p">{item.price} 円（税込）</Text>
+                        )}
                       </div>
                     </BlockStack>
                   </div>
