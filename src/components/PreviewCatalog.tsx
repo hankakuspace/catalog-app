@@ -1,6 +1,6 @@
 // src/components/PreviewCatalog.tsx
 /* eslint-disable @next/next/no-img-element */
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -94,6 +94,33 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
+  // ✅ 高さ揃え用
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const maxHeightRef = useRef(0);
+
+  const adjustHeights = useCallback(() => {
+    if (!cardRefs.current.length) return;
+
+    let maxH = 0;
+    cardRefs.current.forEach((el) => {
+      if (el) maxH = Math.max(maxH, el.offsetHeight);
+    });
+
+    maxHeightRef.current = maxH;
+
+    cardRefs.current.forEach((el) => {
+      if (el) el.style.height = `${maxH}px`;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      adjustHeights();
+      window.addEventListener("resize", adjustHeights);
+      return () => window.removeEventListener("resize", adjustHeights);
+    }
+  }, [products, adjustHeights]);
+
   const handleDragEnd = (event: DragEndEvent) => {
     if (!editable || !onReorder) return;
     const { active, over } = event;
@@ -114,13 +141,13 @@ export default function PreviewCatalog({
           className="mx-auto h-12 w-auto filter invert"
         />
 
-        <h2 className="text-2xl font-medium mt-10 mb-2">
+        <h2 className="text-2xl font-medium mt-10 mb-2 text-white">
           {title || "（タイトル未設定）"}
         </h2>
 
         {leadText && (
           <div
-            className="max-w-3xl mx-auto text-center mt-5 mb-5"
+            className="max-w-3xl mx-auto text-center mt-5 mb-5 text-white"
             dangerouslySetInnerHTML={{ __html: leadText }}
           />
         )}
@@ -132,15 +159,20 @@ export default function PreviewCatalog({
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
               <div className={styles.previewGrid}>
-                {products.map((item) => (
+                {products.map((item, index) => (
                   <SortableItem key={item.id} id={item.id} isReorderMode={isReorderMode} editable={editable}>
                     <div className={styles.cardWrapper}>
                       <Card>
-                        <div className={styles.cardInner}>
-                          <BlockStack gap="200">
+                        <div
+                          className={styles.cardInner}
+                          ref={(el) => {
+                            cardRefs.current[index] = el;
+                          }}
+                        >
+                          <BlockStack gap="200" className="text-black">
                             {/* タイトル + メニュー */}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <Text as="h3" variant="headingSm">
+                              <Text as="h3" variant="headingSm" className="text-black">
                                 {item.artist}
                               </Text>
                               <Popover
@@ -188,17 +220,18 @@ export default function PreviewCatalog({
                                 src={item.imageUrl}
                                 alt={item.title}
                                 className="block w-full h-80 object-contain bg-gray-100 border-b border-gray-200 rounded-t-xl"
+                                onLoad={adjustHeights}
                               />
                             ) : (
                               <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
                                 <span className="text-gray-400">No Image</span>
                               </div>
                             )}
-                            <Text as="p">{item.title}</Text>
-                            {item.year && <Text as="p">{item.year}</Text>}
-                            {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                            {item.medium && <Text as="p">{item.medium}</Text>}
-                            {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                            <Text as="p" className="text-black">{item.title}</Text>
+                            {item.year && <Text as="p" className="text-black">{item.year}</Text>}
+                            {item.dimensions && <Text as="p" className="text-black">{item.dimensions}</Text>}
+                            {item.medium && <Text as="p" className="text-black">{item.medium}</Text>}
+                            {item.price && <Text as="p" className="text-black">{item.price} 円（税込）</Text>}
                           </BlockStack>
                         </div>
                       </Card>
@@ -211,12 +244,17 @@ export default function PreviewCatalog({
         ) : (
           // 公開モード（DnD無効化）
           <div className={styles.previewGrid}>
-            {products.map((item) => (
+            {products.map((item, index) => (
               <div key={item.id} className={styles.cardWrapper}>
                 <Card>
-                  <div className={styles.cardInner}>
-                    <BlockStack gap="200">
-                      <Text as="h3" variant="headingSm">
+                  <div
+                    className={styles.cardInner}
+                    ref={(el) => {
+                      cardRefs.current[index] = el;
+                    }}
+                  >
+                    <BlockStack gap="200" className="text-black">
+                      <Text as="h3" variant="headingSm" className="text-black">
                         {item.artist}
                       </Text>
                       {item.imageUrl ? (
@@ -224,17 +262,18 @@ export default function PreviewCatalog({
                           src={item.imageUrl}
                           alt={item.title}
                           className="block w-full h-80 object-contain bg-gray-100 border-b border-gray-200 rounded-t-xl"
+                          onLoad={adjustHeights}
                         />
                       ) : (
                         <div className="w-full h-80 bg-gray-200 flex items-center justify-center rounded-t-xl">
                           <span className="text-gray-400">No Image</span>
                         </div>
                       )}
-                      <Text as="p">{item.title}</Text>
-                      {item.year && <Text as="p">{item.year}</Text>}
-                      {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                      {item.medium && <Text as="p">{item.medium}</Text>}
-                      {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                      <Text as="p" className="text-black">{item.title}</Text>
+                      {item.year && <Text as="p" className="text-black">{item.year}</Text>}
+                      {item.dimensions && <Text as="p" className="text-black">{item.dimensions}</Text>}
+                      {item.medium && <Text as="p" className="text-black">{item.medium}</Text>}
+                      {item.price && <Text as="p" className="text-black">{item.price} 円（税込）</Text>}
                     </BlockStack>
                   </div>
                 </Card>
