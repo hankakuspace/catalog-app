@@ -172,9 +172,11 @@ export default function PreviewCatalog({
                           <BlockStack gap="200">
                             {/* タイトル + メニュー */}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                              <Text as="h3" variant="headingSm" className="text-black">
-                                {item.artist}
-                              </Text>
+                              <div className="text-black">
+                                <Text as="h3" variant="headingSm">
+                                  {item.artist}
+                                </Text>
+                              </div>
                               <Popover
                                 active={activePopoverId === item.id}
                                 activator={
@@ -227,11 +229,13 @@ export default function PreviewCatalog({
                                 <span className="text-gray-400">No Image</span>
                               </div>
                             )}
-                            <Text as="p" className="text-black">{item.title}</Text>
-                            {item.year && <Text as="p" className="text-black">{item.year}</Text>}
-                            {item.dimensions && <Text as="p" className="text-black">{item.dimensions}</Text>}
-                            {item.medium && <Text as="p" className="text-black">{item.medium}</Text>}
-                            {item.price && <Text as="p" className="text-black">{item.price} 円（税込）</Text>}
+                            <div className="text-black">
+                              <Text as="p">{item.title}</Text>
+                              {item.year && <Text as="p">{item.year}</Text>}
+                              {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                              {item.medium && <Text as="p">{item.medium}</Text>}
+                              {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                            </div>
                           </BlockStack>
                         </div>
                       </Card>
@@ -254,9 +258,11 @@ export default function PreviewCatalog({
                     }}
                   >
                     <BlockStack gap="200">
-                      <Text as="h3" variant="headingSm" className="text-black">
-                        {item.artist}
-                      </Text>
+                      <div className="text-black">
+                        <Text as="h3" variant="headingSm">
+                          {item.artist}
+                        </Text>
+                      </div>
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
@@ -269,11 +275,13 @@ export default function PreviewCatalog({
                           <span className="text-gray-400">No Image</span>
                         </div>
                       )}
-                      <Text as="p" className="text-black">{item.title}</Text>
-                      {item.year && <Text as="p" className="text-black">{item.year}</Text>}
-                      {item.dimensions && <Text as="p" className="text-black">{item.dimensions}</Text>}
-                      {item.medium && <Text as="p" className="text-black">{item.medium}</Text>}
-                      {item.price && <Text as="p" className="text-black">{item.price} 円（税込）</Text>}
+                      <div className="text-black">
+                        <Text as="p">{item.title}</Text>
+                        {item.year && <Text as="p">{item.year}</Text>}
+                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                        {item.medium && <Text as="p">{item.medium}</Text>}
+                        {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                      </div>
                     </BlockStack>
                   </div>
                 </Card>
