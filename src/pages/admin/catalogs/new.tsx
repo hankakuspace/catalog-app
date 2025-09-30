@@ -47,21 +47,6 @@ export default function NewCatalogPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  // ✅ Quill のフォント whitelist を登録（クライアントのみ）
-  useEffect(() => {
-    (async () => {
-      const Quill = (await import("quill")).default;
-      const Font = Quill.import("formats/font");
-      Font.whitelist = [
-        "sans", "serif", "monospace",
-        "noto-sans", "noto-serif",
-        "noto-sans-jp", "noto-serif-jp",
-        "yu-gothic", "hiragino-kaku-gothic",
-      ];
-      Quill.register(Font, true);
-    })();
-  }, []);
-
   // 編集モードでデータ読込
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -163,7 +148,11 @@ export default function NewCatalogPage() {
       >
         {/* 左：公開プレビュー */}
         <Card>
-          <PreviewCatalog title={title} leadText={leadText} products={selectedProducts} />
+          <PreviewCatalog
+            title={title}
+            leadText={leadText}
+            products={selectedProducts}
+          />
         </Card>
 
         {/* 右：フォーム */}
@@ -175,52 +164,6 @@ export default function NewCatalogPage() {
               onChange={setTitle}
               autoComplete="off"
             />
-
-            <div>
-              <Text as="h2" variant="headingSm">
-                リード文
-              </Text>
-              <ReactQuill
-                theme="snow"
-                value={leadText}
-                onChange={setLeadText}
-                modules={{
-                  toolbar: [
-                    [
-                      {
-                        font: [
-                          "sans",
-                          "serif",
-                          "monospace",
-                          "noto-sans",
-                          "noto-serif",
-                          "noto-sans-jp",
-                          "noto-serif-jp",
-                          "yu-gothic",
-                          "hiragino-kaku-gothic",
-                        ],
-                      },
-                    ],
-                    [{ size: [] }],
-                    ["bold", "italic", "underline", "strike"],
-                    [{ color: [] }, { background: [] }],
-                    [{ align: [] }],
-                    ["clean"],
-                  ],
-                }}
-                formats={[
-                  "font",
-                  "size",
-                  "bold",
-                  "italic",
-                  "underline",
-                  "strike",
-                  "color",
-                  "background",
-                  "align",
-                ]}
-              />
-            </div>
 
             <Text as="h2" variant="headingSm">
               作品検索
@@ -271,6 +214,53 @@ export default function NewCatalogPage() {
             </Button>
           </BlockStack>
         </Card>
+      </div>
+
+      {/* ✅ Quill は Card の外に移動 */}
+      <div style={{ marginTop: "20px" }}>
+        <Text as="h2" variant="headingSm">
+          リード文
+        </Text>
+        <ReactQuill
+          theme="snow"
+          value={leadText}
+          onChange={setLeadText}
+          modules={{
+            toolbar: [
+              [
+                {
+                  font: [
+                    "sans",
+                    "serif",
+                    "monospace",
+                    "noto-sans",
+                    "noto-serif",
+                    "noto-sans-jp",
+                    "noto-serif-jp",
+                    "yu-gothic",
+                    "hiragino-kaku-gothic",
+                  ],
+                },
+              ],
+              [{ size: [] }],
+              ["bold", "italic", "underline", "strike"],
+              [{ color: [] }, { background: [] }],
+              [{ align: [] }],
+              ["clean"],
+            ],
+          }}
+          formats={[
+            "font",
+            "size",
+            "bold",
+            "italic",
+            "underline",
+            "strike",
+            "color",
+            "background",
+            "align",
+          ]}
+        />
       </div>
     </div>
   );
