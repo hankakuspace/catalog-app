@@ -1,5 +1,6 @@
 // src/components/PreviewCatalog.tsx
 import React from "react";
+import "react-quill/dist/quill.snow.css"; // ← 追加（リード文のスタイル反映用）
 
 export interface Product {
   id: string;
@@ -30,15 +31,15 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
           className="mx-auto h-12 w-auto filter invert"
         />
 
-        {/* タイトル */}
-        <h2 className="text-2xl font-medium mt-5 mb-5">
+        {/* タイトル（余白調整） */}
+        <h2 className="text-2xl font-medium mt-10 mb-2">
           {title || "（タイトル未設定）"}
         </h2>
 
-        {/* リード文（HTMLをそのまま反映） */}
+        {/* リード文（ReactQuillで編集したHTMLをそのまま表示） */}
         {leadText && (
           <div
-            className="max-w-3xl mx-auto text-center mt-5 mb-5"
+            className="max-w-3xl mx-auto text-center mt-5 mb-5 quill"
             dangerouslySetInnerHTML={{ __html: leadText }}
           />
         )}
@@ -83,9 +84,4 @@ export default function PreviewCatalog({ title, leadText, products }: Props) {
       </main>
 
       {/* フッター */}
-      <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
-        Copyright © 2025 Clue Co.,Ltd. all rights reserved.
-      </footer>
-    </div>
-  );
-}
+      <footer className="text-center py-6
