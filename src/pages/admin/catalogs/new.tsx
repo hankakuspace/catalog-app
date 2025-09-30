@@ -155,69 +155,61 @@ export default function NewCatalogPage() {
           />
         </Card>
 
-        {/* 右：フォーム */}
-        <div>
-          <Card>
-            <BlockStack gap="400">
-              <TextField
-                label="タイトル"
-                value={title}
-                onChange={setTitle}
-                autoComplete="off"
-              />
+        {/* 右：フォーム（Card内にタイトル、作品検索、リード文をまとめる） */}
+        <Card>
+          <BlockStack gap="400">
+            <TextField
+              label="タイトル"
+              value={title}
+              onChange={setTitle}
+              autoComplete="off"
+            />
 
-              <Text as="h2" variant="headingSm">
-                作品検索
-              </Text>
-              <TextField
-                label="検索キーワード"
-                labelHidden
-                value={searchQuery}
-                onChange={(value) => {
-                  setSearchQuery(value);
-                  if (value.trim() !== "") handleSearch(value);
-                  else setSearchResults([]);
-                }}
-                autoComplete="off"
-                placeholder="作家名・作品タイトルで検索"
+            <Text as="h2" variant="headingSm">
+              作品検索
+            </Text>
+            <TextField
+              label="検索キーワード"
+              labelHidden
+              value={searchQuery}
+              onChange={(value) => {
+                setSearchQuery(value);
+                if (value.trim() !== "") handleSearch(value);
+                else setSearchResults([]);
+              }}
+              autoComplete="off"
+              placeholder="作家名・作品タイトルで検索"
+            />
+            {loading ? (
+              <Spinner accessibilityLabel="検索中" size="large" />
+            ) : (
+              <ResourceList
+                resourceName={{ singular: "product", plural: "products" }}
+                items={searchResults}
+                renderItem={(item) => (
+                  <ResourceItem
+                    id={item.id}
+                    accessibilityLabel={`${item.title} を追加`}
+                    onClick={() => handleAddProduct(item)}
+                    media={
+                      item.imageUrl ? (
+                        <Thumbnail
+                          source={item.imageUrl}
+                          alt={item.title}
+                          size="small"
+                        />
+                      ) : undefined
+                    }
+                  >
+                    <Text as="p">
+                      {item.artist ? `${item.artist}, ` : ""}
+                      {item.title}
+                    </Text>
+                  </ResourceItem>
+                )}
               />
-              {loading ? (
-                <Spinner accessibilityLabel="検索中" size="large" />
-              ) : (
-                <ResourceList
-                  resourceName={{ singular: "product", plural: "products" }}
-                  items={searchResults}
-                  renderItem={(item) => (
-                    <ResourceItem
-                      id={item.id}
-                      accessibilityLabel={`${item.title} を追加`}
-                      onClick={() => handleAddProduct(item)}
-                      media={
-                        item.imageUrl ? (
-                          <Thumbnail
-                            source={item.imageUrl}
-                            alt={item.title}
-                            size="small"
-                          />
-                        ) : undefined
-                      }
-                    >
-                      <Text as="p">
-                        {item.artist ? `${item.artist}, ` : ""}
-                        {item.title}
-                      </Text>
-                    </ResourceItem>
-                  )}
-                />
-              )}
-              <Button variant="primary" onClick={handleSave} loading={saving}>
-                {id ? "カタログ更新" : "カタログ作成"}
-              </Button>
-            </BlockStack>
-          </Card>
+            )}
 
-          {/* ✅ リード文エディタは Card の外 */}
-          <div style={{ marginTop: "20px" }}>
             <Text as="h2" variant="headingSm">
               リード文
             </Text>
@@ -227,21 +219,7 @@ export default function NewCatalogPage() {
               onChange={setLeadText}
               modules={{
                 toolbar: [
-                  [
-                    {
-                      font: [
-                        "sans",
-                        "serif",
-                        "monospace",
-                        "noto-sans",
-                        "noto-serif",
-                        "noto-sans-jp",
-                        "noto-serif-jp",
-                        "yu-gothic",
-                        "hiragino-kaku-gothic",
-                      ],
-                    },
-                  ],
+                  [{ font: ["sans", "serif", "monospace"] }],
                   [{ size: [] }],
                   ["bold", "italic", "underline", "strike"],
                   [{ color: [] }, { background: [] }],
@@ -261,8 +239,12 @@ export default function NewCatalogPage() {
                 "align",
               ]}
             />
-          </div>
-        </div>
+
+            <Button variant="primary" onClick={handleSave} loading={saving}>
+              {id ? "カタログ更新" : "カタログ作成"}
+            </Button>
+          </BlockStack>
+        </Card>
       </div>
     </div>
   );
