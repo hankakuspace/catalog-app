@@ -47,6 +47,21 @@ export default function NewCatalogPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
 
+  // ✅ Quill のフォント whitelist を登録（クライアントのみ）
+  useEffect(() => {
+    (async () => {
+      const Quill = (await import("quill")).default;
+      const Font = Quill.import("formats/font");
+      Font.whitelist = [
+        "sans", "serif", "monospace",
+        "noto-sans", "noto-serif",
+        "noto-sans-jp", "noto-serif-jp",
+        "yu-gothic", "hiragino-kaku-gothic",
+      ];
+      Quill.register(Font, true);
+    })();
+  }, []);
+
   // 編集モードでデータ読込
   useEffect(() => {
     if (!router.isReady || !id) return;
