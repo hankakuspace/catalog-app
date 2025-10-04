@@ -12,25 +12,29 @@ export default function AdminHeader() {
   ];
 
   return (
-    <InlineStack align="start" gap="400" style={{ marginBottom: "40px" }}>
-      {menuItems.map((item) => {
-        const isActive = router.pathname === item.path;
-        return (
-          <Link key={item.path} href={item.path}>
-            <span
-              style={{
-                fontWeight: isActive ? 600 : 400,
-                color: isActive ? "#000" : "#666", // ✅ アクティブ時は黒
-                borderBottom: isActive ? "2px solid #000" : "2px solid transparent",
-                paddingBottom: "4px",
-                cursor: "pointer",
-              }}
-            >
-              {item.label}
-            </span>
-          </Link>
-        );
-      })}
-    </InlineStack>
+    <div style={{ marginBottom: "40px" }}>
+      <InlineStack align="start" gap="400">
+        {menuItems.map((item) => {
+          const isActive = router.pathname === item.path;
+          return (
+            <Link key={item.path} href={item.path}>
+              <span
+                style={{
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? "#000" : "#666", // ✅ アクティブ時は黒
+                  borderBottom: isActive
+                    ? "2px solid #000"
+                    : "2px solid transparent",
+                  paddingBottom: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </InlineStack>
+    </div>
   );
 }
