@@ -28,7 +28,7 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Polarisの型要件に準拠
+  // ✅ Polaris 型対応
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
@@ -77,24 +77,14 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ 上部タイトル＋右側にNew Record */}
-      <div
-        style={{
-          marginBottom: "40px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      {/* ✅ タイトル */}
+      <div style={{ marginBottom: "40px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
-        <Button variant="primary" url="/admin/catalogs/new">
-          New Record
-        </Button>
       </div>
 
-      {/* タイトル下メニュー */}
+      {/* ✅ タブメニュー */}
       <AdminHeader />
 
       {error && (
@@ -117,6 +107,14 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
+          {/* ✅ IndexTable の上に New Record ボタン */}
+          <InlineStack align="end" style={{ marginBottom: "8px" }}>
+            <Button variant="primary" url="/admin/catalogs/new">
+              New Record
+            </Button>
+          </InlineStack>
+
+          {/* ✅ テーブル本体 */}
           <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -182,8 +180,8 @@ export default function CatalogListPage() {
             </IndexTable>
           </Card>
 
-          {/* ✅ 下部ボタン群 */}
-          <InlineStack align="space-between">
+          {/* ✅ 下部ボタン：削除のみ残す */}
+          <InlineStack align="start">
             <Button
               tone="critical"
               icon={DeleteIcon}
@@ -191,9 +189,6 @@ export default function CatalogListPage() {
               disabled={selectedResources.length === 0}
             >
               削除
-            </Button>
-            <Button variant="primary" url="/admin/catalogs/new">
-              New Record
             </Button>
           </InlineStack>
         </BlockStack>
