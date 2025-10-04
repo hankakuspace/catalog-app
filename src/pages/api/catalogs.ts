@@ -4,6 +4,7 @@ import { dbAdmin, FieldValue } from "@/lib/firebaseAdmin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    // ✅ GET：一覧または個別取得
     if (req.method === "GET") {
       const { id } = req.query;
       if (id) {
@@ -20,7 +21,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         });
       }
-      const snapshot = await dbAdmin.collection("shopify_catalogs_app").orderBy("createdAt", "desc").get();
+
+      const snapshot = await dbAdmin
+        .collection("shopify_catalogs_app")
+        .orderBy("createdAt", "desc")
+        .get();
+
       const catalogs = snapshot.docs.map((doc) => {
         const data = doc.data();
         return {
@@ -31,9 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           expiresAt: data?.expiresAt?.toDate ? data.expiresAt.toDate().toISOString() : null,
         };
       });
+
       return res.status(200).json({ catalogs });
     }
 
+    // ✅ POST：新規作成
     if (req.method === "POST") {
       const { title, leadText, products, shop, columnCount, passwordEnabled, username, password, expiresAt } = req.body;
       if (!title || !products || !shop) {
@@ -54,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         passwordEnabled: passwordEnabled || false,
         username: username || "",
         password: password || "",
-        expiresAt: expiresAt ? new Date(expiresAt) : null, // ✅ 有効期限を保存
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
         createdAt: FieldValue.serverTimestamp(),
         previewUrl,
       });
@@ -62,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ id: docRef.id, previewUrl });
     }
 
+    // ✅ PUT：更新
     if (req.method === "PUT") {
       const { id, title, leadText, products, columnCount, passwordEnabled, username, password, expiresAt } = req.body;
       if (!id) return res.status(400).json({ error: "Missing id" });
@@ -74,13 +83,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         passwordEnabled: passwordEnabled || false,
         username: username || "",
         password: password || "",
-        expiresAt: expiresAt ? new Date(expiresAt) : null, // ✅ 有効期限を更新
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
         updatedAt: FieldValue.serverTimestamp(),
       });
 
       return res.status(200).json({ id });
     }
 
+    // ✅ DELETE：複数削除（復活）
+    if (req.method === "DELETE") {
+      const { ids } = req.body;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Invalid request: ids required" });
+      }
+
+      try {
+        const batch = dbAdmin.batch();
+        ids.forEach((id: string) => {
+          const ref = dbAdmin.collection("shopify_catalogs_app").doc(id);
+          batch.delete(ref);
+        });
+        await batch.commit();
+
+        return res.status(200).json({ success: true, deletedCount: ids.length });
+      } catch (error) {
+        console.error("DELETE error:", error);
+        return res.status(500).json({ error: "Failed to delete catalogs" });
+      }
+    }
+
+    // ✅ その他メソッド
     return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
     console.error("❌ API error:", err);
