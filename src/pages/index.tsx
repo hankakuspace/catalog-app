@@ -6,7 +6,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/admin");
+    // ✅ アプリのTOPを /admin/catalogs にリダイレクト
+    router.replace("/admin/catalogs");
   }, [router]);
 
   return null;
