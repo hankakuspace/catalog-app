@@ -52,6 +52,7 @@ export default function NewCatalogPage() {
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
 
+  // 編集モードでデータ読込
   useEffect(() => {
     if (!router.isReady || !id) return;
     const fetchCatalog = async () => {
@@ -78,6 +79,23 @@ export default function NewCatalogPage() {
     };
     fetchCatalog();
   }, [router.isReady, id]);
+
+  const handleSearch = async (query: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        shop: "catalog-app-dev-2.myshopify.com",
+        query,
+      });
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const data = await res.json();
+      setSearchResults(data.products || []);
+    } catch (err) {
+      console.error("商品検索エラー:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
@@ -149,6 +167,7 @@ export default function NewCatalogPage() {
           marginTop: "20px",
         }}
       >
+        {/* 左：プレビュー */}
         <Card>
           <PreviewCatalog
             title={title}
@@ -163,9 +182,18 @@ export default function NewCatalogPage() {
           />
         </Card>
 
+        {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
-            <TextField label="タイトル" value={title} onChange={setTitle} />
+            {/* タイトル */}
+            <TextField
+              label="タイトル"
+              value={title}
+              onChange={setTitle}
+              autoComplete="off" // ✅ 追加済み
+            />
+
+            {/* 列数選択 */}
             <Select
               label="列数"
               options={[
@@ -177,26 +205,21 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
-            {/* 検索 */}
+            {/* 作品検索 */}
             <BlockStack gap="200">
               <Text as="h2" variant="headingSm">
                 作品検索
               </Text>
               <TextField
+                label="検索キーワード"
                 labelHidden
                 value={searchQuery}
                 onChange={(value) => {
                   setSearchQuery(value);
-                  if (value.trim() !== "") {
-                    const params = new URLSearchParams({
-                      shop: "catalog-app-dev-2.myshopify.com",
-                      query: value,
-                    });
-                    fetch(`/api/products?${params}`).then(async (res) =>
-                      setSearchResults((await res.json()).products)
-                    );
-                  } else setSearchResults([]);
+                  if (value.trim() !== "") handleSearch(value);
+                  else setSearchResults([]);
                 }}
+                autoComplete="off"
                 placeholder="作家名・作品タイトルで検索"
               />
             </BlockStack>
@@ -259,6 +282,7 @@ export default function NewCatalogPage() {
                     placeholder="ユーザー名"
                     value={username}
                     onChange={setUsername}
+                    autoComplete="off"
                   />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -268,6 +292,7 @@ export default function NewCatalogPage() {
                     type="password"
                     value={password}
                     onChange={setPassword}
+                    autoComplete="off"
                   />
                 </div>
               </InlineStack>
@@ -278,6 +303,7 @@ export default function NewCatalogPage() {
               active={datePickerActive}
               activator={
                 <TextField
+                  label="有効期限"
                   labelHidden
                   value={
                     expiresDate
@@ -291,6 +317,8 @@ export default function NewCatalogPage() {
                   prefix={<Icon source={CalendarIcon} />}
                   placeholder="yyyy/mm/dd"
                   onFocus={() => setDatePickerActive(true)}
+                  onChange={() => {}}
+                  autoComplete="off"
                 />
               }
               onClose={() => setDatePickerActive(false)}
