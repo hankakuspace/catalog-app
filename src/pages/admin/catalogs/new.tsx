@@ -113,6 +113,7 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
+      // ✅ shopフィールドを追加
       const body = {
         id,
         title,
@@ -122,6 +123,7 @@ export default function NewCatalogPage() {
         username,
         password,
         expiresAt: expiresDate ? expiresDate.toISOString() : null, // 00:00固定
+        shop: "catalog-app-dev-2.myshopify.com", // ←ここを追加
       };
 
       const res = await fetch("/api/catalogs", {
@@ -203,7 +205,6 @@ export default function NewCatalogPage() {
               value={String(columnCount)}
               onChange={(val) => setColumnCount(Number(val))}
             />
-
 
             {/* 作品検索 */}
             <BlockStack gap="200">
@@ -290,36 +291,35 @@ export default function NewCatalogPage() {
               />
             </BlockStack>
 
-                       {/* ログイン認証 */}
-<BlockStack gap="200">
-  <Text as="h2" variant="headingSm">
-    ログイン認証
-  </Text>
-  <InlineStack gap="200" blockAlign="center">
-    <div style={{ flex: 1 }}>
-      <TextField
-        label="ユーザー名"
-        labelHidden
-        placeholder="ユーザー名"
-        value={username}
-        onChange={setUsername}
-        autoComplete="off"
-      />
-    </div>
-    <div style={{ flex: 1 }}>
-      <TextField
-        label="パスワード"
-        labelHidden
-        placeholder="パスワード"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        autoComplete="off"
-      />
-    </div>
-  </InlineStack>
-</BlockStack>
-
+            {/* ログイン認証 */}
+            <BlockStack gap="200">
+              <Text as="h2" variant="headingSm">
+                ログイン認証
+              </Text>
+              <InlineStack gap="200" blockAlign="center">
+                <div style={{ flex: 1 }}>
+                  <TextField
+                    label="ユーザー名"
+                    labelHidden
+                    placeholder="ユーザー名"
+                    value={username}
+                    onChange={setUsername}
+                    autoComplete="off"
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <TextField
+                    label="パスワード"
+                    labelHidden
+                    placeholder="パスワード"
+                    type="password"
+                    value={password}
+                    onChange={setPassword}
+                    autoComplete="off"
+                  />
+                </div>
+              </InlineStack>
+            </BlockStack>
 
             {/* 有効期限 */}
             <Popover
@@ -359,7 +359,6 @@ export default function NewCatalogPage() {
                 selected={expiresDate || new Date()}
               />
             </Popover>
-
 
             {/* 保存ボタン */}
             <Button variant="primary" onClick={handleSave} loading={saving}>
