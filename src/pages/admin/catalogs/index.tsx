@@ -44,9 +44,10 @@ export default function CatalogListPage() {
   return (
     <div style={{ width: "100%", padding: "20px" }}>
       {/* ✅ タイトル */}
-      <Text as="h1" variant="headingLg">
-        保存済みカタログ一覧
-      </Text>
+      <Text as="h1" variant="headingLg" fontWeight="regular" style={{ marginBottom: "40px" }}>
+  Catalog List
+</Text>
+
 
       {/* ✅ タイトル下のメニュー */}
       <AdminHeader />
