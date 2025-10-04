@@ -23,6 +23,7 @@ import {
   Icon,
 } from "@shopify/polaris";
 import { CalendarIcon } from "@shopify/polaris-icons";
+import AdminHeader from "@/components/AdminHeader";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
@@ -41,12 +42,8 @@ export default function NewCatalogPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [columnCount, setColumnCount] = useState(3);
-
-  // 認証関連フィールド
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
-  // 有効期限（日付のみ）
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
   const today = new Date();
   const [{ month, year }, setDate] = useState({
@@ -55,7 +52,6 @@ export default function NewCatalogPage() {
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
 
-  // 編集モードでデータ読込
   useEffect(() => {
     if (!router.isReady || !id) return;
     const fetchCatalog = async () => {
@@ -83,23 +79,6 @@ export default function NewCatalogPage() {
     fetchCatalog();
   }, [router.isReady, id]);
 
-  const handleSearch = async (query: string) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        shop: "catalog-app-dev-2.myshopify.com",
-        query,
-      });
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const data = await res.json();
-      setSearchResults(data.products || []);
-    } catch (err) {
-      console.error("商品検索エラー:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
       setSaveError("タイトルと商品は必須です");
@@ -113,7 +92,6 @@ export default function NewCatalogPage() {
     setSaving(true);
     setSaveError("");
     try {
-      // ✅ shopフィールドを追加
       const body = {
         id,
         title,
@@ -122,8 +100,8 @@ export default function NewCatalogPage() {
         columnCount,
         username,
         password,
-        expiresAt: expiresDate ? expiresDate.toISOString() : null, // 00:00固定
-        shop: "catalog-app-dev-2.myshopify.com", // ←ここを追加
+        expiresAt: expiresDate ? expiresDate.toISOString() : null,
+        shop: "catalog-app-dev-2.myshopify.com",
       };
 
       const res = await fetch("/api/catalogs", {
@@ -144,10 +122,13 @@ export default function NewCatalogPage() {
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "100%", padding: "20px" }}>
+    <div style={{ width: "100%", padding: "20px" }}>
       <Text as="h1" variant="headingLg">
         {id ? "カタログ編集" : "新規カタログ作成"}
       </Text>
+
+      {/* ✅ タイトル下メニュー */}
+      <AdminHeader />
 
       {saveSuccess && (
         <Banner tone="success" title="保存完了">
@@ -168,13 +149,12 @@ export default function NewCatalogPage() {
           marginTop: "20px",
         }}
       >
-        {/* 左：プレビュー */}
         <Card>
           <PreviewCatalog
             title={title}
             leadText={leadText}
             products={selectedProducts}
-            editable={true}
+            editable
             onReorder={setSelectedProducts}
             onRemove={(id) =>
               setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
@@ -183,18 +163,9 @@ export default function NewCatalogPage() {
           />
         </Card>
 
-        {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
-            {/* タイトル */}
-            <TextField
-              label="タイトル"
-              value={title}
-              onChange={setTitle}
-              autoComplete="off"
-            />
-
-            {/* 列数選択 */}
+            <TextField label="タイトル" value={title} onChange={setTitle} />
             <Select
               label="列数"
               options={[
@@ -206,24 +177,30 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
-            {/* 作品検索 */}
+            {/* 検索 */}
             <BlockStack gap="200">
               <Text as="h2" variant="headingSm">
                 作品検索
               </Text>
               <TextField
-                label="検索キーワード"
                 labelHidden
                 value={searchQuery}
                 onChange={(value) => {
                   setSearchQuery(value);
-                  if (value.trim() !== "") handleSearch(value);
-                  else setSearchResults([]);
+                  if (value.trim() !== "") {
+                    const params = new URLSearchParams({
+                      shop: "catalog-app-dev-2.myshopify.com",
+                      query: value,
+                    });
+                    fetch(`/api/products?${params}`).then(async (res) =>
+                      setSearchResults((await res.json()).products)
+                    );
+                  } else setSearchResults([]);
                 }}
-                autoComplete="off"
                 placeholder="作家名・作品タイトルで検索"
               />
             </BlockStack>
+
             {loading ? (
               <Spinner accessibilityLabel="検索中" size="large" />
             ) : (
@@ -267,27 +244,6 @@ export default function NewCatalogPage() {
                 theme="snow"
                 value={leadText}
                 onChange={setLeadText}
-                modules={{
-                  toolbar: [
-                    [{ font: ["sans", "serif", "monospace"] }],
-                    [{ size: [] }],
-                    ["bold", "italic", "underline", "strike"],
-                    [{ color: [] }, { background: [] }],
-                    [{ align: [] }],
-                    ["clean"],
-                  ],
-                }}
-                formats={[
-                  "font",
-                  "size",
-                  "bold",
-                  "italic",
-                  "underline",
-                  "strike",
-                  "color",
-                  "background",
-                  "align",
-                ]}
               />
             </BlockStack>
 
@@ -299,23 +255,19 @@ export default function NewCatalogPage() {
               <InlineStack gap="200" blockAlign="center">
                 <div style={{ flex: 1 }}>
                   <TextField
-                    label="ユーザー名"
                     labelHidden
                     placeholder="ユーザー名"
                     value={username}
                     onChange={setUsername}
-                    autoComplete="off"
                   />
                 </div>
                 <div style={{ flex: 1 }}>
                   <TextField
-                    label="パスワード"
                     labelHidden
                     placeholder="パスワード"
                     type="password"
                     value={password}
                     onChange={setPassword}
-                    autoComplete="off"
                   />
                 </div>
               </InlineStack>
@@ -326,7 +278,6 @@ export default function NewCatalogPage() {
               active={datePickerActive}
               activator={
                 <TextField
-                  label="有効期限"
                   labelHidden
                   value={
                     expiresDate
@@ -340,8 +291,6 @@ export default function NewCatalogPage() {
                   prefix={<Icon source={CalendarIcon} />}
                   placeholder="yyyy/mm/dd"
                   onFocus={() => setDatePickerActive(true)}
-                  onChange={() => {}}
-                  autoComplete="off"
                 />
               }
               onClose={() => setDatePickerActive(false)}
