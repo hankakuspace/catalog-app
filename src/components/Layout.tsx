@@ -6,8 +6,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <AppProvider i18n={{}}>
       <Frame>
-        {/* ✅ サイドメニュー削除してブラウザ全幅レイアウト */}
-        <main style={{ width: "100%", minHeight: "100vh" }}>{children}</main>
+        {/* ✅ サイドメニュー削除済み */}
+        <main style={{ width: "100%", minHeight: "100vh", background: "#fff" }}>
+          {children}
+        </main>
       </Frame>
     </AppProvider>
   );

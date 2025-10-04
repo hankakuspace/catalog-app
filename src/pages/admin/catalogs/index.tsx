@@ -13,6 +13,7 @@ import {
   Icon,
 } from "@shopify/polaris";
 import { ExternalIcon } from "@shopify/polaris-icons";
+import AdminHeader from "@/components/AdminHeader";
 
 interface Catalog {
   id: string;
@@ -41,7 +42,15 @@ export default function CatalogListPage() {
   }, []);
 
   return (
-    <Page title="保存済みカタログ一覧" fullWidth>
+    <div style={{ width: "100%", padding: "20px" }}>
+      {/* ✅ タイトル */}
+      <Text as="h1" variant="headingLg">
+        保存済みカタログ一覧
+      </Text>
+
+      {/* ✅ タイトル下のメニュー */}
+      <AdminHeader />
+
       {loading ? (
         <Card>
           <div style={{ padding: "20px", textAlign: "center" }}>
@@ -60,13 +69,6 @@ export default function CatalogListPage() {
         </Card>
       ) : (
         <BlockStack gap="400">
-          {/* 新規作成ボタン */}
-          <InlineStack gap="200" align="start" blockAlign="center">
-            <Button variant="primary" url="/admin/catalogs/new">
-              新規カタログ作成
-            </Button>
-          </InlineStack>
-
           {/* 一覧テーブル */}
           <Card>
             <IndexTable
@@ -135,6 +137,6 @@ export default function CatalogListPage() {
           </InlineStack>
         </BlockStack>
       )}
-    </Page>
+    </div>
   );
 }
