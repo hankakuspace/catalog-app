@@ -6,7 +6,6 @@ import {
   Text,
   Spinner,
   EmptyState,
-  Page,
   Button,
   InlineStack,
   BlockStack,
@@ -43,13 +42,14 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ タイトル */}
-      <Text as="h1" variant="headingLg" fontWeight="regular" style={{ marginBottom: "40px" }}>
-  Catalog List
-</Text>
+      {/* ✅ タイトルとマージン */}
+      <div style={{ marginBottom: "40px" }}>
+        <Text as="h1" variant="headingLg" fontWeight="regular">
+          Catalog List
+        </Text>
+      </div>
 
-
-      {/* ✅ タイトル下のメニュー */}
+      {/* ✅ タイトル下メニュー */}
       <AdminHeader />
 
       {loading ? (
