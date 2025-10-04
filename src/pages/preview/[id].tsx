@@ -23,12 +23,12 @@ export default function CatalogPreviewPage() {
   const [inputPass, setInputPass] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // 認証状態チェック
+  // ✅ 認証状態チェック（sessionStorage使用）
   useEffect(() => {
     if (!data?.catalog || !id) return;
     const catalog = data.catalog;
     if (catalog.username && catalog.password) {
-      const saved = localStorage.getItem(`catalog-auth-${id}`);
+      const saved = sessionStorage.getItem(`catalog-auth-${id}`);
       if (saved === "ok") {
         setIsAuthed(true);
       }
@@ -38,11 +38,12 @@ export default function CatalogPreviewPage() {
     setAuthChecked(true);
   }, [data, id]);
 
+  // ✅ ログイン処理（sessionStorageへ保存）
   const handleLogin = () => {
     const catalog = data?.catalog;
     if (!catalog) return;
     if (inputUser === catalog.username && inputPass === catalog.password) {
-      localStorage.setItem(`catalog-auth-${id}`, "ok");
+      sessionStorage.setItem(`catalog-auth-${id}`, "ok");
       setIsAuthed(true);
       setLoginError("");
     } else {
@@ -50,7 +51,8 @@ export default function CatalogPreviewPage() {
     }
   };
 
-  if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
+  if (error)
+    return <div className="p-6 text-red-600">エラーが発生しました</div>;
   if (!data) return <div className="p-6">読み込み中...</div>;
 
   const catalog = data.catalog;
@@ -63,7 +65,7 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // 有効期限チェック
+  // ✅ 有効期限チェック
   if (catalog.expiresAt) {
     const exp = new Date(catalog.expiresAt);
     const now = new Date();
@@ -76,7 +78,7 @@ export default function CatalogPreviewPage() {
     }
   }
 
-  // 認証必要で未ログイン
+  // ✅ 認証必要で未ログイン時
   if (authChecked && !isAuthed) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -112,7 +114,7 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // 認証済み or 認証不要 → プレビュー表示
+  // ✅ 認証済み or 認証不要 → プレビュー表示
   return (
     <div className="p-4">
       <PreviewCatalog
