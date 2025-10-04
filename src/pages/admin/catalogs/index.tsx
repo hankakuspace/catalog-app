@@ -28,11 +28,11 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ IndexTableの選択状態管理
+  // ✅ 型定義を明示（ジェネリクスで解決）
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
-    useIndexResourceState(catalogs);
+    useIndexResourceState<string>(catalogs.map((c) => c.id));
 
-  // ✅ カタログ一覧取得
+  // ✅ Firestoreから一覧を取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -49,10 +49,9 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ 削除処理
+  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
-
     const confirmDelete = window.confirm(
       `選択した ${selectedResources.length} 件のカタログを削除しますか？`
     );
@@ -64,7 +63,6 @@ export default function CatalogListPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: selectedResources }),
       });
-
       if (!res.ok) throw new Error("削除に失敗しました");
 
       setCatalogs((prev) =>
@@ -78,7 +76,7 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* タイトル＋右上New Record */}
+      {/* ✅ 上部タイトル＋右側にNew Record */}
       <div
         style={{
           marginBottom: "40px",
@@ -90,7 +88,6 @@ export default function CatalogListPage() {
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
-
         <Button variant="primary" url="/admin/catalogs/new">
           New Record
         </Button>
@@ -99,7 +96,6 @@ export default function CatalogListPage() {
       {/* タイトル下メニュー */}
       <AdminHeader />
 
-      {/* エラー表示 */}
       {error && (
         <Banner tone="critical" title="エラーが発生しました">
           <p>{error}</p>
@@ -120,7 +116,6 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* 一覧テーブル（Cardなし・角丸なし） */}
           <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -135,13 +130,12 @@ export default function CatalogListPage() {
                 { title: "プレビューURL" },
                 { title: "" },
               ]}
-              selectable={true}
+              selectable
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
                   ? new Date(catalog.createdAt).toLocaleString()
                   : "-";
-
                 return (
                   <IndexTable.Row
                     id={catalog.id}
@@ -154,9 +148,7 @@ export default function CatalogListPage() {
                         {catalog.title || "(無題)"}
                       </Text>
                     </IndexTable.Cell>
-
                     <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
-
                     <IndexTable.Cell>
                       {catalog.previewUrl ? (
                         <a
@@ -174,12 +166,10 @@ export default function CatalogListPage() {
                         "-"
                       )}
                     </IndexTable.Cell>
-
                     <IndexTable.Cell>
                       <Button
                         size="slim"
                         url={`/admin/catalogs/new?id=${catalog.id}`}
-                        target="_self"
                         variant="plain"
                       >
                         編集
@@ -201,7 +191,6 @@ export default function CatalogListPage() {
             >
               削除
             </Button>
-
             <Button variant="primary" url="/admin/catalogs/new">
               New Record
             </Button>
