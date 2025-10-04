@@ -9,8 +9,11 @@ import {
   InlineStack,
   BlockStack,
   Icon,
+  useIndexResourceState,
+  Card,
+  Banner,
 } from "@shopify/polaris";
-import { ExternalIcon } from "@shopify/polaris-icons";
+import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 
 interface Catalog {
@@ -23,7 +26,13 @@ interface Catalog {
 export default function CatalogListPage() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // ✅ IndexTableの選択状態管理
+  const { selectedResources, allResourcesSelected, handleSelectionChange } =
+    useIndexResourceState(catalogs);
+
+  // ✅ カタログ一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -32,6 +41,7 @@ export default function CatalogListPage() {
         setCatalogs(data.catalogs || []);
       } catch (err) {
         console.error("Failed to load catalogs:", err);
+        setError("カタログ一覧の取得に失敗しました。");
       } finally {
         setLoading(false);
       }
@@ -39,17 +49,62 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
+  // ✅ 削除処理
+  const handleDelete = async () => {
+    if (selectedResources.length === 0) return;
+
+    const confirmDelete = window.confirm(
+      `選択した ${selectedResources.length} 件のカタログを削除しますか？`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch("/api/catalogs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedResources }),
+      });
+
+      if (!res.ok) throw new Error("削除に失敗しました");
+
+      setCatalogs((prev) =>
+        prev.filter((c) => !selectedResources.includes(c.id))
+      );
+    } catch (err) {
+      console.error(err);
+      setError("削除処理中にエラーが発生しました。");
+    }
+  };
+
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* タイトル */}
-      <div style={{ marginBottom: "40px" }}>
+      {/* タイトル＋右上New Record */}
+      <div
+        style={{
+          marginBottom: "40px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
+
+        <Button variant="primary" url="/admin/catalogs/new">
+          New Record
+        </Button>
       </div>
 
       {/* タイトル下メニュー */}
       <AdminHeader />
+
+      {/* エラー表示 */}
+      {error && (
+        <Banner tone="critical" title="エラーが発生しました">
+          <p>{error}</p>
+        </Banner>
+      )}
 
       {loading ? (
         <div style={{ padding: "20px", textAlign: "center" }}>
@@ -58,7 +113,7 @@ export default function CatalogListPage() {
       ) : catalogs.length === 0 ? (
         <EmptyState
           heading="保存されたカタログはありません"
-          action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
+          action={{ content: "New Record", url: "/admin/catalogs/new" }}
           image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
         >
           <p>カタログを作成すると、ここに一覧表示されます。</p>
@@ -66,23 +121,21 @@ export default function CatalogListPage() {
       ) : (
         <BlockStack gap="400">
           {/* 一覧テーブル（Cardなし・角丸なし） */}
-          <div
-            style={{
-              border: "none",
-              borderRadius: "0",
-              boxShadow: "none",
-            }}
-          >
+          <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
               itemCount={catalogs.length}
+              selectedItemsCount={
+                allResourcesSelected ? "All" : selectedResources.length
+              }
+              onSelectionChange={handleSelectionChange}
               headings={[
                 { title: "タイトル" },
                 { title: "作成日" },
                 { title: "プレビューURL" },
-                { title: "" }, // ✅ 「編集」タイトル削除
+                { title: "" },
               ]}
-              selectable={false}
+              selectable={true}
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
@@ -90,7 +143,12 @@ export default function CatalogListPage() {
                   : "-";
 
                 return (
-                  <IndexTable.Row id={catalog.id} key={catalog.id} position={index}>
+                  <IndexTable.Row
+                    id={catalog.id}
+                    key={catalog.id}
+                    selected={selectedResources.includes(catalog.id)}
+                    position={index}
+                  >
                     <IndexTable.Cell>
                       <Text as="span" fontWeight="semibold">
                         {catalog.title || "(無題)"}
@@ -108,7 +166,7 @@ export default function CatalogListPage() {
                           className="text-sky-600 hover:underline inline-flex items-center"
                         >
                           {catalog.previewUrl}
-                          <span style={{ marginLeft: "15px" }}>
+                          <span style={{ marginLeft: "10px" }}>
                             <Icon source={ExternalIcon} tone="base" />
                           </span>
                         </a>
@@ -117,27 +175,35 @@ export default function CatalogListPage() {
                       )}
                     </IndexTable.Cell>
 
-<IndexTable.Cell>
-  <Button
-    size="slim"
-    url={`/admin/catalogs/new?id=${catalog.id}`}
-    target="_self"
-    variant="plain" // ✅ これで「plain」ボタン化
-  >
-    編集
-  </Button>
-</IndexTable.Cell>
-
+                    <IndexTable.Cell>
+                      <Button
+                        size="slim"
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        target="_self"
+                        variant="plain"
+                      >
+                        編集
+                      </Button>
+                    </IndexTable.Cell>
                   </IndexTable.Row>
                 );
               })}
             </IndexTable>
-          </div>
+          </Card>
 
-          {/* 下部の新規作成ボタン */}
-          <InlineStack align="end">
+          {/* ✅ 下部ボタン群 */}
+          <InlineStack align="space-between">
+            <Button
+              tone="critical"
+              icon={DeleteIcon}
+              onClick={handleDelete}
+              disabled={selectedResources.length === 0}
+            >
+              削除
+            </Button>
+
             <Button variant="primary" url="/admin/catalogs/new">
-              新規カタログ作成
+              New Record
             </Button>
           </InlineStack>
         </BlockStack>
