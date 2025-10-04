@@ -1,7 +1,6 @@
 // src/pages/admin/catalogs/index.tsx
 import { useEffect, useState } from "react";
 import {
-  Card,
   IndexTable,
   Text,
   Spinner,
@@ -42,36 +41,38 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ タイトルとマージン */}
+      {/* タイトル */}
       <div style={{ marginBottom: "40px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
       </div>
 
-      {/* ✅ タイトル下メニュー */}
+      {/* タイトル下メニュー */}
       <AdminHeader />
 
       {loading ? (
-        <Card>
-          <div style={{ padding: "20px", textAlign: "center" }}>
-            <Spinner accessibilityLabel="Loading catalogs" size="large" />
-          </div>
-        </Card>
+        <div style={{ padding: "20px", textAlign: "center" }}>
+          <Spinner accessibilityLabel="Loading catalogs" size="large" />
+        </div>
       ) : catalogs.length === 0 ? (
-        <Card>
-          <EmptyState
-            heading="保存されたカタログはありません"
-            action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
-            image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-          >
-            <p>カタログを作成すると、ここに一覧表示されます。</p>
-          </EmptyState>
-        </Card>
+        <EmptyState
+          heading="保存されたカタログはありません"
+          action={{ content: "新しいカタログを作成", url: "/admin/catalogs/new" }}
+          image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+        >
+          <p>カタログを作成すると、ここに一覧表示されます。</p>
+        </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* 一覧テーブル */}
-          <Card>
+          {/* 一覧テーブル（Cardなし・角丸なし） */}
+          <div
+            style={{
+              border: "none",
+              borderRadius: "0",
+              boxShadow: "none",
+            }}
+          >
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
               itemCount={catalogs.length}
@@ -79,7 +80,7 @@ export default function CatalogListPage() {
                 { title: "タイトル" },
                 { title: "作成日" },
                 { title: "プレビューURL" },
-                { title: "編集" },
+                { title: "" }, // ✅ 「編集」タイトル削除
               ]}
               selectable={false}
             >
@@ -118,6 +119,7 @@ export default function CatalogListPage() {
 
                     <IndexTable.Cell>
                       <Button
+                        size="slim" // ✅ 小さくする
                         url={`/admin/catalogs/new?id=${catalog.id}`}
                         target="_self"
                       >
@@ -128,7 +130,7 @@ export default function CatalogListPage() {
                 );
               })}
             </IndexTable>
-          </Card>
+          </div>
 
           {/* 下部の新規作成ボタン */}
           <InlineStack align="end">
