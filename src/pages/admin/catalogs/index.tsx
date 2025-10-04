@@ -122,13 +122,12 @@ export default function CatalogListPage() {
     size="slim"
     url={`/admin/catalogs/new?id=${catalog.id}`}
     target="_self"
-    plain
-    monochrome
-    removeUnderline
+    variant="plain" // ✅ これで「plain」ボタン化
   >
     編集
   </Button>
 </IndexTable.Cell>
+
                   </IndexTable.Row>
                 );
               })}
