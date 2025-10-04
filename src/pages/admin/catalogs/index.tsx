@@ -118,14 +118,22 @@ export default function CatalogListPage() {
                     </IndexTable.Cell>
 
                     <IndexTable.Cell>
-                      <Button
-                        size="slim" // ✅ 小さくする
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
-                        target="_self"
-                      >
-                        編集
-                      </Button>
-                    </IndexTable.Cell>
+  <Button
+    size="slim"
+    url={`/admin/catalogs/new?id=${catalog.id}`}
+    target="_self"
+  >
+    <span
+      style={{
+        fontSize: "12px",
+        padding: "2px 8px",
+        lineHeight: "1.1",
+      }}
+    >
+      編集
+    </span>
+  </Button>
+</IndexTable.Cell>
                   </IndexTable.Row>
                 );
               })}
