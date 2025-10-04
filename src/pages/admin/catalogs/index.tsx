@@ -28,11 +28,12 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ 型定義を明示（ジェネリクスで解決）
+  // ✅ Polarisの型要件に準拠
+  const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
-    useIndexResourceState<string>(catalogs.map((c) => c.id));
+    useIndexResourceState<{ id: string }>(resourceItems);
 
-  // ✅ Firestoreから一覧を取得
+  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
