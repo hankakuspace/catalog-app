@@ -117,21 +117,16 @@ export default function CatalogListPage() {
                       )}
                     </IndexTable.Cell>
 
-                    <IndexTable.Cell>
+<IndexTable.Cell>
   <Button
     size="slim"
     url={`/admin/catalogs/new?id=${catalog.id}`}
     target="_self"
+    plain
+    monochrome
+    removeUnderline
   >
-    <span
-      style={{
-        fontSize: "12px",
-        padding: "2px 8px",
-        lineHeight: "1.1",
-      }}
-    >
-      編集
-    </span>
+    編集
   </Button>
 </IndexTable.Cell>
                   </IndexTable.Row>
