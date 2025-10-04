@@ -84,7 +84,7 @@ export default function CatalogListPage() {
         </Text>
       </div>
 
-      {/* ✅ タブメニュー */}
+      {/* ✅ タブメニュー（マージン削除済み） */}
       <AdminHeader />
 
       {error && (
@@ -107,8 +107,8 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ IndexTable の上に New Record ボタン */}
-          <div style={{ marginBottom: "8px", textAlign: "right" }}>
+          {/* ✅ 表の上に New Record */}
+          <div style={{ textAlign: "right" }}>
             <InlineStack align="end">
               <Button variant="primary" url="/admin/catalogs/new">
                 New Record
@@ -116,7 +116,7 @@ export default function CatalogListPage() {
             </InlineStack>
           </div>
 
-          {/* ✅ テーブル本体 */}
+          {/* ✅ テーブル */}
           <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -182,8 +182,8 @@ export default function CatalogListPage() {
             </IndexTable>
           </Card>
 
-          {/* ✅ 下部ボタン：削除のみ残す */}
-          <InlineStack align="start">
+          {/* ✅ 下部：削除＋New Record（両方並列） */}
+          <InlineStack align="space-between">
             <Button
               tone="critical"
               icon={DeleteIcon}
@@ -191,6 +191,10 @@ export default function CatalogListPage() {
               disabled={selectedResources.length === 0}
             >
               削除
+            </Button>
+
+            <Button variant="primary" url="/admin/catalogs/new">
+              New Record
             </Button>
           </InlineStack>
         </BlockStack>
