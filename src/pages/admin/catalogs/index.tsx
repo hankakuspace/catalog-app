@@ -186,20 +186,28 @@ export default function CatalogListPage() {
           </div>
 
           {/* ✅ 下部ボタン：削除＋New Record（両方あり・削除テキスト黒） */}
-          <InlineStack align="space-between">
-            <Button
-              tone="critical"
-              icon={DeleteIcon}
-              onClick={handleDelete}
-              disabled={selectedResources.length === 0}
-            >
-              <span style={{ color: "#000" }}>削除</span> {/* ✅ テキスト黒化 */}
-            </Button>
+  {/* ✅ 下部ボタン：削除＋New Record（両方あり・削除テキスト黒） */}
+<InlineStack align="space-between">
+  <div
+    style={{
+      filter: "grayscale(100%) brightness(0%)", // ✅ ボタン内文字を黒化
+      display: "inline-block",
+    }}
+  >
+    <Button
+      tone="critical"
+      icon={DeleteIcon}
+      onClick={handleDelete}
+      disabled={selectedResources.length === 0}
+    >
+      削除
+    </Button>
+  </div>
 
-            <Button variant="primary" url="/admin/catalogs/new">
-              New Record
-            </Button>
-          </InlineStack>
+  <Button variant="primary" url="/admin/catalogs/new">
+    New Record
+  </Button>
+</InlineStack>
         </BlockStack>
       )}
     </div>
