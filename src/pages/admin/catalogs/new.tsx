@@ -1,8 +1,9 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
+// ✅ edge ではなく experimental-edge を指定
 export const config = {
-  runtime: "edge", // ✅ VercelがこのページをSSR扱いにし、静的生成しない
+  runtime: "experimental-edge",
 };
 
 import { useState, useEffect } from "react";
@@ -189,7 +190,6 @@ export default function NewCatalogPage() {
         {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
-            {/* タイトル */}
             <TextField
               label="タイトル"
               value={title}
@@ -197,7 +197,6 @@ export default function NewCatalogPage() {
               autoComplete="off"
             />
 
-            {/* 列数選択 */}
             <Select
               label="列数"
               options={[
@@ -209,7 +208,6 @@ export default function NewCatalogPage() {
               onChange={(val) => setColumnCount(Number(val))}
             />
 
-            {/* 作品検索 */}
             <BlockStack gap="200">
               <Text as="h2" variant="headingSm">
                 作品検索
@@ -262,7 +260,6 @@ export default function NewCatalogPage() {
               />
             )}
 
-            {/* リード文 */}
             <BlockStack gap="200">
               <Text as="h2" variant="headingSm">
                 リード文
@@ -270,7 +267,6 @@ export default function NewCatalogPage() {
               <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
             </BlockStack>
 
-            {/* ログイン認証 */}
             <BlockStack gap="200">
               <Text as="h2" variant="headingSm">
                 ログイン認証
@@ -300,7 +296,6 @@ export default function NewCatalogPage() {
               </InlineStack>
             </BlockStack>
 
-            {/* 有効期限 */}
             <Popover
               active={datePickerActive}
               activator={
@@ -339,7 +334,6 @@ export default function NewCatalogPage() {
               />
             </Popover>
 
-            {/* 保存ボタン */}
             <Button variant="primary" onClick={handleSave} loading={saving}>
               {id ? "カタログ更新" : "カタログ作成"}
             </Button>
