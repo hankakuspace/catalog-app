@@ -180,21 +180,23 @@ export default function CatalogListPage() {
 
           {/* ✅ 下部ボタン：削除＋New Record（両方あり） */}
           <InlineStack align="space-between">
-            {/* ✅ テキストだけ黒化 */}
-            <style>{`
-              .black-text-button span {
-                color: #000 !important;
+            {/* ✅ 文字だけ黒化 */}
+            <div
+              style={
+                {
+                  "--p-color-text-critical": "#000",
+                } as React.CSSProperties
               }
-            `}</style>
-            <Button
-              tone="critical"
-              icon={DeleteIcon}
-              onClick={handleDelete}
-              disabled={selectedResources.length === 0}
-              className="black-text-button"
             >
-              削除
-            </Button>
+              <Button
+                tone="critical"
+                icon={DeleteIcon}
+                onClick={handleDelete}
+                disabled={selectedResources.length === 0}
+              >
+                削除
+              </Button>
+            </div>
 
             <Button variant="primary" url="/admin/catalogs/new">
               New Record
