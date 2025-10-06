@@ -10,7 +10,6 @@ import {
   BlockStack,
   Icon,
   useIndexResourceState,
-  Card,
   Banner,
 } from "@shopify/polaris";
 import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
@@ -89,7 +88,7 @@ export default function CatalogListPage() {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center", // ✅ 垂直位置揃え
+          alignItems: "center",
           marginBottom: "20px",
         }}
       >
@@ -119,8 +118,8 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ テーブル */}
-          <Card>
+          {/* ✅ 枠線・角丸なしテーブル */}
+          <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
               itemCount={catalogs.length}
@@ -183,9 +182,9 @@ export default function CatalogListPage() {
                 );
               })}
             </IndexTable>
-          </Card>
+          </div>
 
-          {/* ✅ 下部：削除＋New Record（両方並列） */}
+          {/* ✅ 下部ボタン：削除＋New Record（両方並列） */}
           <InlineStack align="space-between">
             <Button
               tone="critical"
