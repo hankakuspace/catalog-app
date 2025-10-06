@@ -15,10 +15,10 @@ import {
 import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 
-// ✅ Next.js 15 のプリレンダリングを完全に停止
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const dynamicParams = true;
+// ✅ Pages Routerでは getServerSideProps() を宣言してSSR固定
+export async function getServerSideProps() {
+  return { props: {} };
+}
 
 interface Catalog {
   id: string;
@@ -36,7 +36,6 @@ export default function CatalogListPage() {
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
 
-  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -53,7 +52,6 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     const confirmDelete = window.confirm(
@@ -195,7 +193,7 @@ export default function CatalogListPage() {
           <InlineStack align="space-between">
             <Button
               variant="plain"
-              icon={<Icon source={DeleteIcon} tone="base" />} // ✅ 黒アイコン
+              icon={<Icon source={DeleteIcon} tone="base" />}
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
             >
