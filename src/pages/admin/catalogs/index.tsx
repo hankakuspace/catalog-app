@@ -1,5 +1,5 @@
 // src/pages/admin/catalogs/index.tsx
-export const config = { amp: false };
+export const revalidate = 0;
 
 import { useEffect, useState } from "react";
 import {
