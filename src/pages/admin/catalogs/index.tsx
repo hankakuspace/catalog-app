@@ -10,7 +10,6 @@ import {
   BlockStack,
   Icon,
   useIndexResourceState,
-  Card,
   Banner,
 } from "@shopify/polaris";
 import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
@@ -28,12 +27,10 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Polaris 型対応
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
 
-  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -50,7 +47,6 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     const confirmDelete = window.confirm(
@@ -108,16 +104,20 @@ export default function CatalogListPage() {
       ) : (
         <BlockStack gap="400">
           {/* ✅ IndexTable の上に New Record ボタン */}
-          <div style={{ marginBottom: "8px" }}>
-            <InlineStack align="end">
-              <Button variant="primary" url="/admin/catalogs/new">
-                New Record
-              </Button>
-            </InlineStack>
-          </div>
+          <InlineStack align="end">
+            <Button variant="primary" url="/admin/catalogs/new">
+              New Record
+            </Button>
+          </InlineStack>
 
-          {/* ✅ テーブル本体 */}
-          <Card>
+          {/* ✅ テーブル本体（枠削除済み） */}
+          <div
+            style={{
+              border: "none",
+              borderRadius: "0",
+              boxShadow: "none",
+            }}
+          >
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
               itemCount={catalogs.length}
@@ -180,20 +180,22 @@ export default function CatalogListPage() {
                 );
               })}
             </IndexTable>
-          </Card>
+          </div>
 
-          {/* ✅ 下部ボタン：削除のみ残す（テキスト黒） */}
-          <InlineStack align="start">
-            <div style={{ '--p-color-text-critical': '#000' } as React.CSSProperties}>
-              <Button
-                tone="critical"
-                icon={DeleteIcon}
-                onClick={handleDelete}
-                disabled={selectedResources.length === 0}
-              >
-                削除
-              </Button>
-            </div>
+          {/* ✅ 下部ボタン：削除＋New Record（両方あり） */}
+          <InlineStack align="space-between">
+            <Button
+              tone="critical"
+              icon={DeleteIcon}
+              onClick={handleDelete}
+              disabled={selectedResources.length === 0}
+            >
+              削除
+            </Button>
+
+            <Button variant="primary" url="/admin/catalogs/new">
+              New Record
+            </Button>
           </InlineStack>
         </BlockStack>
       )}
