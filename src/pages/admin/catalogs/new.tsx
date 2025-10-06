@@ -1,4 +1,9 @@
 // src/pages/admin/catalogs/new.tsx
+export async function getServerSideProps() {
+  // ✅ Vercelビルド時の静的プリレンダリングを無効化
+  return { props: {} };
+}
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -190,7 +195,7 @@ export default function NewCatalogPage() {
               label="タイトル"
               value={title}
               onChange={setTitle}
-              autoComplete="off" // ✅ 追加済み
+              autoComplete="off"
             />
 
             {/* 列数選択 */}
@@ -263,43 +268,38 @@ export default function NewCatalogPage() {
               <Text as="h2" variant="headingSm">
                 リード文
               </Text>
-              <ReactQuill
-                theme="snow"
-                value={leadText}
-                onChange={setLeadText}
-              />
+              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
             </BlockStack>
 
-         {/* ログイン認証 */}
-<BlockStack gap="200">
-  <Text as="h2" variant="headingSm">
-    ログイン認証
-  </Text>
-  <InlineStack gap="200" blockAlign="center">
-    <div style={{ flex: 1 }}>
-      <TextField
-        label="ユーザー名"
-        labelHidden
-        placeholder="ユーザー名"
-        value={username}
-        onChange={setUsername}
-        autoComplete="off"
-      />
-    </div>
-    <div style={{ flex: 1 }}>
-      <TextField
-        label="パスワード"
-        labelHidden
-        placeholder="パスワード"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        autoComplete="off"
-      />
-    </div>
-  </InlineStack>
-</BlockStack>
-
+            {/* ログイン認証 */}
+            <BlockStack gap="200">
+              <Text as="h2" variant="headingSm">
+                ログイン認証
+              </Text>
+              <InlineStack gap="200" blockAlign="center">
+                <div style={{ flex: 1 }}>
+                  <TextField
+                    label="ユーザー名"
+                    labelHidden
+                    placeholder="ユーザー名"
+                    value={username}
+                    onChange={setUsername}
+                    autoComplete="off"
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <TextField
+                    label="パスワード"
+                    labelHidden
+                    placeholder="パスワード"
+                    type="password"
+                    value={password}
+                    onChange={setPassword}
+                    autoComplete="off"
+                  />
+                </div>
+              </InlineStack>
+            </BlockStack>
 
             {/* 有効期限 */}
             <Popover
