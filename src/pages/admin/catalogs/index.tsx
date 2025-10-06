@@ -73,14 +73,12 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ タイトル */}
       <div style={{ marginBottom: "40px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
       </div>
 
-      {/* ✅ メニューと右上New Record（縦位置揃え） */}
       <div
         style={{
           display: "flex",
@@ -170,7 +168,7 @@ export default function CatalogListPage() {
                         size="slim"
                         url={`/admin/catalogs/new?id=${catalog.id}`}
                         variant="plain"
-                        onClick={(e) => e.stopPropagation()} // ✅ 追加：行選択の伝播を防ぐ
+                        onMouseDown={(e) => e.stopPropagation()} // ✅ 型安全な伝播防止
                       >
                         編集
                       </Button>
@@ -181,7 +179,6 @@ export default function CatalogListPage() {
             </IndexTable>
           </div>
 
-          {/* ✅ 下部ボタン */}
           <InlineStack align="space-between">
             <div
               style={
