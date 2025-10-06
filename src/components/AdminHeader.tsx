@@ -182,12 +182,11 @@ export default function CatalogListPage() {
           {/* ✅ 下部ボタン：削除＋New Record */}
           <InlineStack align="space-between">
             <Button
-              icon={<Icon source={DeleteIcon} tone="base" />} // ✅ アイコンを黒
+              icon={<Icon source={DeleteIcon} tone="base" />} // ✅ 黒アイコン
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
-              style={{ color: "#000" }} // ✅ テキストを黒
             >
-              削除
+              <span style={{ color: "#000" }}>削除</span> {/* ✅ テキスト黒 */}
             </Button>
 
             <Button variant="primary" url="/admin/catalogs/new">
