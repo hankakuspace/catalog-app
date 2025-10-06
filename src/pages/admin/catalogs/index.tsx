@@ -1,6 +1,4 @@
 // src/pages/admin/catalogs/index.tsx
-export const revalidate = 0;
-
 import { useEffect, useState } from "react";
 import {
   IndexTable,
@@ -12,6 +10,7 @@ import {
   BlockStack,
   Icon,
   useIndexResourceState,
+  Card,
   Banner,
 } from "@shopify/polaris";
 import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
@@ -29,10 +28,12 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ Polaris 型対応
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
 
+  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -49,6 +50,7 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
+  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     const confirmDelete = window.confirm(
@@ -75,26 +77,15 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      <div style={{ marginBottom: "20px" }}>
+      {/* ✅ タイトル */}
+      <div style={{ marginBottom: "40px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
       </div>
 
-      {/* ✅ タブとNew Recordボタンを同一行に配置 */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <AdminHeader />
-        <Button variant="primary" url="/admin/catalogs/new">
-          New Record
-        </Button>
-      </div>
+      {/* ✅ タブメニュー */}
+      <AdminHeader />
 
       {error && (
         <Banner tone="critical" title="エラーが発生しました">
@@ -116,8 +107,15 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ 枠なしフラットテーブル */}
-          <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
+          {/* ✅ IndexTable の上に New Record ボタン */}
+          <InlineStack align="end" style={{ marginBottom: "8px" }}>
+            <Button variant="primary" url="/admin/catalogs/new">
+              New Record
+            </Button>
+          </InlineStack>
+
+          {/* ✅ テーブル本体 */}
+          <Card>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
               itemCount={catalogs.length}
@@ -180,23 +178,19 @@ export default function CatalogListPage() {
                 );
               })}
             </IndexTable>
-          </div>
+          </Card>
 
-          {/* ✅ 下部ボタン：削除＋New Record */}
-          <InlineStack align="space-between">
-            <Button
-              variant="plain"
-              icon={<Icon source={DeleteIcon} tone="base" />}
-              onClick={handleDelete}
-              disabled={selectedResources.length === 0}
-            >
-              削除
-            </Button>
-
-            <Button variant="primary" url="/admin/catalogs/new">
-              New Record
-            </Button>
-          </InlineStack>
+          {/* ✅ 下部ボタン：削除のみ残す */}
+         <InlineStack align="start">
+  <Button
+    tone="critical"
+    icon={DeleteIcon}
+    onClick={handleDelete}
+    disabled={selectedResources.length === 0}
+  >
+    <span style={{ color: "#000" }}>削除</span> {/* ✅ テキストのみ黒 */}
+  </Button>
+</InlineStack>
         </BlockStack>
       )}
     </div>
