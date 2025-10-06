@@ -78,14 +78,26 @@ export default function CatalogListPage() {
   return (
     <div style={{ width: "100%", padding: "20px" }}>
       {/* ✅ タイトル */}
-      <div style={{ marginBottom: "40px" }}>
+      <div style={{ marginBottom: "20px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
       </div>
 
-      {/* ✅ タブメニュー（マージン削除済み） */}
-      <AdminHeader />
+      {/* ✅ タブとNew Recordボタンを同一行に配置 */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center", // ✅ 垂直位置揃え
+          marginBottom: "20px",
+        }}
+      >
+        <AdminHeader />
+        <Button variant="primary" url="/admin/catalogs/new">
+          New Record
+        </Button>
+      </div>
 
       {error && (
         <Banner tone="critical" title="エラーが発生しました">
@@ -107,15 +119,6 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ 表の上に New Record */}
-          <div style={{ textAlign: "right" }}>
-            <InlineStack align="end">
-              <Button variant="primary" url="/admin/catalogs/new">
-                New Record
-              </Button>
-            </InlineStack>
-          </div>
-
           {/* ✅ テーブル */}
           <Card>
             <IndexTable
