@@ -184,7 +184,7 @@ export default function CatalogListPage() {
           <InlineStack align="space-between">
             {/* 🔸 削除ボタン（黒文字＋黒アイコン、型エラーなし） */}
             <Button
-              tone="base" // ✅ Polarisのtone指定で黒文字
+              variant="plain" // ✅ フラット黒ボタン
               icon={<Icon source={DeleteIcon} tone="base" />} // ✅ 黒アイコン
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
