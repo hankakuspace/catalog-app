@@ -1,4 +1,6 @@
 // src/pages/admin/catalogs/index.tsx
+export const config = { amp: false };
+
 import { useEffect, useState } from "react";
 import {
   IndexTable,
@@ -182,10 +184,9 @@ export default function CatalogListPage() {
 
           {/* ✅ 下部ボタン：削除＋New Record */}
           <InlineStack align="space-between">
-            {/* 🔸 削除ボタン（黒文字＋黒アイコン、型エラーなし） */}
             <Button
-              variant="plain" // ✅ フラット黒ボタン
-              icon={<Icon source={DeleteIcon} tone="base" />} // ✅ 黒アイコン
+              variant="plain"
+              icon={<Icon source={DeleteIcon} tone="base" />}
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
             >
