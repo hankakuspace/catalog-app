@@ -15,11 +15,6 @@ import {
 import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 
-// ✅ Pages Routerでは getServerSideProps() を宣言してSSR固定
-export async function getServerSideProps() {
-  return { props: {} };
-}
-
 interface Catalog {
   id: string;
   title: string;
@@ -66,6 +61,7 @@ export default function CatalogListPage() {
         body: JSON.stringify({ ids: selectedResources }),
       });
       if (!res.ok) throw new Error("削除に失敗しました");
+
       setCatalogs((prev) =>
         prev.filter((c) => !selectedResources.includes(c.id))
       );
@@ -77,7 +73,6 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ タイトル */}
       <div style={{ marginBottom: "20px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
@@ -99,20 +94,17 @@ export default function CatalogListPage() {
         </Button>
       </div>
 
-      {/* ✅ エラー表示 */}
       {error && (
         <Banner tone="critical" title="エラーが発生しました">
           <p>{error}</p>
         </Banner>
       )}
 
-      {/* ✅ ローディング */}
       {loading ? (
         <div style={{ padding: "20px", textAlign: "center" }}>
           <Spinner accessibilityLabel="Loading catalogs" size="large" />
         </div>
       ) : catalogs.length === 0 ? (
-        // ✅ データなし時
         <EmptyState
           heading="保存されたカタログはありません"
           action={{ content: "New Record", url: "/admin/catalogs/new" }}
@@ -121,7 +113,6 @@ export default function CatalogListPage() {
           <p>カタログを作成すると、ここに一覧表示されます。</p>
         </EmptyState>
       ) : (
-        // ✅ データあり時
         <BlockStack gap="400">
           {/* ✅ 枠なしフラットテーブル */}
           <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
@@ -191,13 +182,13 @@ export default function CatalogListPage() {
 
           {/* ✅ 下部ボタン：削除＋New Record */}
           <InlineStack align="space-between">
+            {/* 🔸 削除ボタン（テキスト＋アイコンを黒に） */}
             <Button
-              variant="plain"
-              icon={<Icon source={DeleteIcon} tone="base" />}
+              icon={<Icon source={DeleteIcon} tone="base" />} // ✅ 黒アイコン
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
             >
-              削除
+              <span style={{ color: "#000" }}>削除</span> {/* ✅ テキスト黒 */}
             </Button>
 
             <Button variant="primary" url="/admin/catalogs/new">
