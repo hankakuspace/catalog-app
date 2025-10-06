@@ -167,12 +167,13 @@ export default function CatalogListPage() {
                       )}
                     </IndexTable.Cell>
 
-                    {/* ✅ 編集セルのみ選択除外 */}
-                    <IndexTable.Cell selectionRange={false}>
+                    {/* ✅ 編集ボタンに data-polaris-overlay を追加 */}
+                    <IndexTable.Cell>
                       <Button
                         size="slim"
                         url={`/admin/catalogs/new?id=${catalog.id}`}
                         variant="plain"
+                        data-polaris-overlay
                       >
                         編集
                       </Button>
