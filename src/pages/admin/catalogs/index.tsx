@@ -80,7 +80,7 @@ export default function CatalogListPage() {
         </Text>
       </div>
 
-      {/* ✅ メニューと右上New Record（縦位置揃え） */}
+      {/* ✅ メニューと右上New Record */}
       <div
         style={{
           display: "flex",
@@ -115,7 +115,7 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ テーブル本体（枠なしフラット表示） */}
+          {/* ✅ テーブル */}
           <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -124,13 +124,13 @@ export default function CatalogListPage() {
                 allResourcesSelected ? "All" : selectedResources.length
               }
               onSelectionChange={handleSelectionChange}
+              selectable
               headings={[
                 { title: "タイトル" },
                 { title: "作成日" },
                 { title: "プレビューURL" },
-                { title: "" },
+                { title: "操作" },
               ]}
-              selectable
             >
               {catalogs.map((catalog, index) => {
                 const createdAtDate = catalog.createdAt
@@ -166,17 +166,16 @@ export default function CatalogListPage() {
                         "-"
                       )}
                     </IndexTable.Cell>
-                    <IndexTable.Cell>
-                      {/* ✅ divラッパーで行クリックの伝播を止める */}
-                      <div onMouseDown={(e) => e.stopPropagation()}>
-                        <Button
-                          size="slim"
-                          url={`/admin/catalogs/new?id=${catalog.id}`}
-                          variant="plain"
-                        >
-                          編集
-                        </Button>
-                      </div>
+
+                    {/* ✅ 編集セルのみ選択除外 */}
+                    <IndexTable.Cell selectionRange={false}>
+                      <Button
+                        size="slim"
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        variant="plain"
+                      >
+                        編集
+                      </Button>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
@@ -184,7 +183,7 @@ export default function CatalogListPage() {
             </IndexTable>
           </div>
 
-          {/* ✅ 下部ボタン：削除＋New Record（削除テキスト黒） */}
+          {/* ✅ 下部ボタン */}
           <InlineStack align="space-between">
             <div
               style={
