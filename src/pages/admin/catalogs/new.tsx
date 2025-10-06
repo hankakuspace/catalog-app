@@ -1,10 +1,9 @@
 // src/pages/admin/catalogs/new.tsx
-export async function getServerSideProps() {
-  // ✅ Vercelビルド時の静的プリレンダリングを無効化
-  return { props: {} };
-}
-
 "use client";
+
+export const config = {
+  runtime: "edge", // ✅ VercelがこのページをSSR扱いにし、静的生成しない
+};
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
