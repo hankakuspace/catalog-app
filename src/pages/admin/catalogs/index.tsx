@@ -27,12 +27,10 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Polaris 型対応
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
 
-  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -49,7 +47,6 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     const confirmDelete = window.confirm(
@@ -64,7 +61,6 @@ export default function CatalogListPage() {
         body: JSON.stringify({ ids: selectedResources }),
       });
       if (!res.ok) throw new Error("削除に失敗しました");
-
       setCatalogs((prev) =>
         prev.filter((c) => !selectedResources.includes(c.id))
       );
@@ -76,7 +72,6 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ タイトル */}
       <div style={{ marginBottom: "20px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
@@ -118,7 +113,7 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ 枠線・角丸なしテーブル */}
+          {/* ✅ 枠なしフラットテーブル */}
           <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -184,11 +179,12 @@ export default function CatalogListPage() {
             </IndexTable>
           </div>
 
-          {/* ✅ 下部ボタン：削除＋New Record（両方並列） */}
+          {/* ✅ 下部ボタン：削除＋New Record */}
           <InlineStack align="space-between">
+            {/* 🔸 テキスト・アイコン黒（variant='plain'でフラット＋黒表示） */}
             <Button
-              tone="critical"
-              icon={DeleteIcon}
+              variant="plain"
+              icon={<Icon source={DeleteIcon} tone="base" />}
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
             >
