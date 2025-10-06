@@ -73,12 +73,14 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
+      {/* ✅ タイトル */}
       <div style={{ marginBottom: "40px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
       </div>
 
+      {/* ✅ メニューと右上New Record（縦位置揃え） */}
       <div
         style={{
           display: "flex",
@@ -113,6 +115,7 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
+          {/* ✅ テーブル本体（枠なしフラット表示） */}
           <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -164,14 +167,16 @@ export default function CatalogListPage() {
                       )}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
-                      <Button
-                        size="slim"
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
-                        variant="plain"
-                        onMouseDown={(e) => e.stopPropagation()} // ✅ 型安全な伝播防止
-                      >
-                        編集
-                      </Button>
+                      {/* ✅ divラッパーで行クリックの伝播を止める */}
+                      <div onMouseDown={(e) => e.stopPropagation()}>
+                        <Button
+                          size="slim"
+                          url={`/admin/catalogs/new?id=${catalog.id}`}
+                          variant="plain"
+                        >
+                          編集
+                        </Button>
+                      </div>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
@@ -179,6 +184,7 @@ export default function CatalogListPage() {
             </IndexTable>
           </div>
 
+          {/* ✅ 下部ボタン：削除＋New Record（削除テキスト黒） */}
           <InlineStack align="space-between">
             <div
               style={
