@@ -108,11 +108,13 @@ export default function CatalogListPage() {
       ) : (
         <BlockStack gap="400">
           {/* ✅ IndexTable の上に New Record ボタン */}
-          <InlineStack align="end" style={{ marginBottom: "8px" }}>
-            <Button variant="primary" url="/admin/catalogs/new">
-              New Record
-            </Button>
-          </InlineStack>
+          <div style={{ marginBottom: "8px" }}>
+            <InlineStack align="end">
+              <Button variant="primary" url="/admin/catalogs/new">
+                New Record
+              </Button>
+            </InlineStack>
+          </div>
 
           {/* ✅ テーブル本体 */}
           <Card>
@@ -180,19 +182,19 @@ export default function CatalogListPage() {
             </IndexTable>
           </Card>
 
-          {/* ✅ 下部ボタン：削除のみ残す */}
-<InlineStack align="start">
-  <div style={{ '--p-color-text-critical': '#000' } as React.CSSProperties}>
-    <Button
-      tone="critical"
-      icon={DeleteIcon}
-      onClick={handleDelete}
-      disabled={selectedResources.length === 0}
-    >
-      削除
-    </Button>
-  </div>
-</InlineStack>
+          {/* ✅ 下部ボタン：削除のみ残す（テキスト黒） */}
+          <InlineStack align="start">
+            <div style={{ '--p-color-text-critical': '#000' } as React.CSSProperties}>
+              <Button
+                tone="critical"
+                icon={DeleteIcon}
+                onClick={handleDelete}
+                disabled={selectedResources.length === 0}
+              >
+                削除
+              </Button>
+            </div>
+          </InlineStack>
         </BlockStack>
       )}
     </div>
