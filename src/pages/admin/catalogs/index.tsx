@@ -73,14 +73,12 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ タイトル */}
       <div style={{ marginBottom: "40px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
         </Text>
       </div>
 
-      {/* ✅ メニューと右上New Record */}
       <div
         style={{
           display: "flex",
@@ -115,7 +113,6 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ テーブル本体 */}
           <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -151,32 +148,37 @@ export default function CatalogListPage() {
 
                     <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-                    {/* ✅ プレビューURLは通常通りクリック可能 */}
+                    {/* ✅ プレビューURL：クリック可能 */}
                     <IndexTable.Cell>
                       {catalog.previewUrl ? (
-                        <a
-                          href={catalog.previewUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sky-600 hover:underline inline-flex items-center"
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation(); // 行選択を止める（ここ限定）
+                          }}
                         >
-                          {catalog.previewUrl}
-                          <span style={{ marginLeft: "10px" }}>
-                            <Icon source={ExternalIcon} tone="base" />
-                          </span>
-                        </a>
+                          <a
+                            href={catalog.previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-600 hover:underline inline-flex items-center"
+                          >
+                            {catalog.previewUrl}
+                            <span style={{ marginLeft: "10px" }}>
+                              <Icon source={ExternalIcon} tone="base" />
+                            </span>
+                          </a>
+                        </span>
                       ) : (
                         "-"
                       )}
                     </IndexTable.Cell>
 
-                    {/* ✅ 編集ボタンのみ stopPropagation */}
+                    {/* ✅ 編集ボタン：クリック可能 */}
                     <IndexTable.Cell>
-                      <div
-                        onClickCapture={(e) => {
-                          e.stopPropagation(); // ✅ 編集ボタンクリックのみ停止
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation(); // 行選択を止める
                         }}
-                        style={{ display: "inline-block" }}
                       >
                         <Button
                           size="slim"
@@ -185,7 +187,7 @@ export default function CatalogListPage() {
                         >
                           編集
                         </Button>
-                      </div>
+                      </span>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
@@ -193,7 +195,6 @@ export default function CatalogListPage() {
             </IndexTable>
           </div>
 
-          {/* ✅ 下部ボタン */}
           <InlineStack align="space-between">
             <div
               style={
