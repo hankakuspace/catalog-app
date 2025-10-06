@@ -148,7 +148,10 @@ export default function CatalogListPage() {
                         {catalog.title || "(無題)"}
                       </Text>
                     </IndexTable.Cell>
+
                     <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+
+                    {/* ✅ プレビューURLは通常通りクリック可能 */}
                     <IndexTable.Cell>
                       {catalog.previewUrl ? (
                         <a
@@ -166,10 +169,13 @@ export default function CatalogListPage() {
                         "-"
                       )}
                     </IndexTable.Cell>
+
+                    {/* ✅ 編集ボタンのみ stopPropagation */}
                     <IndexTable.Cell>
-                      {/* ✅ 編集ボタン — 過去正常動作コード */}
                       <div
-                        onClickCapture={(e) => e.stopPropagation()}
+                        onClickCapture={(e) => {
+                          e.stopPropagation(); // ✅ 編集ボタンクリックのみ停止
+                        }}
                         style={{ display: "inline-block" }}
                       >
                         <Button
