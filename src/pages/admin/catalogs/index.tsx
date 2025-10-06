@@ -181,7 +181,6 @@ export default function CatalogListPage() {
           </Card>
 
           {/* ✅ 下部ボタン：削除のみ残す */}
-         <InlineStack align="start">
 <InlineStack align="start">
   <div style={{ '--p-color-text-critical': '#000' } as React.CSSProperties}>
     <Button
