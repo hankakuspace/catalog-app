@@ -27,10 +27,12 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ Polaris 型対応
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
 
+  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -47,6 +49,7 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
+  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     const confirmDelete = window.confirm(
@@ -110,7 +113,7 @@ export default function CatalogListPage() {
             </Button>
           </InlineStack>
 
-          {/* ✅ テーブル本体（枠削除済み） */}
+          {/* ✅ テーブル本体（枠なし） */}
           <div
             style={{
               border: "none",
@@ -182,7 +185,7 @@ export default function CatalogListPage() {
             </IndexTable>
           </div>
 
-          {/* ✅ 下部ボタン：削除＋New Record（両方あり） */}
+          {/* ✅ 下部ボタン：削除＋New Record（両方あり・削除テキスト黒） */}
           <InlineStack align="space-between">
             <Button
               tone="critical"
@@ -190,7 +193,7 @@ export default function CatalogListPage() {
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
             >
-              削除
+              <span style={{ color: "#000" }}>削除</span> {/* ✅ テキスト黒化 */}
             </Button>
 
             <Button variant="primary" url="/admin/catalogs/new">
