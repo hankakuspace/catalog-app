@@ -1,4 +1,6 @@
 // src/pages/admin/catalogs/index.tsx
+
+export const dynamic = "force-dynamic"; // ✅ ← これを最初に追加！
 import { useEffect, useState } from "react";
 import {
   IndexTable,
