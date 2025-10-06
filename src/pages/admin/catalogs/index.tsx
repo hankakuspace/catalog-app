@@ -1,6 +1,4 @@
 // src/pages/admin/catalogs/index.tsx
-
-export const dynamic = "force-dynamic"; // ✅ ← これを最初に追加！
 import { useEffect, useState } from "react";
 import {
   IndexTable,
@@ -16,6 +14,11 @@ import {
 } from "@shopify/polaris";
 import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
+
+// ✅ Next.js 15 のプリレンダリングを完全に停止
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const dynamicParams = true;
 
 interface Catalog {
   id: string;
@@ -33,6 +36,7 @@ export default function CatalogListPage() {
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
 
+  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -49,6 +53,7 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
+  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     const confirmDelete = window.confirm(
@@ -74,6 +79,7 @@ export default function CatalogListPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
+      {/* ✅ タイトル */}
       <div style={{ marginBottom: "20px" }}>
         <Text as="h1" variant="headingLg" fontWeight="regular">
           Catalog List
@@ -95,17 +101,20 @@ export default function CatalogListPage() {
         </Button>
       </div>
 
+      {/* ✅ エラー表示 */}
       {error && (
         <Banner tone="critical" title="エラーが発生しました">
           <p>{error}</p>
         </Banner>
       )}
 
+      {/* ✅ ローディング */}
       {loading ? (
         <div style={{ padding: "20px", textAlign: "center" }}>
           <Spinner accessibilityLabel="Loading catalogs" size="large" />
         </div>
       ) : catalogs.length === 0 ? (
+        // ✅ データなし時
         <EmptyState
           heading="保存されたカタログはありません"
           action={{ content: "New Record", url: "/admin/catalogs/new" }}
@@ -114,6 +123,7 @@ export default function CatalogListPage() {
           <p>カタログを作成すると、ここに一覧表示されます。</p>
         </EmptyState>
       ) : (
+        // ✅ データあり時
         <BlockStack gap="400">
           {/* ✅ 枠なしフラットテーブル */}
           <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
@@ -183,10 +193,9 @@ export default function CatalogListPage() {
 
           {/* ✅ 下部ボタン：削除＋New Record */}
           <InlineStack align="space-between">
-            {/* 🔸 テキスト・アイコン黒（variant='plain'でフラット＋黒表示） */}
             <Button
               variant="plain"
-              icon={<Icon source={DeleteIcon} tone="base" />}
+              icon={<Icon source={DeleteIcon} tone="base" />} // ✅ 黒アイコン
               onClick={handleDelete}
               disabled={selectedResources.length === 0}
             >
