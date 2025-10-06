@@ -182,14 +182,17 @@ export default function CatalogListPage() {
 
           {/* ✅ 下部ボタン：削除のみ残す */}
          <InlineStack align="start">
-  <Button
-    tone="critical"
-    icon={DeleteIcon}
-    onClick={handleDelete}
-    disabled={selectedResources.length === 0}
-  >
-    <span style={{ color: "#000" }}>削除</span> {/* ✅ テキストのみ黒 */}
-  </Button>
+<InlineStack align="start">
+  <div style={{ '--p-color-text-critical': '#000' } as React.CSSProperties}>
+    <Button
+      tone="critical"
+      icon={DeleteIcon}
+      onClick={handleDelete}
+      disabled={selectedResources.length === 0}
+    >
+      削除
+    </Button>
+  </div>
 </InlineStack>
         </BlockStack>
       )}
