@@ -27,12 +27,10 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Polaris 型対応
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
 
-  // ✅ Firestoreから一覧取得
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
@@ -49,7 +47,6 @@ export default function CatalogListPage() {
     fetchCatalogs();
   }, []);
 
-  // ✅ 選択削除
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
     const confirmDelete = window.confirm(
@@ -118,14 +115,7 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ テーブル本体（枠なしフラット表示） */}
-          <div
-            style={{
-              border: "none",
-              borderRadius: "0",
-              boxShadow: "none",
-            }}
-          >
+          <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
               itemCount={catalogs.length}
@@ -180,6 +170,7 @@ export default function CatalogListPage() {
                         size="slim"
                         url={`/admin/catalogs/new?id=${catalog.id}`}
                         variant="plain"
+                        onClick={(e) => e.stopPropagation()} // ✅ 追加：行選択の伝播を防ぐ
                       >
                         編集
                       </Button>
@@ -190,7 +181,7 @@ export default function CatalogListPage() {
             </IndexTable>
           </div>
 
-          {/* ✅ 下部ボタン：削除＋New Record（削除テキスト黒） */}
+          {/* ✅ 下部ボタン */}
           <InlineStack align="space-between">
             <div
               style={
