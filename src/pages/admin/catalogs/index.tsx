@@ -115,7 +115,7 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          {/* ✅ テーブル */}
+          {/* ✅ テーブル本体 */}
           <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
             <IndexTable
               resourceName={{ singular: "catalog", plural: "catalogs" }}
@@ -166,17 +166,20 @@ export default function CatalogListPage() {
                         "-"
                       )}
                     </IndexTable.Cell>
-
-                    {/* ✅ 編集ボタンに data-polaris-overlay を追加 */}
                     <IndexTable.Cell>
-                      <Button
-                        size="slim"
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
-                        variant="plain"
-                        data-polaris-overlay
+                      {/* ✅ 編集ボタン — 過去正常動作コード */}
+                      <div
+                        onClickCapture={(e) => e.stopPropagation()}
+                        style={{ display: "inline-block" }}
                       >
-                        編集
-                      </Button>
+                        <Button
+                          size="slim"
+                          url={`/admin/catalogs/new?id=${catalog.id}`}
+                          variant="plain"
+                        >
+                          編集
+                        </Button>
+                      </div>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
