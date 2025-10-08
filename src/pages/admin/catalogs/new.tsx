@@ -172,8 +172,8 @@ export default function NewCatalogPage() {
           marginTop: "20px",
         }}
       >
-        {/* 左：プレビュー */}
-        <Card>
+        {/* ✅ 左：プレビュー（Card削除・枠なし） */}
+        <div>
           <PreviewCatalog
             title={title}
             leadText={leadText}
@@ -185,9 +185,9 @@ export default function NewCatalogPage() {
             }
             columnCount={columnCount}
           />
-        </Card>
+        </div>
 
-        {/* 右：フォーム */}
+        {/* 右：フォーム（Cardは維持） */}
         <Card>
           <BlockStack gap="400">
             <TextField
