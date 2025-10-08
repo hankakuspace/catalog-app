@@ -145,20 +145,12 @@ export default function NewCatalogPage() {
     <div style={{ width: "100%", padding: "20px" }}>
       {/* ✅ Catalog List と完全一致のヘッダー余白・サイズ */}
       <div style={{ marginBottom: "12px" }}>
-        <Text
-          as="h1"
-          variant="headingLg"
-          style={{
-            fontSize: "20px",
-            fontWeight: 600,
-            marginBottom: "4px", // タイトル下間隔を統一
-          }}
-        >
-          Catalog Edit
-        </Text>
-        <div style={{ marginTop: "0px" }}>
-          <AdminHeader />
+        <div style={{ fontSize: "20px", fontWeight: 600, marginBottom: "4px" }}>
+          <Text as="h1" variant="headingLg">
+            Catalog Edit
+          </Text>
         </div>
+        <AdminHeader />
       </div>
 
       {saveSuccess && (
