@@ -156,12 +156,14 @@ export default function PreviewCatalog({
           alt="AND COLLECTION"
           className="mx-auto h-12 w-auto filter invert"
         />
-        <h2 className="text-2xl font-medium mt-10 mb-2 text-white">
+        {/* ✅ タイトル削除 */}
+        {/* <h2 className="text-2xl font-medium mt-10 mb-2 text-white">
           {title || "（タイトル未設定）"}
-        </h2>
+        </h2> */}
+        {/* ✅ リード文のみ表示 */}
         {leadText && (
           <div
-            className="max-w-3xl mx-auto text-center mt-5 mb-5 text-white"
+            className="max-w-3xl mx-auto text-center mt-10 mb-5 text-white"
             dangerouslySetInnerHTML={{ __html: leadText }}
           />
         )}
@@ -195,7 +197,6 @@ export default function PreviewCatalog({
                           }}
                         >
                           <BlockStack gap="200">
-                            {/* メニューだけ上部に残す */}
                             <div
                               style={{
                                 display: "flex",
@@ -243,7 +244,6 @@ export default function PreviewCatalog({
                               </Popover>
                             </div>
 
-                            {/* 画像 */}
                             {item.imageUrl ? (
                               <img
                                 src={item.imageUrl}
@@ -257,7 +257,6 @@ export default function PreviewCatalog({
                               </div>
                             )}
 
-                            {/* ✅ 画像下にまとめて情報を表示 */}
                             <div className="text-black mt-2 px-2">
                               {item.artist && <Text as="p">{item.artist}</Text>}
                               {item.title && <Text as="p">{item.title}</Text>}
@@ -293,7 +292,6 @@ export default function PreviewCatalog({
                     }}
                   >
                     <BlockStack gap="200">
-                      {/* 画像 */}
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
@@ -307,18 +305,13 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* ✅ 公開モードも画像下にまとめて */}
                       <div className="text-black mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
                         {item.year && <Text as="p">{item.year}</Text>}
-                        {item.dimensions && (
-                          <Text as="p">{item.dimensions}</Text>
-                        )}
+                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
-                        {item.price && (
-                          <Text as="p">{item.price} 円（税込）</Text>
-                        )}
+                        {item.price && <Text as="p">{item.price} 円（税込）</Text>}
                       </div>
                     </BlockStack>
                   </div>
