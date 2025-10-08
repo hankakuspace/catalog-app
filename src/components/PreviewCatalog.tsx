@@ -48,10 +48,7 @@ interface Props {
   columnCount?: number;
 }
 
-// ✅ 追加: 画像ブルブル用アニメーションCSS
-const shakeStyle: React.CSSProperties = {
-  animation: "shake 0.3s infinite",
-};
+// ✅ CSSアニメーション定義
 const globalShakeKeyframes = `
 @keyframes shake {
   0% { transform: translate(0px, 0px) rotate(0deg); }
@@ -59,9 +56,12 @@ const globalShakeKeyframes = `
   50% { transform: translate(-1px, 0px) rotate(-0.5deg); }
   75% { transform: translate(1px, 0px) rotate(0.5deg); }
   100% { transform: translate(0px, 0px) rotate(0deg); }
-}`;
+}
+.shake-active {
+  animation: shake 0.3s infinite;
+}
+`;
 
-// ✅ DnD個別要素
 function SortableItem({
   id,
   editable,
@@ -82,7 +82,7 @@ function SortableItem({
     cursor: editable ? "grab" : "default",
   };
 
-  // ✅ ドラッグ中 or 並び替えモード中にブルブルアニメ適用
+  // ✅ DnD中またはリオーダーモード中にshakeをON
   const shakeActive = editable && (isDragging || isReorderMode);
 
   return (
@@ -90,7 +90,7 @@ function SortableItem({
       ref={setNodeRef}
       style={style}
       {...(editable ? { ...attributes, ...listeners } : {})}
-      className={shakeActive ? "image-shake" : ""}
+      className={shakeActive ? "shake-active" : ""}
     >
       {children}
     </div>
@@ -222,15 +222,12 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* ✅ 画像本体（ブルブル対象） */}
+                      {/* ✅ 画像本体（DnD中・モード中ブルブル） */}
                       {item.imageUrl && (
                         <img
                           src={item.imageUrl}
                           alt={item.title}
-                          className={`block w-full object-contain ${
-                            isReorderMode ? "shake-image" : ""
-                          }`}
-                          style={isReorderMode ? shakeStyle : undefined}
+                          className="block w-full object-contain"
                         />
                       )}
 
