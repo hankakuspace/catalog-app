@@ -143,12 +143,25 @@ export default function NewCatalogPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ Catalog List ページと全く同じ構成 */}
-      <Text as="h1" variant="headingLg">
-        Catalog Edit
-      </Text>
-      <div style={{ marginBottom: "20px" }}>
+      {/* ✅ Catalog List と同じ構成・余白 */}
+      <div style={{ marginBottom: "40px" }}>
+        <Text as="h1" variant="headingLg" fontWeight="regular">
+          Catalog Edit
+        </Text>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
         <AdminHeader />
+        <Button variant="primary" onClick={handleSave} loading={saving}>
+          {id ? "Update Record" : "New Record"}
+        </Button>
       </div>
 
       {saveSuccess && (
@@ -162,7 +175,7 @@ export default function NewCatalogPage() {
         </Banner>
       )}
 
-      {/* メインエリア */}
+      {/* ✅ メインエリア */}
       <div
         style={{
           display: "grid",
@@ -170,7 +183,7 @@ export default function NewCatalogPage() {
           gap: "20px",
         }}
       >
-        {/* ✅ プレビュー（Cardなし） */}
+        {/* 左：プレビュー（枠・角丸なし） */}
         <div>
           <PreviewCatalog
             title={title}
@@ -185,7 +198,7 @@ export default function NewCatalogPage() {
           />
         </div>
 
-        {/* ✅ 右フォーム */}
+        {/* 右：フォーム */}
         <Card>
           <BlockStack gap="400">
             <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
@@ -202,12 +215,8 @@ export default function NewCatalogPage() {
             />
 
             <BlockStack gap="200">
-              <Text as="h2" variant="headingSm">
-                作品検索
-              </Text>
               <TextField
                 label="検索キーワード"
-                labelHidden
                 value={searchQuery}
                 onChange={(value) => {
                   setSearchQuery(value);
@@ -240,62 +249,45 @@ export default function NewCatalogPage() {
                       ) : undefined
                     }
                   >
-                    <Text as="p">
-                      {item.artist ? `${item.artist}, ` : ""}
-                      {item.title}
-                    </Text>
+                    {item.artist ? `${item.artist}, ` : ""}
+                    {item.title}
                   </ResourceItem>
                 )}
               />
             )}
 
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingSm">
-                リード文
-              </Text>
-              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
-            </BlockStack>
+            <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
 
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingSm">
-                ログイン認証
-              </Text>
-              <InlineStack gap="200" blockAlign="center">
-                <div style={{ flex: 1 }}>
-                  <TextField
-                    label="ユーザー名"
-                    labelHidden
-                    placeholder="ユーザー名"
-                    value={username}
-                    onChange={setUsername}
-                    autoComplete="off"
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <TextField
-                    label="パスワード"
-                    labelHidden
-                    placeholder="パスワード"
-                    type="password"
-                    value={password}
-                    onChange={setPassword}
-                    autoComplete="off"
-                  />
-                </div>
-              </InlineStack>
-            </BlockStack>
+            <InlineStack gap="200" blockAlign="center">
+              <TextField
+                label="ユーザー名"
+                placeholder="ユーザー名"
+                value={username}
+                onChange={setUsername}
+                autoComplete="off"
+              />
+              <TextField
+                label="パスワード"
+                placeholder="パスワード"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                autoComplete="off"
+              />
+            </InlineStack>
 
             <Popover
               active={datePickerActive}
               activator={
                 <TextField
                   label="有効期限"
-                  labelHidden
                   value={
                     expiresDate
                       ? `${expiresDate.getFullYear()}/${String(
                           expiresDate.getMonth() + 1
-                        ).padStart(2, "0")}/${String(expiresDate.getDate()).padStart(2, "0")}`
+                        ).padStart(2, "0")}/${String(
+                          expiresDate.getDate()
+                        ).padStart(2, "0")}`
                       : ""
                   }
                   prefix={<Icon source={CalendarIcon} />}
@@ -320,10 +312,6 @@ export default function NewCatalogPage() {
                 selected={expiresDate || new Date()}
               />
             </Popover>
-
-            <Button variant="primary" onClick={handleSave} loading={saving}>
-              {id ? "カタログ更新" : "カタログ作成"}
-            </Button>
           </BlockStack>
         </Card>
       </div>
