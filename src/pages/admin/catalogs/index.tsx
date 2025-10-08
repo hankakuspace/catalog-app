@@ -188,15 +188,17 @@ export default function CatalogListPage() {
 
                     {/* ✅ 編集ボタン（内部でstopPropagation） */}
                     <IndexTable.Cell>
-                      <Button
-                        size="slim"
-                        variant="plain"
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
-                        onClick={(e) => e.stopPropagation()} // ← ここでクリックイベント停止
-                      >
-                        編集
-                      </Button>
-                    </IndexTable.Cell>
+  <div onClick={(e) => e.stopPropagation()}>
+    <Button
+      size="slim"
+      variant="plain"
+      url={`/admin/catalogs/new?id=${catalog.id}`}
+    >
+      編集
+    </Button>
+  </div>
+</IndexTable.Cell>
+
                   </IndexTable.Row>
                 );
               })}
