@@ -110,9 +110,10 @@ export default function PreviewCatalog({
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [storeHandle, setStoreHandle] = useState<string>("catalog-app-dev-2");
 
-  // ✅ 編集中のアイテムと一時価格
+  // ✅ 編集中のアイテムと一時価格、チェック状態
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -135,7 +136,7 @@ export default function PreviewCatalog({
     }
   };
 
-  // ✅ 専用価格を設定
+  // ✅ カスタム価格設定
   const handleSetCustomPrice = (id: string) => {
     if (!tempPrice.trim()) return;
     onReorder?.(
@@ -149,14 +150,28 @@ export default function PreviewCatalog({
 
   // ✅ 標準価格に戻す
   const handleResetToDefault = (id: string) => {
-    onReorder?.(products.map((p) => {
-      if (p.id === id) {
-        const copy = { ...p };
-        delete copy.customPrice;
-        return copy;
-      }
-      return p;
-    }));
+    onReorder?.(
+      products.map((p) => {
+        if (p.id === id) {
+          const copy = { ...p };
+          delete copy.customPrice;
+          return copy;
+        }
+        return p;
+      })
+    );
+    setCheckedItems((prev) => ({ ...prev, [id]: false }));
+  };
+
+  // ✅ チェック状態変更
+  const handleCheckboxChange = (id: string, checked: boolean) => {
+    setCheckedItems((prev) => ({ ...prev, [id]: checked }));
+    if (checked) {
+      setEditingItemId(id);
+    } else {
+      setEditingItemId(null);
+      setTempPrice("");
+    }
   };
 
   const openShopifyEditPage = (productId: string) => {
@@ -296,14 +311,16 @@ export default function PreviewCatalog({
                                 <label className="flex items-center gap-2">
                                   <input
                                     type="checkbox"
+                                    checked={!!checkedItems[item.id]}
                                     onChange={(e) =>
-                                      e.target.checked &&
-                                      setEditingItemId(item.id)
+                                      handleCheckboxChange(item.id, e.target.checked)
                                     }
                                   />
                                   <span>カタログ専用価格を設定</span>
                                 </label>
-                                {editingItemId === item.id && (
+
+                                {/* ✅ チェックONのときのみフォーム表示 */}
+                                {checkedItems[item.id] && editingItemId === item.id && (
                                   <div className="flex items-center gap-2 mt-2">
                                     <input
                                       type="number"
