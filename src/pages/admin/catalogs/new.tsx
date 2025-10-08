@@ -336,27 +336,32 @@ export default function NewCatalogPage() {
 
                 {/* ✅ パスワード＋表示切替アイコン */}
                 <div style={{ position: "relative", flex: 1 }}>
-                  <TextField
-                    label="パスワード"
-                    placeholder="パスワード"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={setPassword}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "38px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
-                  >
+                <TextField
+  label="パスワード"
+  type={showPassword ? "text" : "password"}
+  placeholder="パスワード"
+  value={password}
+  onChange={setPassword}
+  autoComplete="off"
+  suffix={
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      style={{
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: 0,
+        display: "flex",
+        alignItems: "center",
+      }}
+      aria-label={showPassword ? "パスワードを隠す" : "パスワードを表示"}
+    >
+      <Icon source={showPassword ? HideIcon : ViewIcon} />
+    </button>
+  }
+/>
+
                     <Icon source={showPassword ? HideIcon : ViewIcon} />
                   </button>
                 </div>
