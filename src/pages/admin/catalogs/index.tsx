@@ -159,13 +159,14 @@ export default function CatalogListPage() {
                     {/* 作成日 */}
                     <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-                    {/* ✅ プレビューURL（クリック可能・選択イベント抑制） */}
-                    <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
+                    {/* ✅ プレビューURL（内部要素で stopPropagation） */}
+                    <IndexTable.Cell>
                       {catalog.previewUrl ? (
                         <a
                           href={catalog.previewUrl}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()} // ← ここでクリックイベント停止
                           className="text-sky-600 hover:underline inline-flex items-center"
                         >
                           {catalog.previewUrl}
@@ -185,12 +186,13 @@ export default function CatalogListPage() {
                         : "-"}
                     </IndexTable.Cell>
 
-                    {/* ✅ 編集ボタン（クリック可能・選択イベント抑制） */}
-                    <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
+                    {/* ✅ 編集ボタン（内部でstopPropagation） */}
+                    <IndexTable.Cell>
                       <Button
                         size="slim"
-                        url={`/admin/catalogs/new?id=${catalog.id}`}
                         variant="plain"
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        onClick={(e) => e.stopPropagation()} // ← ここでクリックイベント停止
                       >
                         編集
                       </Button>
