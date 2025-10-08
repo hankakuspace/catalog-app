@@ -48,6 +48,19 @@ interface Props {
   columnCount?: number;
 }
 
+// ✅ 追加: 画像ブルブル用アニメーションCSS
+const shakeStyle: React.CSSProperties = {
+  animation: "shake 0.3s infinite",
+};
+const globalShakeKeyframes = `
+@keyframes shake {
+  0% { transform: translate(0px, 0px) rotate(0deg); }
+  25% { transform: translate(1px, 0px) rotate(0.5deg); }
+  50% { transform: translate(-1px, 0px) rotate(-0.5deg); }
+  75% { transform: translate(1px, 0px) rotate(0.5deg); }
+  100% { transform: translate(0px, 0px) rotate(0deg); }
+}`;
+
 // ✅ DnD個別要素
 function SortableItem({
   id,
@@ -60,7 +73,7 @@ function SortableItem({
   isReorderMode: boolean;
   children: React.ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
 
   const style: React.CSSProperties = {
@@ -69,8 +82,16 @@ function SortableItem({
     cursor: editable ? "grab" : "default",
   };
 
+  // ✅ ドラッグ中 or 並び替えモード中にブルブルアニメ適用
+  const shakeActive = editable && (isDragging || isReorderMode);
+
   return (
-    <div ref={setNodeRef} style={style} {...(editable ? { ...attributes, ...listeners } : {})}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...(editable ? { ...attributes, ...listeners } : {})}
+      className={shakeActive ? "image-shake" : ""}
+    >
       {children}
     </div>
   );
@@ -115,43 +136,46 @@ export default function PreviewCatalog({
     : "";
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* ヘッダー */}
-      <header className="text-center py-8 border-b border-gray-700">
-        <img
-          src="/andcollection.svg"
-          alt="AND COLLECTION"
-          className="mx-auto h-12 w-auto filter invert"
-        />
-        {sanitizedLead && (
-          <div
-            className="max-w-3xl mx-auto text-center mt-10 mb-5"
-            style={{ color: "#fff" }}
-            dangerouslySetInnerHTML={{ __html: sanitizedLead }}
-          />
-        )}
-      </header>
+    <>
+      {/* ✅ shakeアニメーションCSSを注入 */}
+      <style>{globalShakeKeyframes}</style>
 
-      {/* メイン */}
-      <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={products.map((p) => p.id)}
-            strategy={rectSortingStrategy}
+      <div className="min-h-screen bg-black text-white flex flex-col">
+        {/* ヘッダー */}
+        <header className="text-center py-8 border-b border-gray-700">
+          <img
+            src="/andcollection.svg"
+            alt="AND COLLECTION"
+            className="mx-auto h-12 w-auto filter invert"
+          />
+          {sanitizedLead && (
+            <div
+              className="max-w-3xl mx-auto text-center mt-10 mb-5"
+              style={{ color: "#fff" }}
+              dangerouslySetInnerHTML={{ __html: sanitizedLead }}
+            />
+          )}
+        </header>
+
+        {/* メイン */}
+        <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            <div className={gridClass}>
-              {products.map((item) => (
-                <SortableItem
-                  key={item.id}
-                  id={item.id}
-                  editable={editable}
-                  isReorderMode={isReorderMode}
-                >
-                  <div className="bg-transparent">
+            <SortableContext
+              items={products.map((p) => p.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className={gridClass}>
+                {products.map((item) => (
+                  <SortableItem
+                    key={item.id}
+                    id={item.id}
+                    editable={editable}
+                    isReorderMode={isReorderMode}
+                  >
                     <BlockStack gap="200">
                       {/* 編集時メニュー */}
                       {editable && (
@@ -198,12 +222,15 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 画像本体 */}
+                      {/* ✅ 画像本体（ブルブル対象） */}
                       {item.imageUrl && (
                         <img
                           src={item.imageUrl}
                           alt={item.title}
-                          className="block w-full object-contain"
+                          className={`block w-full object-contain ${
+                            isReorderMode ? "shake-image" : ""
+                          }`}
+                          style={isReorderMode ? shakeStyle : undefined}
                         />
                       )}
 
@@ -217,18 +244,18 @@ export default function PreviewCatalog({
                         {item.price && <Text as="p">{item.price} 円（税込）</Text>}
                       </div>
                     </BlockStack>
-                  </div>
-                </SortableItem>
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-      </main>
+                  </SortableItem>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </main>
 
-      {/* フッター */}
-      <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
-        Copyright © 2025 Clue Co.,Ltd. all rights reserved.
-      </footer>
-    </div>
+        {/* フッター */}
+        <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
+          Copyright © 2025 Clue Co.,Ltd. all rights reserved.
+        </footer>
+      </div>
+    </>
   );
 }
