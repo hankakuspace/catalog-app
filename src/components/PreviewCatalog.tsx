@@ -84,7 +84,6 @@ function SortableItem({
     zIndex: isDragging ? 50 : "auto",
   };
 
-  // DnD中 or Moveモード中に shake
   const shakeActive = editable && (isDragging || isReorderMode);
 
   return (
@@ -109,8 +108,8 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // ✅ ストアハンドル自動取得
-  const [storeHandle, setStoreHandle] = useState<string>("");
+  // ✅ ストアハンドル（URLパラメータから取得 or デフォルト）
+  const [storeHandle, setStoreHandle] = useState<string>("catalog-app-dev-2");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -149,18 +148,22 @@ export default function PreviewCatalog({
   // ✅ Shopify商品編集ページを新規タブで開く関数
   const openShopifyEditPage = (productId: string) => {
     if (!productId || !storeHandle) return;
-    const numericId = productId.replace("gid://shopify/Product/", "");
+
+    // gid://形式でも数値形式でも対応
+    const numericId = productId.includes("gid://")
+      ? productId.replace("gid://shopify/Product/", "")
+      : productId;
+
     const editUrl = `https://admin.shopify.com/store/${storeHandle}/products/${numericId}`;
+    console.log("🟢 Edit URL:", editUrl);
     window.open(editUrl, "_blank");
   };
 
   return (
     <>
-      {/* アニメーション定義 */}
       <style>{globalShakeKeyframes}</style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
-        {/* ヘッダー */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -170,33 +173,22 @@ export default function PreviewCatalog({
           {sanitizedLead && (
             <div
               className="max-w-3xl mx-auto text-center mt-10 mb-5"
-              style={{ color: "#fff" }}
               dangerouslySetInnerHTML={{ __html: sanitizedLead }}
             />
           )}
         </header>
 
-        {/* メイン */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={products.map((p) => p.id)}
-              strategy={rectSortingStrategy}
-            >
+            <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
               <div className={gridClass}>
                 {products.map((item) => (
-                  <SortableItem
-                    key={item.id}
-                    id={item.id}
-                    editable={editable}
-                    isReorderMode={isReorderMode}
-                  >
+                  <SortableItem key={item.id} id={item.id} editable={editable} isReorderMode={isReorderMode}>
                     <BlockStack gap="200">
-                      {/* 編集メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -206,11 +198,7 @@ export default function PreviewCatalog({
                                 variant="plain"
                                 icon={MenuHorizontalIcon}
                                 onClick={() =>
-                                  setActivePopoverId(
-                                    activePopoverId === item.id
-                                      ? null
-                                      : item.id
-                                  )
+                                  setActivePopoverId(activePopoverId === item.id ? null : item.id)
                                 }
                               />
                             }
@@ -246,16 +234,10 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 画像 */}
                       {item.imageUrl && (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="block w-full object-contain"
-                        />
+                        <img src={item.imageUrl} alt={item.title} className="block w-full object-contain" />
                       )}
 
-                      {/* テキスト */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
