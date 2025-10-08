@@ -97,6 +97,31 @@ export default function NewCatalogPage() {
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
 
+  // ✅ Quill設定（フォント変更ドロップダウンを復活）
+  const quillModules = {
+    toolbar: [
+      [{ font: [] }, { size: [] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ align: [] }],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["clean"],
+    ],
+  };
+
+  const quillFormats = [
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "color",
+    "background",
+    "align",
+    "list",
+  ];
+
   useEffect(() => {
     if (!id) return;
     const fetchCatalog = async () => {
@@ -319,8 +344,14 @@ export default function NewCatalogPage() {
                 />
               )}
 
-              {/* ✅ リード文 */}
-              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
+              {/* ✅ リード文（フォント変更可能なQuillエディタ） */}
+              <ReactQuill
+                theme="snow"
+                value={leadText}
+                onChange={setLeadText}
+                modules={quillModules}
+                formats={quillFormats}
+              />
 
               {/* ✅ ユーザー名 */}
               <TextField
