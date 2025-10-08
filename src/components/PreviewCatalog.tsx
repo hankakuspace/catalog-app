@@ -178,84 +178,90 @@ export default function PreviewCatalog({
                   isReorderMode={isReorderMode}
                   editable={editable}
                 >
-                  {/* ✅ sectioned 削除、Cardは透過 */}
-                  <Card
+                  {/* ✅ Polaris Cardをラップdivで透過スタイル */}
+                  <div
                     style={{
                       background: "transparent",
                       boxShadow: "none",
                       border: "none",
                     }}
                   >
-                    <div
-                      ref={(el: HTMLDivElement | null) => {
-                        cardRefs.current[index] = el;
-                      }}
-                    >
-                      <BlockStack gap="200">
-                        {editable && (
-                          <div className="flex justify-end mb-2">
-                            <Popover
-                              active={activePopoverId === item.id}
-                              activator={
-                                <Button
-                                  variant="plain"
-                                  icon={MenuHorizontalIcon}
-                                  onClick={() =>
-                                    setActivePopoverId(
-                                      activePopoverId === item.id
-                                        ? null
-                                        : item.id
-                                    )
-                                  }
+                    <Card>
+                      <div
+                        ref={(el: HTMLDivElement | null) => {
+                          cardRefs.current[index] = el;
+                        }}
+                      >
+                        <BlockStack gap="200">
+                          {editable && (
+                            <div className="flex justify-end mb-2">
+                              <Popover
+                                active={activePopoverId === item.id}
+                                activator={
+                                  <Button
+                                    variant="plain"
+                                    icon={MenuHorizontalIcon}
+                                    onClick={() =>
+                                      setActivePopoverId(
+                                        activePopoverId === item.id
+                                          ? null
+                                          : item.id
+                                      )
+                                    }
+                                  />
+                                }
+                                onClose={() => setActivePopoverId(null)}
+                              >
+                                <ActionList
+                                  items={[
+                                    {
+                                      content: isReorderMode
+                                        ? "Finish move"
+                                        : "Move item",
+                                      onAction: () => {
+                                        setIsReorderMode(!isReorderMode);
+                                        setActivePopoverId(null);
+                                      },
+                                    },
+                                    {
+                                      destructive: true,
+                                      content: "Remove",
+                                      onAction: () => {
+                                        if (onRemove) onRemove(item.id);
+                                        setActivePopoverId(null);
+                                      },
+                                    },
+                                  ]}
                                 />
-                              }
-                              onClose={() => setActivePopoverId(null)}
-                            >
-                              <ActionList
-                                items={[
-                                  {
-                                    content: isReorderMode
-                                      ? "Finish move"
-                                      : "Move item",
-                                    onAction: () => {
-                                      setIsReorderMode(!isReorderMode);
-                                      setActivePopoverId(null);
-                                    },
-                                  },
-                                  {
-                                    destructive: true,
-                                    content: "Remove",
-                                    onAction: () => {
-                                      if (onRemove) onRemove(item.id);
-                                      setActivePopoverId(null);
-                                    },
-                                  },
-                                ]}
-                              />
-                            </Popover>
+                              </Popover>
+                            </div>
+                          )}
+
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="block w-full h-auto object-contain"
+                              onLoad={adjustHeights}
+                            />
+                          ) : null}
+
+                          <div className="text-white mt-2 px-2">
+                            {item.artist && <Text as="p">{item.artist}</Text>}
+                            {item.title && <Text as="p">{item.title}</Text>}
+                            {item.year && <Text as="p">{item.year}</Text>}
+                            {item.dimensions && (
+                              <Text as="p">{item.dimensions}</Text>
+                            )}
+                            {item.medium && <Text as="p">{item.medium}</Text>}
+                            {item.price && (
+                              <Text as="p">{item.price} 円（税込）</Text>
+                            )}
                           </div>
-                        )}
-
-                        {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title}
-                            className="block w-full h-auto object-contain"
-                            onLoad={adjustHeights}
-                          />
-                        ) : null}
-
-                        <div className="text-white mt-2 px-2">
-                          {item.artist && <Text as="p">{item.artist}</Text>}
-                          {item.title && <Text as="p">{item.title}</Text>}
-                          {item.year && <Text as="p">{item.year}</Text>}
-                          {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                          {item.medium && <Text as="p">{item.medium}</Text>}
-                          {item.price && <Text as="p">{item.price} 円（税込）</Text>}
-                        </div>
-                      </BlockStack>
-                    </div>
-                  </Card>
+                        </BlockStack>
+                      </div>
+                    </Card>
+                  </div>
                 </SortableItem>
               ))}
             </div>
