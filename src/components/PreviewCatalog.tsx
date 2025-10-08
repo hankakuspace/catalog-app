@@ -31,7 +31,7 @@ export interface Product {
   id: string;
   title: string;
   price?: string;
-  customPrice?: string; // ✅ カタログ専用価格
+  customPrice?: string;
   imageUrl?: string;
   artist?: string;
   year?: string;
@@ -50,7 +50,6 @@ interface Props {
   columnCount?: number;
 }
 
-// ✅ 内側ラッパーを揺らす安全なshakeアニメーション
 const globalShakeKeyframes = `
 @keyframes innerShake {
   0% { transform: translate(0, 0) rotate(0deg); }
@@ -111,6 +110,10 @@ export default function PreviewCatalog({
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [storeHandle, setStoreHandle] = useState<string>("catalog-app-dev-2");
 
+  // ✅ 編集中のアイテムと一時価格
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [tempPrice, setTempPrice] = useState("");
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -130,6 +133,30 @@ export default function PreviewCatalog({
       const newIndex = products.findIndex((p) => p.id === over.id);
       onReorder(arrayMove(products, oldIndex, newIndex));
     }
+  };
+
+  // ✅ 専用価格を設定
+  const handleSetCustomPrice = (id: string) => {
+    if (!tempPrice.trim()) return;
+    onReorder?.(
+      products.map((p) =>
+        p.id === id ? { ...p, customPrice: tempPrice.trim() } : p
+      )
+    );
+    setEditingItemId(null);
+    setTempPrice("");
+  };
+
+  // ✅ 標準価格に戻す
+  const handleResetToDefault = (id: string) => {
+    onReorder?.(products.map((p) => {
+      if (p.id === id) {
+        const copy = { ...p };
+        delete copy.customPrice;
+        return copy;
+      }
+      return p;
+    }));
   };
 
   const openShopifyEditPage = (productId: string) => {
@@ -190,7 +217,6 @@ export default function PreviewCatalog({
                       {/* 編集メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
-                          {/* ✅ Polaris v13: PopoverにclassName不可。divでラップ */}
                           <div className="preview-catalog-popover">
                             <Popover
                               active={activePopoverId === item.id}
@@ -261,6 +287,56 @@ export default function PreviewCatalog({
                             ? `${item.price} 円（税込）`
                             : ""}
                         </Text>
+
+                        {/* ✅ カタログ専用価格設定UI */}
+                        {editable && (
+                          <div className="mt-3 border-t border-gray-700 pt-2 text-sm">
+                            {!item.customPrice ? (
+                              <>
+                                <label className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    onChange={(e) =>
+                                      e.target.checked &&
+                                      setEditingItemId(item.id)
+                                    }
+                                  />
+                                  <span>カタログ専用価格を設定</span>
+                                </label>
+                                {editingItemId === item.id && (
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <input
+                                      type="number"
+                                      placeholder="例：85000"
+                                      value={tempPrice}
+                                      onChange={(e) =>
+                                        setTempPrice(e.target.value)
+                                      }
+                                      className="bg-gray-800 text-white border border-gray-600 p-1 w-24 text-right"
+                                    />
+                                    <Button
+                                      size="slim"
+                                      onClick={() => handleSetCustomPrice(item.id)}
+                                    >
+                                      設定
+                                    </Button>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <label className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={false}
+                                  onChange={() =>
+                                    handleResetToDefault(item.id)
+                                  }
+                                />
+                                <span>標準価格に戻す</span>
+                              </label>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </BlockStack>
                   </SortableItem>
