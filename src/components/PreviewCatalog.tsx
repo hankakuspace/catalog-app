@@ -1,6 +1,6 @@
 // src/components/PreviewCatalog.tsx
 /* eslint-disable @next/next/no-img-element */
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -22,6 +22,7 @@ import {
   Popover,
   ActionList,
   Button,
+  Card,
 } from "@shopify/polaris";
 import { MenuHorizontalIcon } from "@shopify/polaris-icons";
 import styles from "@/pages/admin/catalogs/new.module.css";
@@ -30,7 +31,7 @@ export interface Product {
   id: string;
   title: string;
   price?: string;
-  customPrice?: string;  // ✅ これを追加！
+  customPrice?: string; // ✅ カタログ専用価格
   imageUrl?: string;
   artist?: string;
   year?: string;
@@ -38,7 +39,6 @@ export interface Product {
   medium?: string;
   frame?: string;
 }
-
 
 interface Props {
   title: string;
@@ -109,14 +109,12 @@ export default function PreviewCatalog({
   );
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
-
-  // ✅ ストアハンドル（URLパラメータから取得 or デフォルト）
   const [storeHandle, setStoreHandle] = useState<string>("catalog-app-dev-2");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const shopParam = params.get("shop"); // e.g. ruhra-store.myshopify.com
+      const shopParam = params.get("shop");
       if (shopParam) {
         const handle = shopParam.replace(".myshopify.com", "");
         setStoreHandle(handle);
@@ -134,6 +132,15 @@ export default function PreviewCatalog({
     }
   };
 
+  const openShopifyEditPage = (productId: string) => {
+    if (!productId || !storeHandle) return;
+    const numericId = productId.includes("gid://")
+      ? productId.replace("gid://shopify/Product/", "")
+      : productId;
+    const editUrl = `https://admin.shopify.com/store/${storeHandle}/products/${numericId}`;
+    window.open(editUrl, "_blank");
+  };
+
   const gridClass =
     columnCount === 2
       ? `${styles.previewGrid} ${styles["cols-2"]}`
@@ -147,25 +154,12 @@ export default function PreviewCatalog({
         .replace(/color\s*:\s*#000/gi, "color: #fff")
     : "";
 
-  // ✅ Shopify商品編集ページを新規タブで開く関数
-  const openShopifyEditPage = (productId: string) => {
-    if (!productId || !storeHandle) return;
-
-    // gid://形式でも数値形式でも対応
-    const numericId = productId.includes("gid://")
-      ? productId.replace("gid://shopify/Product/", "")
-      : productId;
-
-    const editUrl = `https://admin.shopify.com/store/${storeHandle}/products/${numericId}`;
-    console.log("🟢 Edit URL:", editUrl);
-    window.open(editUrl, "_blank");
-  };
-
   return (
     <>
       <style>{globalShakeKeyframes}</style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
+        {/* ヘッダー */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -180,74 +174,93 @@ export default function PreviewCatalog({
           )}
         </header>
 
+        {/* メイン */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
               <div className={gridClass}>
                 {products.map((item) => (
-                  <SortableItem key={item.id} id={item.id} editable={editable} isReorderMode={isReorderMode}>
+                  <SortableItem
+                    key={item.id}
+                    id={item.id}
+                    editable={editable}
+                    isReorderMode={isReorderMode}
+                  >
                     <BlockStack gap="200">
+                      {/* 編集メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
-                          <Popover
-                          　className="preview-catalog-popover"
-                            active={activePopoverId === item.id}
-                            activator={
-                              <Button
-                                variant="plain"
-                                icon={MenuHorizontalIcon}
-                                onClick={() =>
-                                  setActivePopoverId(activePopoverId === item.id ? null : item.id)
-                                }
+                          {/* ✅ Polaris v13: PopoverにclassName不可。divでラップ */}
+                          <div className="preview-catalog-popover">
+                            <Popover
+                              active={activePopoverId === item.id}
+                              activator={
+                                <Button
+                                  variant="plain"
+                                  icon={MenuHorizontalIcon}
+                                  onClick={() =>
+                                    setActivePopoverId(
+                                      activePopoverId === item.id ? null : item.id
+                                    )
+                                  }
+                                />
+                              }
+                              onClose={() => setActivePopoverId(null)}
+                            >
+                              <ActionList
+                                items={[
+                                  {
+                                    content: isReorderMode ? "移動を完了" : "移動",
+                                    onAction: () => {
+                                      setIsReorderMode(!isReorderMode);
+                                      setActivePopoverId(null);
+                                    },
+                                  },
+                                  {
+                                    content: "編集",
+                                    onAction: () => {
+                                      openShopifyEditPage(item.id);
+                                      setActivePopoverId(null);
+                                    },
+                                  },
+                                  {
+                                    destructive: true,
+                                    content: "削除",
+                                    onAction: () => {
+                                      if (onRemove) onRemove(item.id);
+                                      setActivePopoverId(null);
+                                    },
+                                  },
+                                ]}
                               />
-                            }
-                            onClose={() => setActivePopoverId(null)}
-                          >
-                            <ActionList
-                              items={[
-                                {
-                                  content: isReorderMode ? "移動を完了" : "移動",
-                                  onAction: () => {
-                                    setIsReorderMode(!isReorderMode);
-                                    setActivePopoverId(null);
-                                  },
-                                },
-                                {
-                                  content: "編集",
-                                  onAction: () => {
-                                    openShopifyEditPage(item.id);
-                                    setActivePopoverId(null);
-                                  },
-                                },
-                                {
-                                  destructive: true,
-                                  content: "削除",
-                                  onAction: () => {
-                                    if (onRemove) onRemove(item.id);
-                                    setActivePopoverId(null);
-                                  },
-                                },
-                              ]}
-                            />
-                          </Popover>
+                            </Popover>
+                          </div>
                         </div>
                       )}
 
+                      {/* 画像 */}
                       {item.imageUrl && (
-                        <img src={item.imageUrl} alt={item.title} className="block w-full object-contain" />
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="block w-full object-contain"
+                        />
                       )}
 
+                      {/* テキスト */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
                         {item.year && <Text as="p">{item.year}</Text>}
                         {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
-                        {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                        <Text as="p">
+                          {item.customPrice
+                            ? `${item.customPrice} 円（税込）`
+                            : item.price
+                            ? `${item.price} 円（税込）`
+                            : ""}
+                        </Text>
                       </div>
                     </BlockStack>
                   </SortableItem>
