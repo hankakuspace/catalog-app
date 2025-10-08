@@ -80,17 +80,20 @@ export default function NewCatalogPage() {
   const [password, setPassword] = useState("");
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
 
-  // ✅ Quill設定
-  const quillModules = {
-    toolbar: [
-      [{ font: [] }, { size: [] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ color: [] }, { background: [] }],
-      [{ align: [] }],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["clean"],
-    ],
-  };
+// ✅ Quill設定（不要アイコン削除＋2行構成＋cleanを上段へ）
+const quillModules = {
+  toolbar: [
+    // ---- 1行目：フォント・サイズ・リセット ----
+    ["clean"],               // ← リセットを上段先頭に
+    [{ font: [] }, { size: [] }],
+
+    // ---- 2行目：テキスト操作系（箇条書き削除済） ----
+    ["bold", "italic", "underline", "strike"], // 強調
+    [{ color: [] }, { background: [] }],       // 文字色・背景色
+    [{ align: [] }],                           // 位置揃え
+  ],
+};
+
   const quillFormats = [
     "font",
     "size",
