@@ -1,4 +1,10 @@
 // src/pages/admin/catalogs/index.tsx
+"use client";
+
+export const config = {
+  runtime: "experimental-edge",
+};
+
 import { useEffect, useState } from "react";
 import {
   IndexTable,
@@ -18,6 +24,7 @@ import AdminHeader from "@/components/AdminHeader";
 interface Catalog {
   id: string;
   title: string;
+  label?: string; // ✅ ラベル追加
   createdAt?: string;
   previewUrl?: string;
 }
@@ -126,6 +133,7 @@ export default function CatalogListPage() {
                 { title: "タイトル" },
                 { title: "作成日" },
                 { title: "プレビューURL" },
+                { title: "ラベル" }, // ✅ ラベル追加
                 { title: "操作" },
               ]}
             >
@@ -140,54 +148,51 @@ export default function CatalogListPage() {
                     selected={selectedResources.includes(catalog.id)}
                     position={index}
                   >
+                    {/* タイトル */}
                     <IndexTable.Cell>
                       <Text as="span" fontWeight="semibold">
                         {catalog.title || "(無題)"}
                       </Text>
                     </IndexTable.Cell>
 
+                    {/* 作成日 */}
                     <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-                    {/* ✅ プレビューURL：クリック可能 */}
+                    {/* プレビューURL */}
                     <IndexTable.Cell>
                       {catalog.previewUrl ? (
-                        <span
-                          onClick={(e) => {
-                            e.stopPropagation(); // 行選択を止める（ここ限定）
-                          }}
+                        <a
+                          href={catalog.previewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sky-600 hover:underline inline-flex items-center"
                         >
-                          <a
-                            href={catalog.previewUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sky-600 hover:underline inline-flex items-center"
-                          >
-                            {catalog.previewUrl}
-                            <span style={{ marginLeft: "10px" }}>
-                              <Icon source={ExternalIcon} tone="base" />
-                            </span>
-                          </a>
-                        </span>
+                          {catalog.previewUrl}
+                          <span style={{ marginLeft: "10px" }}>
+                            <Icon source={ExternalIcon} tone="base" />
+                          </span>
+                        </a>
                       ) : (
                         "-"
                       )}
                     </IndexTable.Cell>
 
-                    {/* ✅ 編集ボタン：クリック可能 */}
+                    {/* ✅ ラベル */}
                     <IndexTable.Cell>
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation(); // 行選択を止める
-                        }}
+                      {catalog.label && catalog.label.trim() !== ""
+                        ? catalog.label
+                        : "-"}
+                    </IndexTable.Cell>
+
+                    {/* 編集ボタン */}
+                    <IndexTable.Cell>
+                      <Button
+                        size="slim"
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                        variant="plain"
                       >
-                        <Button
-                          size="slim"
-                          url={`/admin/catalogs/new?id=${catalog.id}`}
-                          variant="plain"
-                        >
-                          編集
-                        </Button>
-                      </span>
+                        編集
+                      </Button>
                     </IndexTable.Cell>
                   </IndexTable.Row>
                 );
@@ -196,13 +201,7 @@ export default function CatalogListPage() {
           </div>
 
           <InlineStack align="space-between">
-            <div
-              style={
-                {
-                  "--p-color-text-critical": "#000",
-                } as React.CSSProperties
-              }
-            >
+            <div>
               <Button
                 tone="critical"
                 icon={DeleteIcon}
