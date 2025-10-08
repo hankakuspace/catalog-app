@@ -1,6 +1,6 @@
 // src/components/PreviewCatalog.tsx
 /* eslint-disable @next/next/no-img-element */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -109,6 +109,20 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
+  // ✅ ストアハンドル自動取得
+  const [storeHandle, setStoreHandle] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const shopParam = params.get("shop"); // e.g. ruhra-store.myshopify.com
+      if (shopParam) {
+        const handle = shopParam.replace(".myshopify.com", "");
+        setStoreHandle(handle);
+      }
+    }
+  }, []);
+
   const handleDragEnd = (event: DragEndEvent) => {
     if (!editable || !onReorder) return;
     const { active, over } = event;
@@ -134,9 +148,9 @@ export default function PreviewCatalog({
 
   // ✅ Shopify商品編集ページを新規タブで開く関数
   const openShopifyEditPage = (productId: string) => {
-    if (!productId) return;
+    if (!productId || !storeHandle) return;
     const numericId = productId.replace("gid://shopify/Product/", "");
-    const editUrl = `https://admin.shopify.com/store/catalog-app-dev-2/products/${numericId}`;
+    const editUrl = `https://admin.shopify.com/store/${storeHandle}/products/${numericId}`;
     window.open(editUrl, "_blank");
   };
 
@@ -204,26 +218,23 @@ export default function PreviewCatalog({
                           >
                             <ActionList
                               items={[
-                                // ✅ 新規追加
                                 {
-                                  content: "Edit This Item",
-                                  onAction: () => {
-                                    openShopifyEditPage(item.id);
-                                    setActivePopoverId(null);
-                                  },
-                                },
-                                {
-                                  content: isReorderMode
-                                    ? "Finish move"
-                                    : "Move item",
+                                  content: isReorderMode ? "移動を完了" : "移動",
                                   onAction: () => {
                                     setIsReorderMode(!isReorderMode);
                                     setActivePopoverId(null);
                                   },
                                 },
                                 {
+                                  content: "編集",
+                                  onAction: () => {
+                                    openShopifyEditPage(item.id);
+                                    setActivePopoverId(null);
+                                  },
+                                },
+                                {
                                   destructive: true,
-                                  content: "Remove",
+                                  content: "削除",
                                   onAction: () => {
                                     if (onRemove) onRemove(item.id);
                                     setActivePopoverId(null);
