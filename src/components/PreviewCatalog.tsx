@@ -178,9 +178,8 @@ export default function PreviewCatalog({
                   isReorderMode={isReorderMode}
                   editable={editable}
                 >
-                  {/* ✅ Cardはref不可 → 内側divにrefを移動 */}
+                  {/* ✅ sectioned 削除、Cardは透過 */}
                   <Card
-                    sectioned
                     style={{
                       background: "transparent",
                       boxShadow: "none",
