@@ -45,10 +45,46 @@ export default function NewCatalogPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // ✅ Toast用の状態
+  // ✅ Toast制御
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState("");
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
+
+  const toggleToastActive = useCallback(() => {
+    setToastActive((active) => !active);
+  }, []);
+
+  useEffect(() => {
+    if (toastActive) {
+      // ✅ ToastがPortalで描画された後に背景色を強制変更
+      const interval = setInterval(() => {
+        const toastEl = document.querySelector(
+          ".Polaris-Frame-Toast"
+        ) as HTMLElement | null;
+        if (toastEl) {
+          toastEl.style.backgroundColor =
+            toastColor === "success" ? "#36B37E" : "#DE3618";
+          toastEl.style.color = "#fff";
+          toastEl.style.fontWeight = "500";
+          const closeBtn = toastEl.querySelector(
+            ".Polaris-Frame-Toast__CloseButton"
+          ) as HTMLElement | null;
+          if (closeBtn) closeBtn.style.color = "#fff";
+          clearInterval(interval);
+        }
+      }, 50);
+      // safety stop
+      setTimeout(() => clearInterval(interval), 1000);
+    }
+  }, [toastActive, toastColor]);
+
+  const toastMarkup = toastActive ? (
+    <Toast
+      content={toastContent}
+      onDismiss={toggleToastActive}
+      duration={3000}
+    />
+  ) : null;
 
   const [columnCount, setColumnCount] = useState(3);
   const [username, setUsername] = useState("");
@@ -60,46 +96,6 @@ export default function NewCatalogPage() {
     year: today.getFullYear(),
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
-
-  const toggleToastActive = useCallback(
-    () => setToastActive((active) => !active),
-    []
-  );
-
-  // ✅ Toastマークアップ（色を判定して出し分け）
-  const toastMarkup = toastActive ? (
-    <div
-      className={
-        toastColor === "success"
-          ? "custom-toast-success"
-          : "custom-toast-error"
-      }
-    >
-      <Toast
-        content={toastContent}
-        onDismiss={toggleToastActive}
-        duration={3000}
-      />
-      <style jsx global>{`
-        .custom-toast-success .Polaris-Frame-Toast {
-          background: #36b37e !important; /* Shopify Success Green */
-          color: #fff !important;
-          font-weight: 500;
-        }
-        .custom-toast-success .Polaris-Frame-Toast__CloseButton {
-          color: #fff !important;
-        }
-        .custom-toast-error .Polaris-Frame-Toast {
-          background: #de3618 !important; /* Shopify Critical Red */
-          color: #fff !important;
-          font-weight: 500;
-        }
-        .custom-toast-error .Polaris-Frame-Toast__CloseButton {
-          color: #fff !important;
-        }
-      `}</style>
-    </div>
-  ) : null;
 
   useEffect(() => {
     if (!id) return;
@@ -127,23 +123,6 @@ export default function NewCatalogPage() {
     };
     fetchCatalog();
   }, [id]);
-
-  const handleSearch = async (query: string) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        shop: "catalog-app-dev-2.myshopify.com",
-        query,
-      });
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const data = await res.json();
-      setSearchResults(data.products || []);
-    } catch (err) {
-      console.error("商品検索エラー:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
@@ -182,18 +161,35 @@ export default function NewCatalogPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
-      // ✅ 成功時トースト
+      // ✅ 成功時
       setToastContent("保存しました");
       setToastColor("success");
       setToastActive(true);
     } catch (err) {
       console.error(err);
-      // ✅ エラー時トースト
+      // ✅ エラー時
       setToastContent("保存に失敗しました");
       setToastColor("error");
       setToastActive(true);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSearch = async (query: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        shop: "catalog-app-dev-2.myshopify.com",
+        query,
+      });
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const data = await res.json();
+      setSearchResults(data.products || []);
+    } catch (err) {
+      console.error("商品検索エラー:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -253,7 +249,6 @@ export default function NewCatalogPage() {
                 onChange={setTitle}
                 autoComplete="off"
               />
-
               <Select
                 label="列数"
                 options={[
@@ -264,7 +259,6 @@ export default function NewCatalogPage() {
                 value={String(columnCount)}
                 onChange={(val) => setColumnCount(Number(val))}
               />
-
               <BlockStack gap="200">
                 <TextField
                   label="検索キーワード"
@@ -376,7 +370,7 @@ export default function NewCatalogPage() {
         </div>
       </div>
 
-      {/* ✅ 成功／失敗トースト */}
+      {/* ✅ 成功・失敗トースト */}
       {toastMarkup}
     </Frame>
   );
