@@ -27,7 +27,7 @@ import {
   Icon,
   Toast,
 } from "@shopify/polaris";
-import { CalendarIcon } from "@shopify/polaris-icons";
+import { CalendarIcon, ViewIcon, HideIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
@@ -38,12 +38,16 @@ export default function NewCatalogPage() {
   const { id } = router.query;
 
   const [title, setTitle] = useState("");
+  const [label, setLabel] = useState(""); // ✅ 新しい「ラベル」フィールド
   const [leadText, setLeadText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // ✅ パスワード表示切り替え
+  const [showPassword, setShowPassword] = useState(false);
 
   // ✅ Toast制御
   const [toastActive, setToastActive] = useState(false);
@@ -56,7 +60,6 @@ export default function NewCatalogPage() {
 
   useEffect(() => {
     if (toastActive) {
-      // ✅ ToastがPortalで描画された後に背景色を強制変更
       const interval = setInterval(() => {
         const toastEl = document.querySelector(
           ".Polaris-Frame-Toast"
@@ -73,7 +76,6 @@ export default function NewCatalogPage() {
           clearInterval(interval);
         }
       }, 50);
-      // safety stop
       setTimeout(() => clearInterval(interval), 1000);
     }
   }, [toastActive, toastColor]);
@@ -105,6 +107,7 @@ export default function NewCatalogPage() {
         const data = await res.json();
         if (res.ok && data.catalog) {
           setTitle(data.catalog.title || "");
+          setLabel(data.catalog.label || ""); // ✅ 新フィールド
           setLeadText(data.catalog.leadText || "");
           setSelectedProducts(data.catalog.products || []);
           setColumnCount(data.catalog.columnCount || 3);
@@ -143,6 +146,7 @@ export default function NewCatalogPage() {
       const body = {
         id,
         title,
+        label, // ✅ 新フィールド
         leadText,
         products: selectedProducts,
         columnCount,
@@ -161,13 +165,11 @@ export default function NewCatalogPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
-      // ✅ 成功時
       setToastContent("保存しました");
       setToastColor("success");
       setToastActive(true);
     } catch (err) {
       console.error(err);
-      // ✅ エラー時
       setToastContent("保存に失敗しました");
       setToastColor("error");
       setToastActive(true);
@@ -243,12 +245,24 @@ export default function NewCatalogPage() {
           {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
+              {/* ✅ タイトル */}
               <TextField
                 label="タイトル"
                 value={title}
                 onChange={setTitle}
                 autoComplete="off"
               />
+
+              {/* ✅ タイトル下に新しいラベル */}
+              <TextField
+                label="ラベル"
+                value={label}
+                onChange={setLabel}
+                autoComplete="off"
+                placeholder="任意のラベルを入力"
+              />
+
+              {/* ✅ 列数 */}
               <Select
                 label="列数"
                 options={[
@@ -259,6 +273,8 @@ export default function NewCatalogPage() {
                 value={String(columnCount)}
                 onChange={(val) => setColumnCount(Number(val))}
               />
+
+              {/* ✅ 検索 */}
               <BlockStack gap="200">
                 <TextField
                   label="検索キーワード"
@@ -305,12 +321,10 @@ export default function NewCatalogPage() {
                 />
               )}
 
-              <ReactQuill
-                theme="snow"
-                value={leadText}
-                onChange={setLeadText}
-              />
+              {/* ✅ リード文 */}
+              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
 
+              {/* ✅ ユーザー名・パスワード */}
               <InlineStack gap="200" blockAlign="center">
                 <TextField
                   label="ユーザー名"
@@ -319,16 +333,36 @@ export default function NewCatalogPage() {
                   onChange={setUsername}
                   autoComplete="off"
                 />
-                <TextField
-                  label="パスワード"
-                  placeholder="パスワード"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  autoComplete="off"
-                />
+
+                {/* ✅ パスワード＋表示切替アイコン */}
+                <div style={{ position: "relative", flex: 1 }}>
+                  <TextField
+                    label="パスワード"
+                    placeholder="パスワード"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={setPassword}
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "38px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    <Icon source={showPassword ? HideIcon : ViewIcon} />
+                  </button>
+                </div>
               </InlineStack>
 
+              {/* ✅ 有効期限 */}
               <Popover
                 active={datePickerActive}
                 activator={
@@ -370,7 +404,7 @@ export default function NewCatalogPage() {
         </div>
       </div>
 
-      {/* ✅ 成功・失敗トースト */}
+      {/* ✅ Toast */}
       {toastMarkup}
     </Frame>
   );
