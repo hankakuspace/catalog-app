@@ -279,7 +279,8 @@ export default function NewCatalogPage() {
       <BlockStack gap="200">
         {selectedProducts.map((p) => (
           <Card key={p.id}>
-            <Card.Section>
+            {/* ✅ Polaris13ではSection削除。代わりに内側をBlockStackで整列 */}
+            <BlockStack gap="200" padding="400">
               <Text>{p.title}</Text>
               <Text>
                 通常価格：{p.price ? `${p.price} 円` : "未設定"}
@@ -292,13 +293,14 @@ export default function NewCatalogPage() {
                 autoComplete="off"
                 placeholder="例：85000"
               />
-            </Card.Section>
+            </BlockStack>
           </Card>
         ))}
       </BlockStack>
     </div>
   </div>
 )}
+
 
 
 
