@@ -48,17 +48,17 @@ interface Props {
   columnCount?: number;
 }
 
-// ✅ CSSアニメーション定義
+// ✅ transformを使わないshake定義（filter/translateZでちらつき表現）
 const globalShakeKeyframes = `
-@keyframes shake {
-  0% { transform: translate(0px, 0px) rotate(0deg); }
-  25% { transform: translate(1px, 0px) rotate(0.5deg); }
-  50% { transform: translate(-1px, 0px) rotate(-0.5deg); }
-  75% { transform: translate(1px, 0px) rotate(0.5deg); }
-  100% { transform: translate(0px, 0px) rotate(0deg); }
+@keyframes shakeSafe {
+  0% { filter: brightness(100%) blur(0); }
+  25% { filter: brightness(95%) blur(0.3px); }
+  50% { filter: brightness(100%) blur(0); }
+  75% { filter: brightness(95%) blur(0.3px); }
+  100% { filter: brightness(100%) blur(0); }
 }
-.shake-active {
-  animation: shake 0.3s infinite;
+.shake-safe {
+  animation: shakeSafe 0.25s infinite;
 }
 `;
 
@@ -80,9 +80,10 @@ function SortableItem({
     transform: CSS.Transform.toString(transform),
     transition,
     cursor: editable ? "grab" : "default",
+    zIndex: isDragging ? 100 : "auto",
   };
 
-  // ✅ DnD中またはリオーダーモード中にshakeをON
+  // ドラッグ中またはMoveモード中 → アニメON
   const shakeActive = editable && (isDragging || isReorderMode);
 
   return (
@@ -90,9 +91,8 @@ function SortableItem({
       ref={setNodeRef}
       style={style}
       {...(editable ? { ...attributes, ...listeners } : {})}
-      className={shakeActive ? "shake-active" : ""}
     >
-      {children}
+      <div className={shakeActive ? "shake-safe" : ""}>{children}</div>
     </div>
   );
 }
@@ -137,11 +137,10 @@ export default function PreviewCatalog({
 
   return (
     <>
-      {/* ✅ shakeアニメーションCSSを注入 */}
+      {/* shakeSafe animation注入 */}
       <style>{globalShakeKeyframes}</style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
-        {/* ヘッダー */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -157,7 +156,6 @@ export default function PreviewCatalog({
           )}
         </header>
 
-        {/* メイン */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext
             sensors={sensors}
@@ -177,7 +175,7 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-                      {/* 編集時メニュー */}
+                      {/* メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -222,7 +220,7 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* ✅ 画像本体（DnD中・モード中ブルブル） */}
+                      {/* 画像本体（DnD中もshakeSafe適用） */}
                       {item.imageUrl && (
                         <img
                           src={item.imageUrl}
@@ -231,7 +229,6 @@ export default function PreviewCatalog({
                         />
                       )}
 
-                      {/* 情報テキスト */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
@@ -248,7 +245,6 @@ export default function PreviewCatalog({
           </DndContext>
         </main>
 
-        {/* フッター */}
         <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
           Copyright © 2025 Clue Co.,Ltd. all rights reserved.
         </footer>
