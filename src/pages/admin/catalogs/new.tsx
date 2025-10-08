@@ -1,9 +1,7 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-export const config = {
-  runtime: "experimental-edge",
-};
+export const config = { runtime: "experimental-edge" };
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
@@ -23,7 +21,6 @@ import {
   Select,
   DatePicker,
   Popover,
-  InlineStack,
   Icon,
   Toast,
 } from "@shopify/polaris";
@@ -52,38 +49,10 @@ export default function NewCatalogPage() {
   const [toastContent, setToastContent] = useState("");
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
 
-  const toggleToastActive = useCallback(() => {
-    setToastActive((active) => !active);
-  }, []);
-
-  useEffect(() => {
-    if (toastActive) {
-      const interval = setInterval(() => {
-        const toastEl = document.querySelector(
-          ".Polaris-Frame-Toast"
-        ) as HTMLElement | null;
-        if (toastEl) {
-          toastEl.style.backgroundColor =
-            toastColor === "success" ? "#36B37E" : "#DE3618";
-          toastEl.style.color = "#fff";
-          toastEl.style.fontWeight = "500";
-          const closeBtn = toastEl.querySelector(
-            ".Polaris-Frame-Toast__CloseButton"
-          ) as HTMLElement | null;
-          if (closeBtn) closeBtn.style.color = "#fff";
-          clearInterval(interval);
-        }
-      }, 50);
-      setTimeout(() => clearInterval(interval), 1000);
-    }
-  }, [toastActive, toastColor]);
+  const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
 
   const toastMarkup = toastActive ? (
-    <Toast
-      content={toastContent}
-      onDismiss={toggleToastActive}
-      duration={3000}
-    />
+    <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} />
   ) : null;
 
   const [columnCount, setColumnCount] = useState(3);
@@ -91,13 +60,10 @@ export default function NewCatalogPage() {
   const [password, setPassword] = useState("");
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
   const today = new Date();
-  const [{ month, year }, setDate] = useState({
-    month: today.getMonth(),
-    year: today.getFullYear(),
-  });
+  const [{ month, year }, setDate] = useState({ month: today.getMonth(), year: today.getFullYear() });
   const [datePickerActive, setDatePickerActive] = useState(false);
 
-  // ✅ Quill設定（フォント変更ドロップダウンを復活）
+  // ✅ Quill設定
   const quillModules = {
     toolbar: [
       [{ font: [] }, { size: [] }],
@@ -108,20 +74,11 @@ export default function NewCatalogPage() {
       ["clean"],
     ],
   };
-
   const quillFormats = [
-    "font",
-    "size",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "color",
-    "background",
-    "align",
-    "list",
+    "font", "size", "bold", "italic", "underline", "strike", "color", "background", "align", "list",
   ];
 
+  // ✅ カタログ取得
   useEffect(() => {
     if (!id) return;
     const fetchCatalog = async () => {
@@ -150,6 +107,14 @@ export default function NewCatalogPage() {
     fetchCatalog();
   }, [id]);
 
+  // ✅ カスタム価格変更
+  const handleCustomPriceChange = (id: string, value: string) => {
+    setSelectedProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, customPrice: value } : p))
+    );
+  };
+
+  // ✅ 保存処理
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
       setToastContent("タイトルと商品は必須です");
@@ -178,13 +143,11 @@ export default function NewCatalogPage() {
         expiresAt: expiresDate ? expiresDate.toISOString() : null,
         shop: "catalog-app-dev-2.myshopify.com",
       };
-
       const res = await fetch("/api/catalogs", {
         method: id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
@@ -201,6 +164,7 @@ export default function NewCatalogPage() {
     }
   };
 
+  // ✅ 商品検索
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
@@ -221,35 +185,18 @@ export default function NewCatalogPage() {
   return (
     <Frame>
       <div style={{ width: "100%", padding: "20px" }}>
-        {/* ✅ ヘッダー */}
         <div style={{ marginBottom: "40px" }}>
-          <Text as="h1" variant="headingLg" fontWeight="regular">
-            Catalog Edit
-          </Text>
+          <Text as="h1" variant="headingLg">Catalog Edit</Text>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <AdminHeader />
           <Button variant="primary" onClick={handleSave} loading={saving}>
             {id ? "Update Record" : "New Record"}
           </Button>
         </div>
 
-        {/* ✅ メインエリア */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "3fr 1fr",
-            gap: "20px",
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px" }}>
           {/* 左：プレビュー */}
           <div>
             <PreviewCatalog
@@ -258,9 +205,7 @@ export default function NewCatalogPage() {
               products={selectedProducts}
               editable
               onReorder={setSelectedProducts}
-              onRemove={(id) =>
-                setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
-              }
+              onRemove={(id) => setSelectedProducts(selectedProducts.filter((p) => p.id !== id))}
               columnCount={columnCount}
             />
           </div>
@@ -268,24 +213,10 @@ export default function NewCatalogPage() {
           {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
-              {/* ✅ タイトル */}
-              <TextField
-                label="タイトル"
-                value={title}
-                onChange={setTitle}
-                autoComplete="off"
-              />
+              <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
+              <TextField label="ラベル" value={label} onChange={setLabel} autoComplete="off" placeholder="任意のラベルを入力" />
 
-              {/* ✅ タイトル下ラベル */}
-              <TextField
-                label="ラベル"
-                value={label}
-                onChange={setLabel}
-                autoComplete="off"
-                placeholder="任意のラベルを入力"
-              />
-
-              {/* ✅ 列数 */}
+              {/* 列数 */}
               <Select
                 label="列数"
                 options={[
@@ -297,7 +228,7 @@ export default function NewCatalogPage() {
                 onChange={(val) => setColumnCount(Number(val))}
               />
 
-              {/* ✅ 検索 */}
+              {/* 検索 */}
               <BlockStack gap="200">
                 <TextField
                   label="検索キーワード"
@@ -328,13 +259,7 @@ export default function NewCatalogPage() {
                         }
                       }}
                       media={
-                        item.imageUrl ? (
-                          <Thumbnail
-                            source={item.imageUrl}
-                            alt={item.title}
-                            size="small"
-                          />
-                        ) : undefined
+                        item.imageUrl ? <Thumbnail source={item.imageUrl} alt={item.title} size="small" /> : undefined
                       }
                     >
                       {item.artist ? `${item.artist}, ` : ""}
@@ -344,96 +269,36 @@ export default function NewCatalogPage() {
                 />
               )}
 
-              {/* ✅ リード文（フォント変更可能なQuillエディタ） */}
-              <ReactQuill
-                theme="snow"
-                value={leadText}
-                onChange={setLeadText}
-                modules={quillModules}
-                formats={quillFormats}
-              />
+              {/* ✅ カタログ専用価格欄 */}
+              {selectedProducts.length > 0 && (
+                <div style={{ marginTop: "20px" }}>
+                  <Text variant="headingSm" as="h3">カタログ専用価格</Text>
+                  <BlockStack gap="200" style={{ marginTop: "10px" }}>
+                    {selectedProducts.map((p) => (
+                      <Card key={p.id} sectioned>
+                        <Text>{p.title}</Text>
+                        <Text>通常価格：{p.price ? `${p.price} 円` : "未設定"}</Text>
+                        <TextField
+                          label="カタログ専用価格（任意）"
+                          type="number"
+                          value={p.customPrice || ""}
+                          onChange={(val) => handleCustomPriceChange(p.id, val)}
+                          autoComplete="off"
+                          placeholder="例：85000"
+                        />
+                      </Card>
+                    ))}
+                  </BlockStack>
+                </div>
+              )}
 
-              {/* ✅ ユーザー名 */}
-              <TextField
-                label="ユーザー名"
-                placeholder="ユーザー名"
-                value={username}
-                onChange={setUsername}
-                autoComplete="off"
-              />
-
-              {/* ✅ パスワード（suffix方式） */}
-              <TextField
-                label="パスワード"
-                type={showPassword ? "text" : "password"}
-                placeholder="パスワード"
-                value={password}
-                onChange={setPassword}
-                autoComplete="off"
-                suffix={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                    aria-label={
-                      showPassword ? "パスワードを隠す" : "パスワードを表示"
-                    }
-                  >
-                    <Icon source={showPassword ? HideIcon : ViewIcon} />
-                  </button>
-                }
-              />
-
-              {/* ✅ 有効期限 */}
-              <Popover
-                active={datePickerActive}
-                activator={
-                  <TextField
-                    label="有効期限"
-                    value={
-                      expiresDate
-                        ? `${expiresDate.getFullYear()}/${String(
-                            expiresDate.getMonth() + 1
-                          ).padStart(2, "0")}/${String(
-                            expiresDate.getDate()
-                          ).padStart(2, "0")}`
-                        : ""
-                    }
-                    prefix={<Icon source={CalendarIcon} />}
-                    placeholder="yyyy/mm/dd"
-                    onFocus={() => setDatePickerActive(true)}
-                    onChange={() => {}}
-                    autoComplete="off"
-                  />
-                }
-                onClose={() => setDatePickerActive(false)}
-              >
-                <DatePicker
-                  month={month}
-                  year={year}
-                  onChange={({ start }) => {
-                    const d = new Date(start);
-                    d.setHours(0, 0, 0, 0);
-                    setExpiresDate(d);
-                    setDate({ month: d.getMonth(), year: d.getFullYear() });
-                    setDatePickerActive(false);
-                  }}
-                  selected={expiresDate || new Date()}
-                />
-              </Popover>
+              {/* リード文 */}
+              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} modules={quillModules} formats={quillFormats} />
             </BlockStack>
           </Card>
         </div>
       </div>
 
-      {/* ✅ トースト */}
       {toastMarkup}
     </Frame>
   );
