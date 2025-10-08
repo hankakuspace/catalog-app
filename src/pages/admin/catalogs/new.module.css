@@ -1,7 +1,7 @@
 /* src/pages/admin/catalogs/new.module.css */
 .previewGrid {
   display: grid;
-  gap: 0px 40px 60px;
+  gap: 60px 40px; /* ✅ 行間40px / 列間60px に変更 */
   justify-content: center; /* ✅ 常に中央寄せ */
 }
 
