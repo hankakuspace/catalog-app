@@ -106,13 +106,6 @@ export default function NewCatalogPage() {
     fetchCatalog();
   }, [id]);
 
-  // ✅ カスタム価格変更
-  const handleCustomPriceChange = (id: string, value: string) => {
-    setSelectedProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, customPrice: value } : p))
-    );
-  };
-
   // ✅ 保存処理
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
@@ -184,14 +177,27 @@ export default function NewCatalogPage() {
           </Text>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
           <AdminHeader />
           <Button variant="primary" onClick={handleSave} loading={saving}>
             {id ? "Update Record" : "New Record"}
           </Button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "3fr 1fr",
+            gap: "20px",
+          }}
+        >
           {/* 左：プレビュー */}
           <div>
             <PreviewCatalog
@@ -200,7 +206,9 @@ export default function NewCatalogPage() {
               products={selectedProducts}
               editable
               onReorder={setSelectedProducts}
-              onRemove={(id) => setSelectedProducts(selectedProducts.filter((p) => p.id !== id))}
+              onRemove={(id) =>
+                setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
+              }
               columnCount={columnCount}
             />
           </div>
@@ -208,8 +216,19 @@ export default function NewCatalogPage() {
           {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
-              <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
-              <TextField label="ラベル" value={label} onChange={setLabel} autoComplete="off" placeholder="任意のラベルを入力" />
+              <TextField
+                label="タイトル"
+                value={title}
+                onChange={setTitle}
+                autoComplete="off"
+              />
+              <TextField
+                label="ラベル"
+                value={label}
+                onChange={setLabel}
+                autoComplete="off"
+                placeholder="任意のラベルを入力"
+              />
 
               {/* 列数 */}
               <Select
@@ -254,7 +273,13 @@ export default function NewCatalogPage() {
                         }
                       }}
                       media={
-                        item.imageUrl ? <Thumbnail source={item.imageUrl} alt={item.title} size="small" /> : undefined
+                        item.imageUrl ? (
+                          <Thumbnail
+                            source={item.imageUrl}
+                            alt={item.title}
+                            size="small"
+                          />
+                        ) : undefined
                       }
                     >
                       {item.artist ? `${item.artist}, ` : ""}
@@ -264,41 +289,14 @@ export default function NewCatalogPage() {
                 />
               )}
 
-              {/* ✅ カタログ専用価格欄 */}
-              {selectedProducts.length > 0 && (
-                <div style={{ marginTop: "20px" }}>
-                  <Text variant="headingSm" as="h3">
-                    カタログ専用価格
-                  </Text>
-                  <div style={{ marginTop: "10px" }}>
-                    <BlockStack gap="200">
-                      {selectedProducts.map((p) => (
-                        <Card key={p.id}>
-                          <div className="p-4">
-                            <BlockStack gap="200">
-                              <Text as="p">{p.title}</Text>
-                              <Text as="p">
-                                通常価格：{p.price ? `${p.price} 円` : "未設定"}
-                              </Text>
-                              <TextField
-                                label="カタログ専用価格（任意）"
-                                type="number"
-                                value={p.customPrice || ""}
-                                onChange={(val) => handleCustomPriceChange(p.id, val)}
-                                autoComplete="off"
-                                placeholder="例：85000"
-                              />
-                            </BlockStack>
-                          </div>
-                        </Card>
-                      ))}
-                    </BlockStack>
-                  </div>
-                </div>
-              )}
-
-              {/* リード文 */}
-              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} modules={quillModules} formats={quillFormats} />
+              {/* ✅ リード文 */}
+              <ReactQuill
+                theme="snow"
+                value={leadText}
+                onChange={setLeadText}
+                modules={quillModules}
+                formats={quillFormats}
+              />
             </BlockStack>
           </Card>
         </div>
