@@ -143,11 +143,13 @@ export default function NewCatalogPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ Catalog Listと全く同じHTML構成 */}
+      {/* ✅ Catalog List ページと全く同じ構成 */}
       <Text as="h1" variant="headingLg">
         Catalog Edit
       </Text>
-      <AdminHeader />
+      <div style={{ marginBottom: "20px" }}>
+        <AdminHeader />
+      </div>
 
       {saveSuccess && (
         <Banner tone="success" title="保存完了">
@@ -160,15 +162,15 @@ export default function NewCatalogPage() {
         </Banner>
       )}
 
+      {/* メインエリア */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "3fr 1fr",
           gap: "20px",
-          marginTop: "20px",
         }}
       >
-        {/* ✅ 左側プレビュー（枠・角丸なし） */}
+        {/* ✅ プレビュー（Cardなし） */}
         <div>
           <PreviewCatalog
             title={title}
@@ -183,15 +185,11 @@ export default function NewCatalogPage() {
           />
         </div>
 
-        {/* ✅ 右側フォーム */}
+        {/* ✅ 右フォーム */}
         <Card>
           <BlockStack gap="400">
-            <TextField
-              label="タイトル"
-              value={title}
-              onChange={setTitle}
-              autoComplete="off"
-            />
+            <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
+
             <Select
               label="列数"
               options={[
@@ -202,6 +200,7 @@ export default function NewCatalogPage() {
               value={String(columnCount)}
               onChange={(val) => setColumnCount(Number(val))}
             />
+
             <BlockStack gap="200">
               <Text as="h2" variant="headingSm">
                 作品検索
@@ -237,11 +236,7 @@ export default function NewCatalogPage() {
                     }}
                     media={
                       item.imageUrl ? (
-                        <Thumbnail
-                          source={item.imageUrl}
-                          alt={item.title}
-                          size="small"
-                        />
+                        <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
                       ) : undefined
                     }
                   >
@@ -300,9 +295,7 @@ export default function NewCatalogPage() {
                     expiresDate
                       ? `${expiresDate.getFullYear()}/${String(
                           expiresDate.getMonth() + 1
-                        ).padStart(2, "0")}/${String(
-                          expiresDate.getDate()
-                        ).padStart(2, "0")}`
+                        ).padStart(2, "0")}/${String(expiresDate.getDate()).padStart(2, "0")}`
                       : ""
                   }
                   prefix={<Icon source={CalendarIcon} />}
