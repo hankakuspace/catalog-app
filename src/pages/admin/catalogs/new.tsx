@@ -44,8 +44,12 @@ export default function NewCatalogPage() {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // ✅ Toast用の状態
   const [toastActive, setToastActive] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  const [toastContent, setToastContent] = useState("");
+  const [toastColor, setToastColor] = useState<"success" | "error">("success");
+
   const [columnCount, setColumnCount] = useState(3);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -62,8 +66,39 @@ export default function NewCatalogPage() {
     []
   );
 
+  // ✅ Toastマークアップ（色を判定して出し分け）
   const toastMarkup = toastActive ? (
-    <Toast content="保存しました" onDismiss={toggleToastActive} duration={3000} />
+    <div
+      className={
+        toastColor === "success"
+          ? "custom-toast-success"
+          : "custom-toast-error"
+      }
+    >
+      <Toast
+        content={toastContent}
+        onDismiss={toggleToastActive}
+        duration={3000}
+      />
+      <style jsx global>{`
+        .custom-toast-success .Polaris-Frame-Toast {
+          background: #36b37e !important; /* Shopify Success Green */
+          color: #fff !important;
+          font-weight: 500;
+        }
+        .custom-toast-success .Polaris-Frame-Toast__CloseButton {
+          color: #fff !important;
+        }
+        .custom-toast-error .Polaris-Frame-Toast {
+          background: #de3618 !important; /* Shopify Critical Red */
+          color: #fff !important;
+          font-weight: 500;
+        }
+        .custom-toast-error .Polaris-Frame-Toast__CloseButton {
+          color: #fff !important;
+        }
+      `}</style>
+    </div>
   ) : null;
 
   useEffect(() => {
@@ -112,16 +147,19 @@ export default function NewCatalogPage() {
 
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
-      setSaveError("タイトルと商品は必須です");
+      setToastContent("タイトルと商品は必須です");
+      setToastColor("error");
+      setToastActive(true);
       return;
     }
     if (username && !password) {
-      setSaveError("ユーザー名を入力した場合はパスワードも必須です");
+      setToastContent("ユーザー名を入力した場合はパスワードも必須です");
+      setToastColor("error");
+      setToastActive(true);
       return;
     }
 
     setSaving(true);
-    setSaveError("");
     try {
       const body = {
         id,
@@ -144,10 +182,16 @@ export default function NewCatalogPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
-      // ✅ 成功時：Toastを表示
+      // ✅ 成功時トースト
+      setToastContent("保存しました");
+      setToastColor("success");
       setToastActive(true);
     } catch (err) {
-      setSaveError(`保存に失敗しました: ${String(err)}`);
+      console.error(err);
+      // ✅ エラー時トースト
+      setToastContent("保存に失敗しました");
+      setToastColor("error");
+      setToastActive(true);
     } finally {
       setSaving(false);
     }
@@ -156,7 +200,7 @@ export default function NewCatalogPage() {
   return (
     <Frame>
       <div style={{ width: "100%", padding: "20px" }}>
-        {/* ✅ Catalog List と同じ構成 */}
+        {/* ✅ ヘッダー */}
         <div style={{ marginBottom: "40px" }}>
           <Text as="h1" variant="headingLg" fontWeight="regular">
             Catalog Edit
@@ -177,21 +221,7 @@ export default function NewCatalogPage() {
           </Button>
         </div>
 
-        {saveError && (
-          <div
-            style={{
-              background: "#fbeaea",
-              color: "#bf0711",
-              padding: "8px 12px",
-              borderRadius: "6px",
-              marginBottom: "16px",
-              fontSize: "14px",
-            }}
-          >
-            {saveError}
-          </div>
-        )}
-
+        {/* ✅ メインエリア */}
         <div
           style={{
             display: "grid",
@@ -199,7 +229,7 @@ export default function NewCatalogPage() {
             gap: "20px",
           }}
         >
-          {/* ✅ プレビュー（枠・角丸なし） */}
+          {/* 左：プレビュー */}
           <div>
             <PreviewCatalog
               title={title}
@@ -214,7 +244,7 @@ export default function NewCatalogPage() {
             />
           </div>
 
-          {/* ✅ 右：フォーム */}
+          {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
               <TextField
@@ -346,7 +376,7 @@ export default function NewCatalogPage() {
         </div>
       </div>
 
-      {/* ✅ Toast通知 */}
+      {/* ✅ 成功／失敗トースト */}
       {toastMarkup}
     </Frame>
   );
