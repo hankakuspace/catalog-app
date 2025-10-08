@@ -33,8 +33,6 @@
   position: absolute !important;
 }
 
-
-
 /* Quill ドロップダウンに表示されるラベルを正しくする */
 .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-sans"]::before,
 .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-sans"]::before {
@@ -87,4 +85,39 @@
 }
 .ql-font-hiragino-kaku-gothic {
   font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif !important;
+}
+
+/* =========================================================
+   🔧 Quillフォントサイズ別の行間最適化
+   ========================================================= */
+
+/* 全体ベース行間 */
+.ql-editor {
+  line-height: 1.8;
+}
+
+/* サイズ別に見やすく調整 */
+.ql-size-small {
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.ql-size-normal {
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.ql-size-large {
+  font-size: 1.5rem;
+  line-height: 2.2; /* ⬅ Largeの詰まり解消 */
+}
+
+.ql-size-huge {
+  font-size: 2.5rem;
+  line-height: 2.6; /* ⬅ Hugeでも重ならない */
+}
+
+/* 段落間の余白も確保 */
+.ql-editor p {
+  margin-bottom: 1em;
 }
