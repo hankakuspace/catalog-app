@@ -178,16 +178,19 @@ export default function PreviewCatalog({
                   isReorderMode={isReorderMode}
                   editable={editable}
                 >
-                  {/* ✅ 型安全: elに明示的な型を付ける */}
+                  {/* ✅ background prop削除・styleで透過指定 */}
                   <Card
                     ref={(el: HTMLDivElement | null) => {
                       cardRefs.current[index] = el;
                     }}
                     sectioned
-                    background="transparent"
+                    style={{
+                      background: "transparent",
+                      boxShadow: "none",
+                      border: "none",
+                    }}
                   >
                     <BlockStack gap="200">
-                      {/* 操作メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -232,7 +235,6 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 画像（枠なし） */}
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
@@ -242,7 +244,6 @@ export default function PreviewCatalog({
                         />
                       ) : null}
 
-                      {/* テキスト */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
