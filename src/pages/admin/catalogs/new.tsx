@@ -270,27 +270,36 @@ export default function NewCatalogPage() {
               )}
 
               {/* ✅ カタログ専用価格欄 */}
-              {selectedProducts.length > 0 && (
-                <div style={{ marginTop: "20px" }}>
-                  <Text variant="headingSm" as="h3">カタログ専用価格</Text>
-                  <BlockStack gap="200" style={{ marginTop: "10px" }}>
-                    {selectedProducts.map((p) => (
-                      <Card key={p.id} sectioned>
-                        <Text>{p.title}</Text>
-                        <Text>通常価格：{p.price ? `${p.price} 円` : "未設定"}</Text>
-                        <TextField
-                          label="カタログ専用価格（任意）"
-                          type="number"
-                          value={p.customPrice || ""}
-                          onChange={(val) => handleCustomPriceChange(p.id, val)}
-                          autoComplete="off"
-                          placeholder="例：85000"
-                        />
-                      </Card>
-                    ))}
-                  </BlockStack>
-                </div>
-              )}
+{selectedProducts.length > 0 && (
+  <div style={{ marginTop: "20px" }}>
+    <Text variant="headingSm" as="h3">
+      カタログ専用価格
+    </Text>
+
+    {/* ← ここで余白を取るために div でラップ */}
+    <div style={{ marginTop: "10px" }}>
+      <BlockStack gap="200">
+        {selectedProducts.map((p) => (
+          <Card key={p.id} sectioned>
+            <Text>{p.title}</Text>
+            <Text>
+              通常価格：{p.price ? `${p.price} 円` : "未設定"}
+            </Text>
+            <TextField
+              label="カタログ専用価格（任意）"
+              type="number"
+              value={p.customPrice || ""}
+              onChange={(val) => handleCustomPriceChange(p.id, val)}
+              autoComplete="off"
+              placeholder="例：85000"
+            />
+          </Card>
+        ))}
+      </BlockStack>
+    </div>
+  </div>
+)}
+
 
               {/* リード文 */}
               <ReactQuill theme="snow" value={leadText} onChange={setLeadText} modules={quillModules} formats={quillFormats} />
