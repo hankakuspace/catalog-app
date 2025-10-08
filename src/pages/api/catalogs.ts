@@ -6,29 +6,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // ✅ GET：一覧または個別取得
     if (req.method === "GET") {
-      let { id } = req.query;
+      // ✅ idがstring[]やundefinedで来ても安全に処理
+      const idParam = Array.isArray(req.query.id)
+        ? req.query.id[0]
+        : req.query.id ?? null;
 
-      // ✅ id が配列で渡るケースを正しく処理
-      if (Array.isArray(id)) {
-        id = id[0];
-      }
+      if (idParam) {
+        const doc = await dbAdmin
+          .collection("shopify_catalogs_app")
+          .doc(String(idParam))
+          .get();
 
-      if (id) {
-        const doc = await dbAdmin.collection("shopify_catalogs_app").doc(String(id)).get();
         if (!doc.exists) return res.status(404).json({ error: "Not found" });
+
         const data = doc.data();
         return res.status(200).json({
           catalog: {
             id: doc.id,
             ...data,
-            createdAt: data?.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
-            updatedAt: data?.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : null,
-            expiresAt: data?.expiresAt?.toDate ? data.expiresAt.toDate().toISOString() : null,
+            createdAt: data?.createdAt?.toDate
+              ? data.createdAt.toDate().toISOString()
+              : null,
+            updatedAt: data?.updatedAt?.toDate
+              ? data.updatedAt.toDate().toISOString()
+              : null,
+            expiresAt: data?.expiresAt?.toDate
+              ? data.expiresAt.toDate().toISOString()
+              : null,
           },
         });
       }
 
-      // ✅ 一覧取得
+      // ✅ 一覧取得（id指定がない場合）
       const snapshot = await dbAdmin
         .collection("shopify_catalogs_app")
         .orderBy("createdAt", "desc")
@@ -39,9 +48,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return {
           id: doc.id,
           ...data,
-          createdAt: data?.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
-          updatedAt: data?.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : null,
-          expiresAt: data?.expiresAt?.toDate ? data.expiresAt.toDate().toISOString() : null,
+          createdAt: data?.createdAt?.toDate
+            ? data.createdAt.toDate().toISOString()
+            : null,
+          updatedAt: data?.updatedAt?.toDate
+            ? data.updatedAt.toDate().toISOString()
+            : null,
+          expiresAt: data?.expiresAt?.toDate
+            ? data.expiresAt.toDate().toISOString()
+            : null,
         };
       });
 
@@ -50,7 +65,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ POST：新規作成
     if (req.method === "POST") {
-      const { title, leadText, products, shop, columnCount, passwordEnabled, username, password, expiresAt } = req.body;
+      const {
+        title,
+        leadText,
+        products,
+        shop,
+        columnCount,
+        passwordEnabled,
+        username,
+        password,
+        expiresAt,
+      } = req.body;
+
       if (!title || !products || !shop) {
         return res.status(400).json({ error: "Missing fields" });
       }
@@ -79,7 +105,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ PUT：更新
     if (req.method === "PUT") {
-      const { id, title, leadText, products, columnCount, passwordEnabled, username, password, expiresAt } = req.body;
+      const {
+        id,
+        title,
+        leadText,
+        products,
+        columnCount,
+        passwordEnabled,
+        username,
+        password,
+        expiresAt,
+      } = req.body;
+
       if (!id) return res.status(400).json({ error: "Missing id" });
 
       await dbAdmin.collection("shopify_catalogs_app").doc(id).update({
@@ -100,6 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ✅ DELETE：複数削除
     if (req.method === "DELETE") {
       const { ids } = req.body;
+
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: "Invalid request: ids required" });
       }
