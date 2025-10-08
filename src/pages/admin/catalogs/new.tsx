@@ -45,6 +45,32 @@ export default function NewCatalogPage() {
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
 
   const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
+
+  // ✅ Toast背景色を指定色で強制
+  useEffect(() => {
+    if (toastActive) {
+      const interval = setInterval(() => {
+        const toastEl = document.querySelector(
+          ".Polaris-Frame-Toast"
+        ) as HTMLElement | null;
+        if (toastEl) {
+          toastEl.style.backgroundColor =
+            toastColor === "success" ? "#36B37E" : "#DE3618"; // ✅ 緑／赤で強制
+          toastEl.style.color = "#fff";
+          toastEl.style.fontWeight = "500";
+
+          const closeBtn = toastEl.querySelector(
+            ".Polaris-Frame-Toast__CloseButton"
+          ) as HTMLElement | null;
+          if (closeBtn) closeBtn.style.color = "#fff";
+
+          clearInterval(interval);
+        }
+      }, 50);
+      setTimeout(() => clearInterval(interval), 1000);
+    }
+  }, [toastActive, toastColor]);
+
   const toastMarkup = toastActive ? (
     <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} />
   ) : null;
@@ -302,6 +328,7 @@ export default function NewCatalogPage() {
         </div>
       </div>
 
+      {/* ✅ トースト */}
       {toastMarkup}
     </Frame>
   );
