@@ -108,15 +108,12 @@ export default function PreviewCatalog({
 
   // ✅ 高さ揃え
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const maxHeightRef = useRef(0);
-
   const adjustHeights = useCallback(() => {
     if (!cardRefs.current.length) return;
     let maxH = 0;
     cardRefs.current.forEach((el) => {
       if (el) maxH = Math.max(maxH, el.offsetHeight);
     });
-    maxHeightRef.current = maxH;
     cardRefs.current.forEach((el) => {
       if (el) el.style.height = `${maxH}px`;
     });
@@ -140,13 +137,19 @@ export default function PreviewCatalog({
     }
   };
 
-  // ✅ 列数クラス切り替え
   const gridClass =
     columnCount === 2
       ? `${styles.previewGrid} ${styles["cols-2"]}`
       : columnCount === 4
       ? `${styles.previewGrid} ${styles["cols-4"]}`
       : `${styles.previewGrid} ${styles["cols-3"]}`;
+
+  // ✅ リード文のスタイルを白文字固定に加工
+  const sanitizedLead = leadText
+    ? leadText
+        .replace(/color\s*:\s*rgb\(0,\s*0,\s*0\)/gi, "color: #fff")
+        .replace(/color\s*:\s*#000/gi, "color: #fff")
+    : "";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -156,15 +159,13 @@ export default function PreviewCatalog({
           alt="AND COLLECTION"
           className="mx-auto h-12 w-auto filter invert"
         />
-        {/* ✅ タイトル削除 */}
-        {/* <h2 className="text-2xl font-medium mt-10 mb-2 text-white">
-          {title || "（タイトル未設定）"}
-        </h2> */}
-        {/* ✅ リード文のみ表示 */}
-        {leadText && (
+        {/* ✅ タイトル非表示 */}
+        {/* ✅ リード文を白文字で表示 */}
+        {sanitizedLead && (
           <div
-            className="max-w-3xl mx-auto text-center mt-10 mb-5 text-white"
-            dangerouslySetInnerHTML={{ __html: leadText }}
+            className="max-w-3xl mx-auto text-center mt-10 mb-5"
+            style={{ color: "#fff" }}
+            dangerouslySetInnerHTML={{ __html: sanitizedLead }}
           />
         )}
       </header>
