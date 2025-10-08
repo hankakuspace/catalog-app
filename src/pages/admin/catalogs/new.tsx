@@ -19,12 +19,8 @@ import {
   Thumbnail,
   Button,
   Select,
-  DatePicker,
-  Popover,
-  Icon,
   Toast,
 } from "@shopify/polaris";
-import { CalendarIcon, ViewIcon, HideIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
@@ -42,7 +38,6 @@ export default function NewCatalogPage() {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   // ✅ Toast管理
   const [toastActive, setToastActive] = useState(false);
@@ -50,7 +45,6 @@ export default function NewCatalogPage() {
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
 
   const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
-
   const toastMarkup = toastActive ? (
     <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} />
   ) : null;
@@ -59,9 +53,6 @@ export default function NewCatalogPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
-  const today = new Date();
-  const [{ month, year }, setDate] = useState({ month: today.getMonth(), year: today.getFullYear() });
-  const [datePickerActive, setDatePickerActive] = useState(false);
 
   // ✅ Quill設定
   const quillModules = {
@@ -75,7 +66,16 @@ export default function NewCatalogPage() {
     ],
   };
   const quillFormats = [
-    "font", "size", "bold", "italic", "underline", "strike", "color", "background", "align", "list",
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "color",
+    "background",
+    "align",
+    "list",
   ];
 
   // ✅ カタログ取得
@@ -97,7 +97,6 @@ export default function NewCatalogPage() {
             const d = new Date(data.catalog.expiresAt);
             d.setHours(0, 0, 0, 0);
             setExpiresDate(d);
-            setDate({ month: d.getMonth(), year: d.getFullYear() });
           }
         }
       } catch (err) {
@@ -118,12 +117,6 @@ export default function NewCatalogPage() {
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
       setToastContent("タイトルと商品は必須です");
-      setToastColor("error");
-      setToastActive(true);
-      return;
-    }
-    if (username && !password) {
-      setToastContent("ユーザー名を入力した場合はパスワードも必須です");
       setToastColor("error");
       setToastActive(true);
       return;
@@ -186,7 +179,9 @@ export default function NewCatalogPage() {
     <Frame>
       <div style={{ width: "100%", padding: "20px" }}>
         <div style={{ marginBottom: "40px" }}>
-          <Text as="h1" variant="headingLg">Catalog Edit</Text>
+          <Text as="h1" variant="headingLg">
+            Catalog Edit
+          </Text>
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
@@ -270,42 +265,37 @@ export default function NewCatalogPage() {
               )}
 
               {/* ✅ カタログ専用価格欄 */}
-{selectedProducts.length > 0 && (
-  <div style={{ marginTop: "20px" }}>
-    <Text variant="headingSm" as="h3">
-      カタログ専用価格
-    </Text>
-    <div style={{ marginTop: "10px" }}>
-      <BlockStack gap="200">
-        {selectedProducts.map((p) => (
-          <Card key={p.id}>
-            <div style={{ padding: "16px" }}>
-              <BlockStack gap="200">
-                <Text as="p">{p.title}</Text>
-                <Text as="p">
-                  通常価格：{p.price ? `${p.price} 円` : "未設定"}
-                </Text>
-                <TextField
-                  label="カタログ専用価格（任意）"
-                  type="number"
-                  value={p.customPrice || ""}
-                  onChange={(val) => handleCustomPriceChange(p.id, val)}
-                  autoComplete="off"
-                  placeholder="例：85000"
-                />
-              </BlockStack>
-            </div>
-          </Card>
-        ))}
-      </BlockStack>
-    </div>
-  </div>
-)}
-
-
-
-
-
+              {selectedProducts.length > 0 && (
+                <div style={{ marginTop: "20px" }}>
+                  <Text variant="headingSm" as="h3">
+                    カタログ専用価格
+                  </Text>
+                  <div style={{ marginTop: "10px" }}>
+                    <BlockStack gap="200">
+                      {selectedProducts.map((p) => (
+                        <Card key={p.id}>
+                          <div className="p-4">
+                            <BlockStack gap="200">
+                              <Text as="p">{p.title}</Text>
+                              <Text as="p">
+                                通常価格：{p.price ? `${p.price} 円` : "未設定"}
+                              </Text>
+                              <TextField
+                                label="カタログ専用価格（任意）"
+                                type="number"
+                                value={p.customPrice || ""}
+                                onChange={(val) => handleCustomPriceChange(p.id, val)}
+                                autoComplete="off"
+                                placeholder="例：85000"
+                              />
+                            </BlockStack>
+                          </div>
+                        </Card>
+                      ))}
+                    </BlockStack>
+                  </div>
+                </div>
+              )}
 
               {/* リード文 */}
               <ReactQuill theme="snow" value={leadText} onChange={setLeadText} modules={quillModules} formats={quillFormats} />
