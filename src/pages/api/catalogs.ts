@@ -6,7 +6,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // ✅ GET：一覧または個別取得
     if (req.method === "GET") {
-      // ✅ idがstring[]やundefinedで来ても安全に処理
       const idParam = Array.isArray(req.query.id)
         ? req.query.id[0]
         : req.query.id ?? null;
@@ -37,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      // ✅ 一覧取得（id指定がない場合）
+      // ✅ 一覧取得
       const snapshot = await dbAdmin
         .collection("shopify_catalogs_app")
         .orderBy("createdAt", "desc")
@@ -67,6 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "POST") {
       const {
         title,
+        label, // ← ★追加
         leadText,
         products,
         shop,
@@ -86,8 +86,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!baseUrl) throw new Error("SHOPIFY_APP_URL is not defined");
 
       const previewUrl = `${baseUrl}/preview/${docRef.id}`;
+
       await docRef.set({
         title,
+        label: label || "", // ← ★Firestoreに保存
         leadText: leadText || "",
         products,
         shop,
@@ -108,6 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const {
         id,
         title,
+        label, // ← ★追加
         leadText,
         products,
         columnCount,
@@ -121,6 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       await dbAdmin.collection("shopify_catalogs_app").doc(id).update({
         title,
+        label: label || "", // ← ★Firestoreに保存
         leadText: leadText || "",
         products,
         columnCount: columnCount || 3,
@@ -152,7 +156,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ success: true, deletedCount: ids.length });
     }
 
-    // ✅ その他メソッド
     return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
     console.error("❌ API error:", err);
