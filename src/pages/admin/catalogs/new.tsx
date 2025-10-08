@@ -143,17 +143,12 @@ export default function NewCatalogPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ タイトルとナビ配置（一覧と同じ構成） */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <Text as="h1" variant="headingLg">
-            {id ? "カタログ編集" : "新規カタログ作成"}
-          </Text>
-          <Text as="p" tone="subdued">
-            {id ? "Catalog Edit" : "New Catalog"}
-          </Text>
-        </div>
-        {/* 一覧ページと同じヘッダー配置 */}
+      {/* ✅ 一覧ページと同じヘッダー構成に統一 */}
+      <div style={{ marginBottom: "16px" }}>
+        <Text as="h1" variant="headingLg">
+          Catalog Edit
+        </Text>
+        {/* 左寄せで Catalog List / New Record を配置 */}
         <AdminHeader />
       </div>
 
