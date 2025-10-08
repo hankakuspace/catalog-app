@@ -1,6 +1,6 @@
 // src/components/PreviewCatalog.tsx
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -17,7 +17,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  Card,
   BlockStack,
   Text,
   Popover,
@@ -49,37 +48,29 @@ interface Props {
   columnCount?: number;
 }
 
+// ✅ DnD個別要素
 function SortableItem({
   id,
-  isReorderMode,
   editable,
+  isReorderMode,
   children,
 }: {
   id: string;
-  isReorderMode: boolean;
   editable: boolean;
+  isReorderMode: boolean;
   children: React.ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+  const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    height: "100%",
+    cursor: editable ? "grab" : "default",
   };
 
-  const shakeClass =
-    editable && (isReorderMode || isDragging) ? styles.shakeWrapper : "";
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...(editable ? attributes : {})}
-      {...(editable ? listeners : {})}
-      className={shakeClass}
-    >
+    <div ref={setNodeRef} style={style} {...(editable ? { ...attributes, ...listeners } : {})}>
       {children}
     </div>
   );
@@ -99,26 +90,6 @@ export default function PreviewCatalog({
   );
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
-
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const adjustHeights = useCallback(() => {
-    if (!cardRefs.current.length) return;
-    let maxH = 0;
-    cardRefs.current.forEach((el) => {
-      if (el) maxH = Math.max(maxH, el.offsetHeight);
-    });
-    cardRefs.current.forEach((el) => {
-      if (el) el.style.height = `${maxH}px`;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (products.length > 0) {
-      adjustHeights();
-      window.addEventListener("resize", adjustHeights);
-      return () => window.removeEventListener("resize", adjustHeights);
-    }
-  }, [products, adjustHeights]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!editable || !onReorder) return;
@@ -145,6 +116,7 @@ export default function PreviewCatalog({
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* ヘッダー */}
       <header className="text-center py-8 border-b border-gray-700">
         <img
           src="/andcollection.svg"
@@ -160,6 +132,7 @@ export default function PreviewCatalog({
         )}
       </header>
 
+      {/* メイン */}
       <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
         <DndContext
           sensors={sensors}
@@ -171,96 +144,79 @@ export default function PreviewCatalog({
             strategy={rectSortingStrategy}
           >
             <div className={gridClass}>
-              {products.map((item, index) => (
+              {products.map((item) => (
                 <SortableItem
                   key={item.id}
                   id={item.id}
-                  isReorderMode={isReorderMode}
                   editable={editable}
+                  isReorderMode={isReorderMode}
                 >
-                  {/* ✅ Polaris Cardをラップdivで透過スタイル */}
-                  <div
-                    style={{
-                      background: "transparent",
-                      boxShadow: "none",
-                      border: "none",
-                    }}
-                  >
-                    <Card>
-                      <div
-                        ref={(el: HTMLDivElement | null) => {
-                          cardRefs.current[index] = el;
-                        }}
-                      >
-                        <BlockStack gap="200">
-                          {editable && (
-                            <div className="flex justify-end mb-2">
-                              <Popover
-                                active={activePopoverId === item.id}
-                                activator={
-                                  <Button
-                                    variant="plain"
-                                    icon={MenuHorizontalIcon}
-                                    onClick={() =>
-                                      setActivePopoverId(
-                                        activePopoverId === item.id
-                                          ? null
-                                          : item.id
-                                      )
-                                    }
-                                  />
+                  <div className="bg-transparent">
+                    <BlockStack gap="200">
+                      {/* 編集時メニュー */}
+                      {editable && (
+                        <div className="flex justify-end mb-2">
+                          <Popover
+                            active={activePopoverId === item.id}
+                            activator={
+                              <Button
+                                variant="plain"
+                                icon={MenuHorizontalIcon}
+                                onClick={() =>
+                                  setActivePopoverId(
+                                    activePopoverId === item.id
+                                      ? null
+                                      : item.id
+                                  )
                                 }
-                                onClose={() => setActivePopoverId(null)}
-                              >
-                                <ActionList
-                                  items={[
-                                    {
-                                      content: isReorderMode
-                                        ? "Finish move"
-                                        : "Move item",
-                                      onAction: () => {
-                                        setIsReorderMode(!isReorderMode);
-                                        setActivePopoverId(null);
-                                      },
-                                    },
-                                    {
-                                      destructive: true,
-                                      content: "Remove",
-                                      onAction: () => {
-                                        if (onRemove) onRemove(item.id);
-                                        setActivePopoverId(null);
-                                      },
-                                    },
-                                  ]}
-                                />
-                              </Popover>
-                            </div>
-                          )}
-
-                          {item.imageUrl ? (
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title}
-                              className="block w-full h-auto object-contain"
-                              onLoad={adjustHeights}
+                              />
+                            }
+                            onClose={() => setActivePopoverId(null)}
+                          >
+                            <ActionList
+                              items={[
+                                {
+                                  content: isReorderMode
+                                    ? "Finish move"
+                                    : "Move item",
+                                  onAction: () => {
+                                    setIsReorderMode(!isReorderMode);
+                                    setActivePopoverId(null);
+                                  },
+                                },
+                                {
+                                  destructive: true,
+                                  content: "Remove",
+                                  onAction: () => {
+                                    if (onRemove) onRemove(item.id);
+                                    setActivePopoverId(null);
+                                  },
+                                },
+                              ]}
                             />
-                          ) : null}
+                          </Popover>
+                        </div>
+                      )}
 
-                          <div className="text-white mt-2 px-2">
-                            {item.artist && <Text as="p">{item.artist}</Text>}
-                            {item.title && <Text as="p">{item.title}</Text>}
-                            {item.year && <Text as="p">{item.year}</Text>}
-                            {item.dimensions && (
-                              <Text as="p">{item.dimensions}</Text>
-                            )}
-                            {item.medium && <Text as="p">{item.medium}</Text>}
-                            {item.price && (
-                              <Text as="p">{item.price} 円（税込）</Text>
-                            )}
-                          </div>
-                        </BlockStack>
+                      {/* 画像本体 */}
+                      {item.imageUrl && (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="block w-full object-contain"
+                        />
+                      )}
+
+                      {/* 情報テキスト */}
+                      <div className="text-white mt-2 px-2">
+                        {item.artist && <Text as="p">{item.artist}</Text>}
+                        {item.title && <Text as="p">{item.title}</Text>}
+                        {item.year && <Text as="p">{item.year}</Text>}
+                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                        {item.medium && <Text as="p">{item.medium}</Text>}
+                        {item.price && <Text as="p">{item.price} 円（税込）</Text>}
                       </div>
-                    </Card>
+                    </BlockStack>
                   </div>
                 </SortableItem>
               ))}
@@ -269,6 +225,7 @@ export default function PreviewCatalog({
         </DndContext>
       </main>
 
+      {/* フッター */}
       <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
         Copyright © 2025 Clue Co.,Ltd. all rights reserved.
       </footer>
