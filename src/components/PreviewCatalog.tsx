@@ -132,6 +132,14 @@ export default function PreviewCatalog({
         .replace(/color\s*:\s*#000/gi, "color: #fff")
     : "";
 
+  // ✅ Shopify商品編集ページを新規タブで開く関数
+  const openShopifyEditPage = (productId: string) => {
+    if (!productId) return;
+    const numericId = productId.replace("gid://shopify/Product/", "");
+    const editUrl = `https://admin.shopify.com/store/catalog-app-dev-2/products/${numericId}`;
+    window.open(editUrl, "_blank");
+  };
+
   return (
     <>
       {/* アニメーション定義 */}
@@ -196,6 +204,14 @@ export default function PreviewCatalog({
                           >
                             <ActionList
                               items={[
+                                // ✅ 新規追加
+                                {
+                                  content: "Edit This Item",
+                                  onAction: () => {
+                                    openShopifyEditPage(item.id);
+                                    setActivePopoverId(null);
+                                  },
+                                },
                                 {
                                   content: isReorderMode
                                     ? "Finish move"
