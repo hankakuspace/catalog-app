@@ -30,6 +30,7 @@ export interface Product {
   id: string;
   title: string;
   price?: string;
+  customPrice?: string;  // ✅ これを追加！
   imageUrl?: string;
   artist?: string;
   year?: string;
@@ -37,6 +38,7 @@ export interface Product {
   medium?: string;
   frame?: string;
 }
+
 
 interface Props {
   title: string;
@@ -192,6 +194,7 @@ export default function PreviewCatalog({
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
+                          　className="preview-catalog-popover"
                             active={activePopoverId === item.id}
                             activator={
                               <Button
