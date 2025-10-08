@@ -5,11 +5,12 @@ export const config = {
   runtime: "experimental-edge",
 };
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
 import {
+  Frame,
   BlockStack,
   Text,
   TextField,
@@ -19,12 +20,12 @@ import {
   Spinner,
   Thumbnail,
   Button,
-  Banner,
   Select,
   DatePicker,
   Popover,
   InlineStack,
   Icon,
+  Toast,
 } from "@shopify/polaris";
 import { CalendarIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
@@ -43,7 +44,7 @@ export default function NewCatalogPage() {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [toastActive, setToastActive] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [columnCount, setColumnCount] = useState(3);
   const [username, setUsername] = useState("");
@@ -55,6 +56,15 @@ export default function NewCatalogPage() {
     year: today.getFullYear(),
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
+
+  const toggleToastActive = useCallback(
+    () => setToastActive((active) => !active),
+    []
+  );
+
+  const toastMarkup = toastActive ? (
+    <Toast content="保存しました" onDismiss={toggleToastActive} duration={3000} />
+  ) : null;
 
   useEffect(() => {
     if (!id) return;
@@ -133,7 +143,9 @@ export default function NewCatalogPage() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
-      setSaveSuccess(true);
+
+      // ✅ 成功時：Toastを表示
+      setToastActive(true);
     } catch (err) {
       setSaveError(`保存に失敗しました: ${String(err)}`);
     } finally {
@@ -142,179 +154,200 @@ export default function NewCatalogPage() {
   };
 
   return (
-    <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ Catalog List と同じ構成・余白 */}
-      <div style={{ marginBottom: "40px" }}>
-        <Text as="h1" variant="headingLg" fontWeight="regular">
-          Catalog Edit
-        </Text>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <AdminHeader />
-        <Button variant="primary" onClick={handleSave} loading={saving}>
-          {id ? "Update Record" : "New Record"}
-        </Button>
-      </div>
-
-      {saveSuccess && (
-        <Banner tone="success" title="保存完了">
-          カタログを保存しました。
-        </Banner>
-      )}
-      {saveError && (
-        <Banner tone="critical" title="エラー">
-          {saveError}
-        </Banner>
-      )}
-
-      {/* ✅ メインエリア */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "3fr 1fr",
-          gap: "20px",
-        }}
-      >
-        {/* 左：プレビュー（枠・角丸なし） */}
-        <div>
-          <PreviewCatalog
-            title={title}
-            leadText={leadText}
-            products={selectedProducts}
-            editable
-            onReorder={setSelectedProducts}
-            onRemove={(id) =>
-              setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
-            }
-            columnCount={columnCount}
-          />
+    <Frame>
+      <div style={{ width: "100%", padding: "20px" }}>
+        {/* ✅ Catalog List と同じ構成 */}
+        <div style={{ marginBottom: "40px" }}>
+          <Text as="h1" variant="headingLg" fontWeight="regular">
+            Catalog Edit
+          </Text>
         </div>
 
-        {/* 右：フォーム */}
-        <Card>
-          <BlockStack gap="400">
-            <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
+          <AdminHeader />
+          <Button variant="primary" onClick={handleSave} loading={saving}>
+            {id ? "Update Record" : "New Record"}
+          </Button>
+        </div>
 
-            <Select
-              label="列数"
-              options={[
-                { label: "2列", value: "2" },
-                { label: "3列", value: "3" },
-                { label: "4列", value: "4" },
-              ]}
-              value={String(columnCount)}
-              onChange={(val) => setColumnCount(Number(val))}
+        {saveError && (
+          <div
+            style={{
+              background: "#fbeaea",
+              color: "#bf0711",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              marginBottom: "16px",
+              fontSize: "14px",
+            }}
+          >
+            {saveError}
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "3fr 1fr",
+            gap: "20px",
+          }}
+        >
+          {/* ✅ プレビュー（枠・角丸なし） */}
+          <div>
+            <PreviewCatalog
+              title={title}
+              leadText={leadText}
+              products={selectedProducts}
+              editable
+              onReorder={setSelectedProducts}
+              onRemove={(id) =>
+                setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
+              }
+              columnCount={columnCount}
             />
+          </div>
 
-            <BlockStack gap="200">
+          {/* ✅ 右：フォーム */}
+          <Card>
+            <BlockStack gap="400">
               <TextField
-                label="検索キーワード"
-                value={searchQuery}
-                onChange={(value) => {
-                  setSearchQuery(value);
-                  if (value.trim() !== "") handleSearch(value);
-                  else setSearchResults([]);
-                }}
-                autoComplete="off"
-                placeholder="作家名・作品タイトルで検索"
-              />
-            </BlockStack>
-
-            {loading ? (
-              <Spinner accessibilityLabel="検索中" size="large" />
-            ) : (
-              <ResourceList
-                resourceName={{ singular: "product", plural: "products" }}
-                items={searchResults}
-                renderItem={(item) => (
-                  <ResourceItem
-                    id={item.id}
-                    accessibilityLabel={`${item.title} を追加`}
-                    onClick={() => {
-                      if (!selectedProducts.find((p) => p.id === item.id)) {
-                        setSelectedProducts([...selectedProducts, item]);
-                      }
-                    }}
-                    media={
-                      item.imageUrl ? (
-                        <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
-                      ) : undefined
-                    }
-                  >
-                    {item.artist ? `${item.artist}, ` : ""}
-                    {item.title}
-                  </ResourceItem>
-                )}
-              />
-            )}
-
-            <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
-
-            <InlineStack gap="200" blockAlign="center">
-              <TextField
-                label="ユーザー名"
-                placeholder="ユーザー名"
-                value={username}
-                onChange={setUsername}
+                label="タイトル"
+                value={title}
+                onChange={setTitle}
                 autoComplete="off"
               />
-              <TextField
-                label="パスワード"
-                placeholder="パスワード"
-                type="password"
-                value={password}
-                onChange={setPassword}
-                autoComplete="off"
-              />
-            </InlineStack>
 
-            <Popover
-              active={datePickerActive}
-              activator={
+              <Select
+                label="列数"
+                options={[
+                  { label: "2列", value: "2" },
+                  { label: "3列", value: "3" },
+                  { label: "4列", value: "4" },
+                ]}
+                value={String(columnCount)}
+                onChange={(val) => setColumnCount(Number(val))}
+              />
+
+              <BlockStack gap="200">
                 <TextField
-                  label="有効期限"
-                  value={
-                    expiresDate
-                      ? `${expiresDate.getFullYear()}/${String(
-                          expiresDate.getMonth() + 1
-                        ).padStart(2, "0")}/${String(
-                          expiresDate.getDate()
-                        ).padStart(2, "0")}`
-                      : ""
-                  }
-                  prefix={<Icon source={CalendarIcon} />}
-                  placeholder="yyyy/mm/dd"
-                  onFocus={() => setDatePickerActive(true)}
-                  onChange={() => {}}
+                  label="検索キーワード"
+                  value={searchQuery}
+                  onChange={(value) => {
+                    setSearchQuery(value);
+                    if (value.trim() !== "") handleSearch(value);
+                    else setSearchResults([]);
+                  }}
+                  autoComplete="off"
+                  placeholder="作家名・作品タイトルで検索"
+                />
+              </BlockStack>
+
+              {loading ? (
+                <Spinner accessibilityLabel="検索中" size="large" />
+              ) : (
+                <ResourceList
+                  resourceName={{ singular: "product", plural: "products" }}
+                  items={searchResults}
+                  renderItem={(item) => (
+                    <ResourceItem
+                      id={item.id}
+                      accessibilityLabel={`${item.title} を追加`}
+                      onClick={() => {
+                        if (!selectedProducts.find((p) => p.id === item.id)) {
+                          setSelectedProducts([...selectedProducts, item]);
+                        }
+                      }}
+                      media={
+                        item.imageUrl ? (
+                          <Thumbnail
+                            source={item.imageUrl}
+                            alt={item.title}
+                            size="small"
+                          />
+                        ) : undefined
+                      }
+                    >
+                      {item.artist ? `${item.artist}, ` : ""}
+                      {item.title}
+                    </ResourceItem>
+                  )}
+                />
+              )}
+
+              <ReactQuill
+                theme="snow"
+                value={leadText}
+                onChange={setLeadText}
+              />
+
+              <InlineStack gap="200" blockAlign="center">
+                <TextField
+                  label="ユーザー名"
+                  placeholder="ユーザー名"
+                  value={username}
+                  onChange={setUsername}
                   autoComplete="off"
                 />
-              }
-              onClose={() => setDatePickerActive(false)}
-            >
-              <DatePicker
-                month={month}
-                year={year}
-                onChange={({ start }) => {
-                  const d = new Date(start);
-                  d.setHours(0, 0, 0, 0);
-                  setExpiresDate(d);
-                  setDate({ month: d.getMonth(), year: d.getFullYear() });
-                  setDatePickerActive(false);
-                }}
-                selected={expiresDate || new Date()}
-              />
-            </Popover>
-          </BlockStack>
-        </Card>
+                <TextField
+                  label="パスワード"
+                  placeholder="パスワード"
+                  type="password"
+                  value={password}
+                  onChange={setPassword}
+                  autoComplete="off"
+                />
+              </InlineStack>
+
+              <Popover
+                active={datePickerActive}
+                activator={
+                  <TextField
+                    label="有効期限"
+                    value={
+                      expiresDate
+                        ? `${expiresDate.getFullYear()}/${String(
+                            expiresDate.getMonth() + 1
+                          ).padStart(2, "0")}/${String(
+                            expiresDate.getDate()
+                          ).padStart(2, "0")}`
+                        : ""
+                    }
+                    prefix={<Icon source={CalendarIcon} />}
+                    placeholder="yyyy/mm/dd"
+                    onFocus={() => setDatePickerActive(true)}
+                    onChange={() => {}}
+                    autoComplete="off"
+                  />
+                }
+                onClose={() => setDatePickerActive(false)}
+              >
+                <DatePicker
+                  month={month}
+                  year={year}
+                  onChange={({ start }) => {
+                    const d = new Date(start);
+                    d.setHours(0, 0, 0, 0);
+                    setExpiresDate(d);
+                    setDate({ month: d.getMonth(), year: d.getFullYear() });
+                    setDatePickerActive(false);
+                  }}
+                  selected={expiresDate || new Date()}
+                />
+              </Popover>
+            </BlockStack>
+          </Card>
+        </div>
       </div>
-    </div>
+
+      {/* ✅ Toast通知 */}
+      {toastMarkup}
+    </Frame>
   );
 }
