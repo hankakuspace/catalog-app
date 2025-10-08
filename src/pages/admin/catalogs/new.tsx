@@ -143,7 +143,7 @@ export default function NewCatalogPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ Catalog List と完全同じ構成 */}
+      {/* ✅ Catalog Listと全く同じHTML構成 */}
       <Text as="h1" variant="headingLg">
         Catalog Edit
       </Text>
@@ -168,7 +168,7 @@ export default function NewCatalogPage() {
           marginTop: "20px",
         }}
       >
-        {/* ✅ プレビュー側：Card削除・黒背景のみ */}
+        {/* ✅ 左側プレビュー（枠・角丸なし） */}
         <div>
           <PreviewCatalog
             title={title}
@@ -183,7 +183,7 @@ export default function NewCatalogPage() {
           />
         </div>
 
-        {/* 右側フォーム */}
+        {/* ✅ 右側フォーム */}
         <Card>
           <BlockStack gap="400">
             <TextField
@@ -192,7 +192,6 @@ export default function NewCatalogPage() {
               onChange={setTitle}
               autoComplete="off"
             />
-
             <Select
               label="列数"
               options={[
@@ -203,7 +202,6 @@ export default function NewCatalogPage() {
               value={String(columnCount)}
               onChange={(val) => setColumnCount(Number(val))}
             />
-
             <BlockStack gap="200">
               <Text as="h2" variant="headingSm">
                 作品検索
