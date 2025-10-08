@@ -1,7 +1,6 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-// ✅ edge ではなく experimental-edge を指定
 export const config = {
   runtime: "experimental-edge",
 };
@@ -57,10 +56,8 @@ export default function NewCatalogPage() {
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
 
-  // ✅ 編集モードでデータ読込（router.isReadyを削除）
   useEffect(() => {
-    if (!id) return; // idが存在する時点でfetch実行
-
+    if (!id) return;
     const fetchCatalog = async () => {
       try {
         const res = await fetch(`/api/catalogs?id=${id}`);
@@ -83,9 +80,8 @@ export default function NewCatalogPage() {
         console.error("カタログ取得エラー:", err);
       }
     };
-
     fetchCatalog();
-  }, [id]); // router.isReadyを依存から除外
+  }, [id]);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -137,7 +133,6 @@ export default function NewCatalogPage() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
-
       setSaveSuccess(true);
     } catch (err) {
       setSaveError(`保存に失敗しました: ${String(err)}`);
@@ -148,12 +143,19 @@ export default function NewCatalogPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      <Text as="h1" variant="headingLg">
-        {id ? "カタログ編集" : "新規カタログ作成"}
-      </Text>
-
-      {/* ✅ タイトル下メニュー */}
-      <AdminHeader />
+      {/* ✅ タイトルとナビ配置（一覧と同じ構成） */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <Text as="h1" variant="headingLg">
+            {id ? "カタログ編集" : "新規カタログ作成"}
+          </Text>
+          <Text as="p" tone="subdued">
+            {id ? "Catalog Edit" : "New Catalog"}
+          </Text>
+        </div>
+        {/* 一覧ページと同じヘッダー配置 */}
+        <AdminHeader />
+      </div>
 
       {saveSuccess && (
         <Banner tone="success" title="保存完了">
