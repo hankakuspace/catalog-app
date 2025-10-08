@@ -279,11 +279,10 @@ export default function NewCatalogPage() {
       <BlockStack gap="200">
         {selectedProducts.map((p) => (
           <Card key={p.id}>
-            {/* ✅ Polaris v13: BlockStack に padding はないため div で内側余白を付与 */}
             <div style={{ padding: "16px" }}>
               <BlockStack gap="200">
-                <Text>{p.title}</Text>
-                <Text>
+                <Text as="p">{p.title}</Text>
+                <Text as="p">
                   通常価格：{p.price ? `${p.price} 円` : "未設定"}
                 </Text>
                 <TextField
@@ -302,6 +301,7 @@ export default function NewCatalogPage() {
     </div>
   </div>
 )}
+
 
 
 
