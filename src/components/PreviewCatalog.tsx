@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  Card,
   BlockStack,
   Text,
   Popover,
@@ -160,28 +161,34 @@ export default function PreviewCatalog({
       </header>
 
       <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-        {editable ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={products.map((p) => p.id)}
+            strategy={rectSortingStrategy}
           >
-            <SortableContext
-              items={products.map((p) => p.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className={gridClass}>
-                {products.map((item, index) => (
-                  <SortableItem
-                    key={item.id}
-                    id={item.id}
-                    isReorderMode={isReorderMode}
-                    editable={editable}
+            <div className={gridClass}>
+              {products.map((item, index) => (
+                <SortableItem
+                  key={item.id}
+                  id={item.id}
+                  isReorderMode={isReorderMode}
+                  editable={editable}
+                >
+                  {/* ✅ CardをDnD安定用に復活（透過） */}
+                  <Card
+                    ref={(el) => {
+                      cardRefs.current[index] = el;
+                    }}
+                    sectioned
+                    background="transparent"
                   >
-                    {/* ✅ ref修正：return値なし関数 */}
-                    <div ref={(el) => { cardRefs.current[index] = el; }}>
-                      <BlockStack gap="200">
-                        {/* 操作メニュー */}
+                    <BlockStack gap="200">
+                      {/* 操作メニュー（編集モードのみ） */}
+                      {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
                             active={activePopoverId === item.id}
@@ -223,60 +230,34 @@ export default function PreviewCatalog({
                             />
                           </Popover>
                         </div>
+                      )}
 
-                        {/* ✅ 背景・枠削除済み */}
-                        {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title}
-                            className="block w-full h-auto object-contain"
-                            onLoad={adjustHeights}
-                          />
-                        ) : null}
+                      {/* ✅ 純粋な画像（枠なし） */}
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="block w-full h-auto object-contain"
+                          onLoad={adjustHeights}
+                        />
+                      ) : null}
 
-                        <div className="text-white mt-2 px-2">
-                          {item.artist && <Text as="p">{item.artist}</Text>}
-                          {item.title && <Text as="p">{item.title}</Text>}
-                          {item.year && <Text as="p">{item.year}</Text>}
-                          {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                          {item.medium && <Text as="p">{item.medium}</Text>}
-                          {item.price && <Text as="p">{item.price} 円（税込）</Text>}
-                        </div>
-                      </BlockStack>
-                    </div>
-                  </SortableItem>
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        ) : (
-          <div className={gridClass}>
-            {products.map((item, index) => (
-              /* ✅ ref修正 */
-              <div key={item.id} ref={(el) => { cardRefs.current[index] = el; }}>
-                <BlockStack gap="200">
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="block w-full h-auto object-contain"
-                      onLoad={adjustHeights}
-                    />
-                  ) : null}
-
-                  <div className="text-white mt-2 px-2">
-                    {item.artist && <Text as="p">{item.artist}</Text>}
-                    {item.title && <Text as="p">{item.title}</Text>}
-                    {item.year && <Text as="p">{item.year}</Text>}
-                    {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                    {item.medium && <Text as="p">{item.medium}</Text>}
-                    {item.price && <Text as="p">{item.price} 円（税込）</Text>}
-                  </div>
-                </BlockStack>
-              </div>
-            ))}
-          </div>
-        )}
+                      {/* ✅ テキストは白文字で */}
+                      <div className="text-white mt-2 px-2">
+                        {item.artist && <Text as="p">{item.artist}</Text>}
+                        {item.title && <Text as="p">{item.title}</Text>}
+                        {item.year && <Text as="p">{item.year}</Text>}
+                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                        {item.medium && <Text as="p">{item.medium}</Text>}
+                        {item.price && <Text as="p">{item.price} 円（税込）</Text>}
+                      </div>
+                    </BlockStack>
+                  </Card>
+                </SortableItem>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </main>
 
       <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
