@@ -48,17 +48,18 @@ interface Props {
   columnCount?: number;
 }
 
-// ✅ transformを使わないshake定義（filter/translateZでちらつき表現）
+// ✅ 内側ラッパーを揺らす安全なshakeアニメーション
 const globalShakeKeyframes = `
-@keyframes shakeSafe {
-  0% { filter: brightness(100%) blur(0); }
-  25% { filter: brightness(95%) blur(0.3px); }
-  50% { filter: brightness(100%) blur(0); }
-  75% { filter: brightness(95%) blur(0.3px); }
-  100% { filter: brightness(100%) blur(0); }
+@keyframes innerShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(1px, 0) rotate(0.4deg); }
+  50% { transform: translate(-1px, 0) rotate(-0.4deg); }
+  75% { transform: translate(1px, 0) rotate(0.4deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
 }
-.shake-safe {
-  animation: shakeSafe 0.25s infinite;
+.shake-inner {
+  animation: innerShake 0.25s infinite linear;
+  transform-origin: center center;
 }
 `;
 
@@ -80,19 +81,15 @@ function SortableItem({
     transform: CSS.Transform.toString(transform),
     transition,
     cursor: editable ? "grab" : "default",
-    zIndex: isDragging ? 100 : "auto",
+    zIndex: isDragging ? 50 : "auto",
   };
 
-  // ドラッグ中またはMoveモード中 → アニメON
+  // DnD中 or Moveモード中に shake
   const shakeActive = editable && (isDragging || isReorderMode);
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...(editable ? { ...attributes, ...listeners } : {})}
-    >
-      <div className={shakeActive ? "shake-safe" : ""}>{children}</div>
+    <div ref={setNodeRef} style={style} {...(editable ? { ...attributes, ...listeners } : {})}>
+      <div className={shakeActive ? "shake-inner" : ""}>{children}</div>
     </div>
   );
 }
@@ -137,10 +134,11 @@ export default function PreviewCatalog({
 
   return (
     <>
-      {/* shakeSafe animation注入 */}
+      {/* アニメーション定義 */}
       <style>{globalShakeKeyframes}</style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
+        {/* ヘッダー */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -156,6 +154,7 @@ export default function PreviewCatalog({
           )}
         </header>
 
+        {/* メイン */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext
             sensors={sensors}
@@ -175,7 +174,7 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-                      {/* メニュー */}
+                      {/* 編集メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -220,7 +219,7 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 画像本体（DnD中もshakeSafe適用） */}
+                      {/* 画像 */}
                       {item.imageUrl && (
                         <img
                           src={item.imageUrl}
@@ -229,6 +228,7 @@ export default function PreviewCatalog({
                         />
                       )}
 
+                      {/* テキスト */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
