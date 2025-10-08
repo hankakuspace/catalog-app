@@ -178,7 +178,8 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                     editable={editable}
                   >
-                    <div ref={(el) => (cardRefs.current[index] = el)}>
+                    {/* ✅ ref修正：return値なし関数 */}
+                    <div ref={(el) => { cardRefs.current[index] = el; }}>
                       <BlockStack gap="200">
                         {/* 操作メニュー */}
                         <div className="flex justify-end mb-2">
@@ -223,7 +224,7 @@ export default function PreviewCatalog({
                           </Popover>
                         </div>
 
-                        {/* ✅ 画像のみ（背景・枠削除） */}
+                        {/* ✅ 背景・枠削除済み */}
                         {item.imageUrl ? (
                           <img
                             src={item.imageUrl}
@@ -233,7 +234,6 @@ export default function PreviewCatalog({
                           />
                         ) : null}
 
-                        {/* 情報表示 */}
                         <div className="text-white mt-2 px-2">
                           {item.artist && <Text as="p">{item.artist}</Text>}
                           {item.title && <Text as="p">{item.title}</Text>}
@@ -252,7 +252,8 @@ export default function PreviewCatalog({
         ) : (
           <div className={gridClass}>
             {products.map((item, index) => (
-              <div key={item.id} ref={(el) => (cardRefs.current[index] = el)}>
+              /* ✅ ref修正 */
+              <div key={item.id} ref={(el) => { cardRefs.current[index] = el; }}>
                 <BlockStack gap="200">
                   {item.imageUrl ? (
                     <img
