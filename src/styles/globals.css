@@ -121,3 +121,11 @@
 .ql-editor p {
   margin-bottom: 1em;
 }
+
+/* =========================================================
+   Shopify Polaris ActionList（移動・編集・削除メニュー）横幅調整
+   ========================================================= */
+.Polaris-Popover__Content {
+  min-width: 200px !important; /* デフォルト160px → 広めに調整 */
+  max-width: 240px !important; /* 画面に収まる程度に制限 */
+}
