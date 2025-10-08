@@ -6,7 +6,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // ✅ GET：一覧または個別取得
     if (req.method === "GET") {
-      const { id } = req.query;
+      let { id } = req.query;
+
+      // ✅ id が配列で渡るケースを正しく処理
+      if (Array.isArray(id)) {
+        id = id[0];
+      }
+
       if (id) {
         const doc = await dbAdmin.collection("shopify_catalogs_app").doc(String(id)).get();
         if (!doc.exists) return res.status(404).json({ error: "Not found" });
@@ -22,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
+      // ✅ 一覧取得
       const snapshot = await dbAdmin
         .collection("shopify_catalogs_app")
         .orderBy("createdAt", "desc")
@@ -90,27 +97,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ id });
     }
 
-    // ✅ DELETE：複数削除（復活）
+    // ✅ DELETE：複数削除
     if (req.method === "DELETE") {
       const { ids } = req.body;
-
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: "Invalid request: ids required" });
       }
 
-      try {
-        const batch = dbAdmin.batch();
-        ids.forEach((id: string) => {
-          const ref = dbAdmin.collection("shopify_catalogs_app").doc(id);
-          batch.delete(ref);
-        });
-        await batch.commit();
+      const batch = dbAdmin.batch();
+      ids.forEach((id: string) => {
+        const ref = dbAdmin.collection("shopify_catalogs_app").doc(id);
+        batch.delete(ref);
+      });
+      await batch.commit();
 
-        return res.status(200).json({ success: true, deletedCount: ids.length });
-      } catch (error) {
-        console.error("DELETE error:", error);
-        return res.status(500).json({ error: "Failed to delete catalogs" });
-      }
+      return res.status(200).json({ success: true, deletedCount: ids.length });
     }
 
     // ✅ その他メソッド
