@@ -279,27 +279,30 @@ export default function NewCatalogPage() {
       <BlockStack gap="200">
         {selectedProducts.map((p) => (
           <Card key={p.id}>
-            {/* ✅ Polaris13ではSection削除。代わりに内側をBlockStackで整列 */}
-            <BlockStack gap="200" padding="400">
-              <Text>{p.title}</Text>
-              <Text>
-                通常価格：{p.price ? `${p.price} 円` : "未設定"}
-              </Text>
-              <TextField
-                label="カタログ専用価格（任意）"
-                type="number"
-                value={p.customPrice || ""}
-                onChange={(val) => handleCustomPriceChange(p.id, val)}
-                autoComplete="off"
-                placeholder="例：85000"
-              />
-            </BlockStack>
+            {/* ✅ Polaris v13: BlockStack に padding はないため div で内側余白を付与 */}
+            <div style={{ padding: "16px" }}>
+              <BlockStack gap="200">
+                <Text>{p.title}</Text>
+                <Text>
+                  通常価格：{p.price ? `${p.price} 円` : "未設定"}
+                </Text>
+                <TextField
+                  label="カタログ専用価格（任意）"
+                  type="number"
+                  value={p.customPrice || ""}
+                  onChange={(val) => handleCustomPriceChange(p.id, val)}
+                  autoComplete="off"
+                  placeholder="例：85000"
+                />
+              </BlockStack>
+            </div>
           </Card>
         ))}
       </BlockStack>
     </div>
   </div>
 )}
+
 
 
 
