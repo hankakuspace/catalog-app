@@ -19,8 +19,12 @@ import {
   Thumbnail,
   Button,
   Select,
+  DatePicker,
+  Popover,
+  Icon,
   Toast,
 } from "@shopify/polaris";
+import { CalendarIcon, ViewIcon, HideIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
@@ -38,6 +42,7 @@ export default function NewCatalogPage() {
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // ✅ Toast管理
   const [toastActive, setToastActive] = useState(false);
@@ -46,24 +51,18 @@ export default function NewCatalogPage() {
 
   const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
 
-  // ✅ Toast背景色を指定色で強制
+  // ✅ Toast背景色カスタム（緑／赤固定）
   useEffect(() => {
     if (toastActive) {
       const interval = setInterval(() => {
-        const toastEl = document.querySelector(
-          ".Polaris-Frame-Toast"
-        ) as HTMLElement | null;
+        const toastEl = document.querySelector(".Polaris-Frame-Toast") as HTMLElement | null;
         if (toastEl) {
           toastEl.style.backgroundColor =
-            toastColor === "success" ? "#36B37E" : "#DE3618"; // ✅ 緑／赤で強制
+            toastColor === "success" ? "#36B37E" : "#DE3618";
           toastEl.style.color = "#fff";
           toastEl.style.fontWeight = "500";
-
-          const closeBtn = toastEl.querySelector(
-            ".Polaris-Frame-Toast__CloseButton"
-          ) as HTMLElement | null;
+          const closeBtn = toastEl.querySelector(".Polaris-Frame-Toast__CloseButton") as HTMLElement | null;
           if (closeBtn) closeBtn.style.color = "#fff";
-
           clearInterval(interval);
         }
       }, 50);
@@ -79,21 +78,23 @@ export default function NewCatalogPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
+  const today = new Date();
+  const [{ month, year }, setDate] = useState({
+    month: today.getMonth(),
+    year: today.getFullYear(),
+  });
+  const [datePickerActive, setDatePickerActive] = useState(false);
 
-// ✅ Quill設定（不要アイコン削除＋2行構成＋cleanを上段へ）
-const quillModules = {
-  toolbar: [
-    // ---- 1行目：フォント・サイズ・リセット ----
-    ["clean"],               // ← リセットを上段先頭に
-    [{ font: [] }, { size: [] }],
-
-    // ---- 2行目：テキスト操作系（箇条書き削除済） ----
-    ["bold", "italic", "underline", "strike"], // 強調
-    [{ color: [] }, { background: [] }],       // 文字色・背景色
-    [{ align: [] }],                           // 位置揃え
-  ],
-};
-
+  // ✅ Quill設定（整形済）
+  const quillModules = {
+    toolbar: [
+      ["clean"],
+      [{ font: [] }, { size: [] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ align: [] }],
+    ],
+  };
   const quillFormats = [
     "font",
     "size",
@@ -104,10 +105,8 @@ const quillModules = {
     "color",
     "background",
     "align",
-    "list",
   ];
 
-  // ✅ カタログ取得
   useEffect(() => {
     if (!id) return;
     const fetchCatalog = async () => {
@@ -126,6 +125,7 @@ const quillModules = {
             const d = new Date(data.catalog.expiresAt);
             d.setHours(0, 0, 0, 0);
             setExpiresDate(d);
+            setDate({ month: d.getMonth(), year: d.getFullYear() });
           }
         }
       } catch (err) {
@@ -135,10 +135,15 @@ const quillModules = {
     fetchCatalog();
   }, [id]);
 
-  // ✅ 保存処理
   const handleSave = async () => {
     if (!title.trim() || selectedProducts.length === 0) {
       setToastContent("タイトルと商品は必須です");
+      setToastColor("error");
+      setToastActive(true);
+      return;
+    }
+    if (username && !password) {
+      setToastContent("ユーザー名を入力した場合はパスワードも必須です");
       setToastColor("error");
       setToastActive(true);
       return;
@@ -158,11 +163,13 @@ const quillModules = {
         expiresAt: expiresDate ? expiresDate.toISOString() : null,
         shop: "catalog-app-dev-2.myshopify.com",
       };
+
       const res = await fetch("/api/catalogs", {
         method: id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "保存失敗");
 
@@ -179,7 +186,6 @@ const quillModules = {
     }
   };
 
-  // ✅ 商品検索
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
@@ -200,33 +206,21 @@ const quillModules = {
   return (
     <Frame>
       <div style={{ width: "100%", padding: "20px", backgroundColor: "#fff" }}>
-    <div style={{ marginBottom: "40px" }}>
-  <Text as="h1" variant="headingLg" fontWeight="regular">
-    Catalog Edit
-  </Text>
-</div>
+        {/* ✅ ヘッダー */}
+        <div style={{ marginBottom: "40px" }}>
+          <Text as="h1" variant="headingLg" fontWeight="regular">
+            Catalog Edit
+          </Text>
+        </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <AdminHeader />
           <Button variant="primary" onClick={handleSave} loading={saving}>
             {id ? "Update Record" : "New Record"}
           </Button>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "3fr 1fr",
-            gap: "20px",
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px" }}>
           {/* 左：プレビュー */}
           <div>
             <PreviewCatalog
@@ -235,9 +229,7 @@ const quillModules = {
               products={selectedProducts}
               editable
               onReorder={setSelectedProducts}
-              onRemove={(id) =>
-                setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
-              }
+              onRemove={(id) => setSelectedProducts(selectedProducts.filter((p) => p.id !== id))}
               columnCount={columnCount}
             />
           </div>
@@ -245,21 +237,9 @@ const quillModules = {
           {/* 右：フォーム */}
           <Card>
             <BlockStack gap="400">
-              <TextField
-                label="タイトル"
-                value={title}
-                onChange={setTitle}
-                autoComplete="off"
-              />
-              <TextField
-                label="ラベル"
-                value={label}
-                onChange={setLabel}
-                autoComplete="off"
-                placeholder="任意のラベルを入力"
-              />
+              <TextField label="タイトル" value={title} onChange={setTitle} autoComplete="off" />
+              <TextField label="ラベル" value={label} onChange={setLabel} autoComplete="off" placeholder="任意のラベルを入力" />
 
-              {/* 列数 */}
               <Select
                 label="列数"
                 options={[
@@ -271,7 +251,6 @@ const quillModules = {
                 onChange={(val) => setColumnCount(Number(val))}
               />
 
-              {/* 検索 */}
               <BlockStack gap="200">
                 <TextField
                   label="検索キーワード"
@@ -302,13 +281,7 @@ const quillModules = {
                         }
                       }}
                       media={
-                        item.imageUrl ? (
-                          <Thumbnail
-                            source={item.imageUrl}
-                            alt={item.title}
-                            size="small"
-                          />
-                        ) : undefined
+                        item.imageUrl ? <Thumbnail source={item.imageUrl} alt={item.title} size="small" /> : undefined
                       }
                     >
                       {item.artist ? `${item.artist}, ` : ""}
@@ -319,19 +292,76 @@ const quillModules = {
               )}
 
               {/* ✅ リード文 */}
-              <ReactQuill
-                theme="snow"
-                value={leadText}
-                onChange={setLeadText}
-                modules={quillModules}
-                formats={quillFormats}
+              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} modules={quillModules} formats={quillFormats} />
+
+              {/* ✅ ユーザー名 */}
+              <TextField label="ユーザー名" placeholder="ユーザー名" value={username} onChange={setUsername} autoComplete="off" />
+
+              {/* ✅ パスワード（suffix方式） */}
+              <TextField
+                label="パスワード"
+                type={showPassword ? "text" : "password"}
+                placeholder="パスワード"
+                value={password}
+                onChange={setPassword}
+                autoComplete="off"
+                suffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                    aria-label={showPassword ? "パスワードを隠す" : "パスワードを表示"}
+                  >
+                    <Icon source={showPassword ? HideIcon : ViewIcon} />
+                  </button>
+                }
               />
+
+              {/* ✅ 有効期限 */}
+              <Popover
+                active={datePickerActive}
+                activator={
+                  <TextField
+                    label="有効期限"
+                    value={
+                      expiresDate
+                        ? `${expiresDate.getFullYear()}/${String(expiresDate.getMonth() + 1).padStart(2, "0")}/${String(expiresDate.getDate()).padStart(2, "0")}`
+                        : ""
+                    }
+                    prefix={<Icon source={CalendarIcon} />}
+                    placeholder="yyyy/mm/dd"
+                    onFocus={() => setDatePickerActive(true)}
+                    onChange={() => {}}
+                    autoComplete="off"
+                  />
+                }
+                onClose={() => setDatePickerActive(false)}
+              >
+                <DatePicker
+                  month={month}
+                  year={year}
+                  onChange={({ start }) => {
+                    const d = new Date(start);
+                    d.setHours(0, 0, 0, 0);
+                    setExpiresDate(d);
+                    setDate({ month: d.getMonth(), year: d.getFullYear() });
+                    setDatePickerActive(false);
+                  }}
+                  selected={expiresDate || new Date()}
+                />
+              </Popover>
             </BlockStack>
           </Card>
         </div>
       </div>
 
-      {/* ✅ トースト */}
       {toastMarkup}
     </Frame>
   );
