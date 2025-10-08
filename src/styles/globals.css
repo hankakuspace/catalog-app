@@ -126,13 +126,6 @@
    ActionList（移動・編集・削除）メニューの横幅・余白調整
    ========================================================= */
 
-/* ボックス自体は最小160px、最大180pxで自然にフィット */
-.Polaris-Popover__Content {
-  min-width: 160px !important;
-  max-width: 180px !important;
-  width: auto !important;
-}
-
 /* 各メニュー項目の左右に余白を確保 */
 .Polaris-ActionList__Item {
   padding-left: 40px !important;
