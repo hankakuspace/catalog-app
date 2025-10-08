@@ -143,13 +143,22 @@ export default function NewCatalogPage() {
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
-      {/* ✅ 一覧ページと同じヘッダー構成に統一 */}
-      <div style={{ marginBottom: "16px" }}>
-        <Text as="h1" variant="headingLg">
+      {/* ✅ Catalog List と完全一致のヘッダー余白・サイズ */}
+      <div style={{ marginBottom: "12px" }}>
+        <Text
+          as="h1"
+          variant="headingLg"
+          style={{
+            fontSize: "20px",
+            fontWeight: 600,
+            marginBottom: "4px", // タイトル下間隔を統一
+          }}
+        >
           Catalog Edit
         </Text>
-        {/* 左寄せで Catalog List / New Record を配置 */}
-        <AdminHeader />
+        <div style={{ marginTop: "0px" }}>
+          <AdminHeader />
+        </div>
       </div>
 
       {saveSuccess && (
