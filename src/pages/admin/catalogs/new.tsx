@@ -200,11 +200,11 @@ const quillModules = {
   return (
     <Frame>
       <div style={{ width: "100%", padding: "20px" }}>
-        <div style={{ marginBottom: "40px" }}>
-          <Text as="h1" variant="headingLg">
-            Catalog Edit
-          </Text>
-        </div>
+    <div style={{ marginBottom: "40px" }}>
+  <Text as="h1" variant="headingLg" fontWeight="regular">
+    Catalog Edit
+  </Text>
+</div>
 
         <div
           style={{
