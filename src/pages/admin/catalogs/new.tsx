@@ -38,18 +38,16 @@ export default function NewCatalogPage() {
   const { id } = router.query;
 
   const [title, setTitle] = useState("");
-  const [label, setLabel] = useState(""); // ✅ 新しい「ラベル」フィールド
+  const [label, setLabel] = useState("");
   const [leadText, setLeadText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  // ✅ パスワード表示切り替え
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ Toast制御
+  // ✅ Toast管理
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState("");
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
@@ -107,7 +105,7 @@ export default function NewCatalogPage() {
         const data = await res.json();
         if (res.ok && data.catalog) {
           setTitle(data.catalog.title || "");
-          setLabel(data.catalog.label || ""); // ✅ 新フィールド
+          setLabel(data.catalog.label || "");
           setLeadText(data.catalog.leadText || "");
           setSelectedProducts(data.catalog.products || []);
           setColumnCount(data.catalog.columnCount || 3);
@@ -146,7 +144,7 @@ export default function NewCatalogPage() {
       const body = {
         id,
         title,
-        label, // ✅ 新フィールド
+        label,
         leadText,
         products: selectedProducts,
         columnCount,
@@ -253,7 +251,7 @@ export default function NewCatalogPage() {
                 autoComplete="off"
               />
 
-              {/* ✅ タイトル下に新しいラベル */}
+              {/* ✅ タイトル下ラベル */}
               <TextField
                 label="ラベル"
                 value={label}
@@ -324,48 +322,43 @@ export default function NewCatalogPage() {
               {/* ✅ リード文 */}
               <ReactQuill theme="snow" value={leadText} onChange={setLeadText} />
 
-              {/* ✅ ユーザー名・パスワード */}
-              <InlineStack gap="200" blockAlign="center">
-                <TextField
-                  label="ユーザー名"
-                  placeholder="ユーザー名"
-                  value={username}
-                  onChange={setUsername}
-                  autoComplete="off"
-                />
+              {/* ✅ ユーザー名 */}
+              <TextField
+                label="ユーザー名"
+                placeholder="ユーザー名"
+                value={username}
+                onChange={setUsername}
+                autoComplete="off"
+              />
 
-                {/* ✅ パスワード＋表示切替アイコン */}
-                <div style={{ position: "relative", flex: 1 }}>
-                <TextField
-  label="パスワード"
-  type={showPassword ? "text" : "password"}
-  placeholder="パスワード"
-  value={password}
-  onChange={setPassword}
-  autoComplete="off"
-  suffix={
-    <button
-      type="button"
-      onClick={() => setShowPassword(!showPassword)}
-      style={{
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        padding: 0,
-        display: "flex",
-        alignItems: "center",
-      }}
-      aria-label={showPassword ? "パスワードを隠す" : "パスワードを表示"}
-    >
-      <Icon source={showPassword ? HideIcon : ViewIcon} />
-    </button>
-  }
-/>
-
+              {/* ✅ パスワード（suffix方式） */}
+              <TextField
+                label="パスワード"
+                type={showPassword ? "text" : "password"}
+                placeholder="パスワード"
+                value={password}
+                onChange={setPassword}
+                autoComplete="off"
+                suffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                    aria-label={
+                      showPassword ? "パスワードを隠す" : "パスワードを表示"
+                    }
+                  >
                     <Icon source={showPassword ? HideIcon : ViewIcon} />
                   </button>
-                </div>
-              </InlineStack>
+                }
+              />
 
               {/* ✅ 有効期限 */}
               <Popover
@@ -409,7 +402,7 @@ export default function NewCatalogPage() {
         </div>
       </div>
 
-      {/* ✅ Toast */}
+      {/* ✅ トースト */}
       {toastMarkup}
     </Frame>
   );
