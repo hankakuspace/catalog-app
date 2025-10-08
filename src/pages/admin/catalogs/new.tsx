@@ -57,9 +57,10 @@ export default function NewCatalogPage() {
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
 
-  // 編集モードでデータ読込
+  // ✅ 編集モードでデータ読込（router.isReadyを削除）
   useEffect(() => {
-    if (!router.isReady || !id) return;
+    if (!id) return; // idが存在する時点でfetch実行
+
     const fetchCatalog = async () => {
       try {
         const res = await fetch(`/api/catalogs?id=${id}`);
@@ -82,8 +83,9 @@ export default function NewCatalogPage() {
         console.error("カタログ取得エラー:", err);
       }
     };
+
     fetchCatalog();
-  }, [router.isReady, id]);
+  }, [id]); // router.isReadyを依存から除外
 
   const handleSearch = async (query: string) => {
     setLoading(true);
