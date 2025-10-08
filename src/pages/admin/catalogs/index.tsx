@@ -24,7 +24,7 @@ import AdminHeader from "@/components/AdminHeader";
 interface Catalog {
   id: string;
   title: string;
-  label?: string; // ✅ ラベル追加
+  label?: string;
   createdAt?: string;
   previewUrl?: string;
 }
@@ -133,7 +133,7 @@ export default function CatalogListPage() {
                 { title: "タイトル" },
                 { title: "作成日" },
                 { title: "プレビューURL" },
-                { title: "ラベル" }, // ✅ ラベル追加
+                { title: "ラベル" },
                 { title: "操作" },
               ]}
             >
@@ -141,6 +141,7 @@ export default function CatalogListPage() {
                 const createdAtDate = catalog.createdAt
                   ? new Date(catalog.createdAt).toLocaleString()
                   : "-";
+
                 return (
                   <IndexTable.Row
                     id={catalog.id}
@@ -158,8 +159,8 @@ export default function CatalogListPage() {
                     {/* 作成日 */}
                     <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-                    {/* プレビューURL */}
-                    <IndexTable.Cell>
+                    {/* ✅ プレビューURL（クリック可能・選択イベント抑制） */}
+                    <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
                       {catalog.previewUrl ? (
                         <a
                           href={catalog.previewUrl}
@@ -184,8 +185,8 @@ export default function CatalogListPage() {
                         : "-"}
                     </IndexTable.Cell>
 
-                    {/* 編集ボタン */}
-                    <IndexTable.Cell>
+                    {/* ✅ 編集ボタン（クリック可能・選択イベント抑制） */}
+                    <IndexTable.Cell onClick={(e) => e.stopPropagation()}>
                       <Button
                         size="slim"
                         url={`/admin/catalogs/new?id=${catalog.id}`}
