@@ -20,9 +20,7 @@ import { SessionStorage } from "@shopify/shopify-app-session-storage";
 // =======================================
 // ✅ Firestore 初期化
 // =======================================
-const firestore = new Firestore({
-  projectId: process.env.FIREBASE_PROJECT_ID,
-});
+
 
 // ✅ Shopify セッションストレージを Firestore で実装
 class FirestoreSessionStorageAdapter implements SessionStorage {
