@@ -1,4 +1,17 @@
 // src/lib/shopify.ts
+
+console.log("🔥 Firebase ENV:", {
+  project: process.env.FIREBASE_PROJECT_ID,
+  client: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length,
+});
+
+const firestore = new Firestore({
+  projectId: process.env.FIREBASE_PROJECT_ID,
+});
+console.log("✅ Firestore Initialized with Project:", process.env.FIREBASE_PROJECT_ID);
+
+
 import "@shopify/shopify-api/adapters/node";
 import { shopifyApi, ApiVersion, Session } from "@shopify/shopify-api";
 import { Firestore } from "@google-cloud/firestore";
