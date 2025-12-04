@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = req.query.shop as string | undefined;
     const search = (req.query.query as string) || "";
 
-    // Firestoreより offline セッションロード
+    // Firestore から offline セッションロード
     let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
 
     if (!session) {
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ⭐ namespace: "product" を指定して明示的にメタフィールドを取得
+    // ⭐ product namespace のメタフィールドを明示的に取得
     const gqlQuery = gql`
       {
         products(first: 50) {
@@ -102,7 +102,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let formatted = data.products.edges.map((edge) => {
       const p = edge.node;
 
-      // ⭐ product namespace のメタフィールドマップ
       const metafields: Record<string, string> = {};
       p.metafields?.edges.forEach((mf) => {
         const { key, value } = mf.node;
@@ -116,13 +115,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         imageUrl: p.images.edges[0]?.node.originalSrc || null,
         price: p.variants?.edges[0]?.node?.price || "0.00",
 
-        // ⭐ 基本フィールド
+        // ⭐ 作品情報
         year: metafields["year"] || "",
         dimensions: metafields["dimensions"] || "",
         medium: metafields["medium"] || "",
         frame: metafields["frame"] || "",
 
-        // ⭐ 今回追加（素材 / サイズ区分 / 技法 / 真正証明）
+        // ⭐ 追加項目
         material: metafields["material"] || "",
         size: metafields["size"] || "",
         technique: metafields["technique"] || "",
@@ -130,13 +129,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
-    // ⭐ 検索フィルタ
+    // ⭐ 検索（title / artist / year に対応）
     if (search) {
       const q = search.toLowerCase().trim();
+
       formatted = formatted.filter((p) => {
-        const titleMatch = p.title?.toLowerCase().startsWith(q);
-        const artistMatch = p.artist?.toLowerCase().startsWith(q);
-        return Boolean(titleMatch || artistMatch);
+        const titleMatch = p.title?.toLowerCase().includes(q);
+        const artistMatch = p.artist?.toLowerCase().includes(q);
+        const yearMatch   = p.year?.toLowerCase().includes(q);
+
+        return Boolean(titleMatch || artistMatch || yearMatch);
       });
     }
 
