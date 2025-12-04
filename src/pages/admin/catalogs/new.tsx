@@ -44,21 +44,19 @@ export default function NewCatalogPage() {
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ Toast管理
+  // Toast
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState("");
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
 
   const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
 
-  // ✅ Toast背景色カスタム（緑／赤固定）
   useEffect(() => {
     if (toastActive) {
       const interval = setInterval(() => {
         const toastEl = document.querySelector(".Polaris-Frame-Toast") as HTMLElement | null;
         if (toastEl) {
-          toastEl.style.backgroundColor =
-            toastColor === "success" ? "#36B37E" : "#DE3618";
+          toastEl.style.backgroundColor = toastColor === "success" ? "#36B37E" : "#DE3618";
           toastEl.style.color = "#fff";
           toastEl.style.fontWeight = "500";
           const closeBtn = toastEl.querySelector(".Polaris-Frame-Toast__CloseButton") as HTMLElement | null;
@@ -70,9 +68,7 @@ export default function NewCatalogPage() {
     }
   }, [toastActive, toastColor]);
 
-  const toastMarkup = toastActive ? (
-    <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} />
-  ) : null;
+  const toastMarkup = toastActive ? <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} /> : null;
 
   const [columnCount, setColumnCount] = useState(3);
   const [username, setUsername] = useState("");
@@ -85,27 +81,10 @@ export default function NewCatalogPage() {
   });
   const [datePickerActive, setDatePickerActive] = useState(false);
 
-  // ✅ Quill設定（整形済）
   const quillModules = {
-    toolbar: [
-      ["clean"],
-      [{ font: [] }, { size: [] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ color: [] }, { background: [] }],
-      [{ align: [] }],
-    ],
+    toolbar: [["clean"], [{ font: [] }, { size: [] }], ["bold", "italic", "underline", "strike"], [{ color: [] }, { background: [] }], [{ align: [] }]],
   };
-  const quillFormats = [
-    "font",
-    "size",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "color",
-    "background",
-    "align",
-  ];
+  const quillFormats = ["font", "size", "bold", "italic", "underline", "strike", "color", "background", "align"];
 
   useEffect(() => {
     if (!id) return;
@@ -136,6 +115,8 @@ export default function NewCatalogPage() {
   }, [id]);
 
   const handleSave = async () => {
+    const shop = localStorage.getItem("shopify_shop") || "";
+
     if (!title.trim() || selectedProducts.length === 0) {
       setToastContent("タイトルと商品は必須です");
       setToastColor("error");
@@ -161,7 +142,7 @@ export default function NewCatalogPage() {
         username,
         password,
         expiresAt: expiresDate ? expiresDate.toISOString() : null,
-        shop: "catalog-app-dev-2.myshopify.com",
+        shop, // 🔥 ← 修正（動的）
       };
 
       const res = await fetch("/api/catalogs", {
@@ -189,10 +170,9 @@ export default function NewCatalogPage() {
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        shop: "catalog-app-dev-2.myshopify.com",
-        query,
-      });
+      const shop = localStorage.getItem("shopify_shop") || "";
+      const params = new URLSearchParams({ shop, query }); // 🔥 ← 修正（動的）
+
       const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
       setSearchResults(data.products || []);
@@ -206,7 +186,6 @@ export default function NewCatalogPage() {
   return (
     <Frame>
       <div style={{ width: "100%", padding: "20px", backgroundColor: "#fff" }}>
-        {/* ✅ ヘッダー */}
         <div style={{ marginBottom: "40px" }}>
           <Text as="h1" variant="headingLg" fontWeight="regular">
             Catalog Edit
@@ -280,9 +259,7 @@ export default function NewCatalogPage() {
                           setSelectedProducts([...selectedProducts, item]);
                         }
                       }}
-                      media={
-                        item.imageUrl ? <Thumbnail source={item.imageUrl} alt={item.title} size="small" /> : undefined
-                      }
+                      media={item.imageUrl ? <Thumbnail source={item.imageUrl} alt={item.title} size="small" /> : undefined}
                     >
                       {item.artist ? `${item.artist}, ` : ""}
                       {item.title}
@@ -291,13 +268,10 @@ export default function NewCatalogPage() {
                 />
               )}
 
-              {/* ✅ リード文 */}
               <ReactQuill theme="snow" value={leadText} onChange={setLeadText} modules={quillModules} formats={quillFormats} />
 
-              {/* ✅ ユーザー名 */}
               <TextField label="ユーザー名" placeholder="ユーザー名" value={username} onChange={setUsername} autoComplete="off" />
 
-              {/* ✅ パスワード（suffix方式） */}
               <TextField
                 label="パスワード"
                 type={showPassword ? "text" : "password"}
@@ -309,14 +283,7 @@ export default function NewCatalogPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      display: "flex",
-                      alignItems: "center",
-                    }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}
                     aria-label={showPassword ? "パスワードを隠す" : "パスワードを表示"}
                   >
                     <Icon source={showPassword ? HideIcon : ViewIcon} />
@@ -324,7 +291,6 @@ export default function NewCatalogPage() {
                 }
               />
 
-              {/* ✅ 有効期限 */}
               <Popover
                 active={datePickerActive}
                 activator={
