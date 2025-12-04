@@ -7,6 +7,7 @@ interface ProductNode {
   id: string;
   title: string;
   vendor: string;
+  onlineStoreUrl: string | null; // ⭐ 追加
   images: {
     edges: { node: { originalSrc: string } }[];
   };
@@ -33,7 +34,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shop = req.query.shop as string | undefined;
     const search = (req.query.query as string) || "";
 
-    // Firestore から offline セッションロード
     let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
 
     if (!session) {
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ⭐ product namespace のメタフィールドを明示的に取得
+    // ⭐ onlineStoreUrl を追加
     const gqlQuery = gql`
       {
         products(first: 50) {
@@ -68,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               id
               title
               vendor
+              onlineStoreUrl   # ⭐ 追加
               images(first: 1) {
                 edges {
                   node {
@@ -115,6 +116,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         imageUrl: p.images.edges[0]?.node.originalSrc || null,
         price: p.variants?.edges[0]?.node?.price || "0.00",
 
+        // ⭐ ECサイトの本物の商品ページURL
+        onlineStoreUrl: p.onlineStoreUrl || null, // ← 必須
+
         // ⭐ 作品情報
         year: metafields["year"] || "",
         dimensions: metafields["dimensions"] || "",
@@ -129,14 +133,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
-    // ⭐ 検索（title / artist / year に対応）
     if (search) {
       const q = search.toLowerCase().trim();
 
       formatted = formatted.filter((p) => {
         const titleMatch = p.title?.toLowerCase().includes(q);
         const artistMatch = p.artist?.toLowerCase().includes(q);
-        const yearMatch   = p.year?.toLowerCase().includes(q);
+        const yearMatch = p.year?.toLowerCase().includes(q);
 
         return Boolean(titleMatch || artistMatch || yearMatch);
       });
