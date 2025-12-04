@@ -69,6 +69,18 @@ const globalShakeKeyframes = `
 }
 `;
 
+const formatTechnique = (value?: string) => {
+  if (!value) return "";
+  try {
+    const arr = JSON.parse(value);
+    if (Array.isArray(arr)) return arr.join(" / ");
+    return value;
+  } catch {
+    return value;
+  }
+};
+
+
 function SortableItem({
   id,
   editable,
@@ -323,7 +335,7 @@ export default function PreviewCatalog({
                         {item.frame && <Text as="p">{item.frame}</Text>}
                         {item.material && <Text as="p">{item.material}</Text>}
                         {item.size && <Text as="p">{item.size}</Text>}
-                        {item.technique && <Text as="p">{item.technique}</Text>}
+                        {item.technique && <Text as="p">{formatTechnique(item.technique)}</Text>}
                         {item.certificate && (
                           <Text as="p">{item.certificate}</Text>
                         )}
