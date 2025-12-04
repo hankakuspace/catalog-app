@@ -2,7 +2,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import { shopify, sessionStorage } from "@/lib/shopify";
-import { Session } from "@shopify/shopify-api"; // ✅ 直接 import
+import { Session } from "@shopify/shopify-api"; // 既存
+import { sessionToObject } from "@shopify/shopify-api/session"; // ★ 追加：Session を JSON 化
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -42,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).send("HMAC validation failed");
     }
 
-    // ✅ アクセストークンを取得
+    // ✅ アクセストークン取得
     const tokenResponse = await fetch(
       `https://${shop}/admin/oauth/access_token`,
       {
@@ -67,10 +68,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const tokenData: TokenResponse = await tokenResponse.json();
 
-    // ✅ 正しい offline セッションID を生成
+    // ✅ 正しい offline セッションID
     const offlineId = shopify.session.getOfflineId(shop);
 
-    // ✅ セッションを作成
+    // ✅ セッション生成（Session クラス）
     const offlineSession = new Session({
       id: offlineId,
       shop,
@@ -79,12 +80,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     offlineSession.accessToken = tokenData.access_token;
 
-    await sessionStorage.storeSession(offlineSession);
+    // 🔥 Firestore は Session クラスを保存できない → JSON に変換
+    const plainSession = sessionToObject(offlineSession);
 
-    console.log("🔥 Session stored:", {
-      id: offlineSession.id,
-      shop: offlineSession.shop,
-      accessToken: offlineSession.accessToken ? "存在する" : "なし",
+    // 🔥 Firestore 保存（ここが 500 → 正常動作に変わる）
+    await sessionStorage.storeSession(plainSession);
+
+    console.log("🔥 Session stored (converted JSON):", {
+      id: plainSession.id,
+      shop: plainSession.shop,
+      accessToken: plainSession.accessToken ? "存在する" : "なし",
     });
 
     // ✅ exitiframe にリダイレクト
