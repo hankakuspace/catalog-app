@@ -1,8 +1,6 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-export const config = { runtime: "experimental-edge" };
-
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
