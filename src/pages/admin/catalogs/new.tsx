@@ -1,7 +1,6 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-// ❗ Edge Runtime は ReactQuill と相性最悪なので削除（白画面原因）
 // export const config = { runtime: "experimental-edge" };
 
 import { useState, useEffect, useCallback } from "react";
@@ -29,7 +28,7 @@ import { CalendarIcon, ViewIcon, HideIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 import PreviewCatalog from "@/components/PreviewCatalog";
 
-// ⭐ Product 型を new.tsx 内で完全定義（PreviewCatalog と合わせる）
+/** ⭐ Product 型を PreviewCatalog と完全一致にする */
 export interface CatalogProduct {
   id: string;
   title: string;
@@ -45,7 +44,7 @@ export interface CatalogProduct {
   size?: string;
   technique?: string;
   certificate?: string;
-  onlineStoreUrl?: string | null; // ⭐ 最重要
+  onlineStoreUrl?: string; /** ← null を許可しない（重要） */
 }
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
@@ -58,8 +57,9 @@ export default function NewCatalogPage() {
   const [label, setLabel] = useState("");
   const [leadText, setLeadText] = useState("");
 
-  // ⭐ 型を CatalogProduct[] に統一
   const [searchQuery, setSearchQuery] = useState("");
+
+  /** ⭐ 型統一 */
   const [searchResults, setSearchResults] = useState<CatalogProduct[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<CatalogProduct[]>([]);
 
@@ -70,18 +70,28 @@ export default function NewCatalogPage() {
   // Toast
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState("");
-  const [toastColor, setToastColor] = useState<"success" | "error">("success");
-  const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
+  const [toastColor, setToastColor] =
+    useState<"success" | "error">("success");
+  const toggleToastActive = useCallback(
+    () => setToastActive((a) => !a),
+    []
+  );
 
   useEffect(() => {
     if (toastActive) {
       const interval = setInterval(() => {
-        const toastEl = document.querySelector(".Polaris-Frame-Toast") as HTMLElement | null;
+        const toastEl =
+          document.querySelector(".Polaris-Frame-Toast") as
+            | HTMLElement
+            | null;
         if (toastEl) {
-          toastEl.style.backgroundColor = toastColor === "success" ? "#36B37E" : "#DE3618";
+          toastEl.style.backgroundColor =
+            toastColor === "success" ? "#36B37E" : "#DE3618";
           toastEl.style.color = "#fff";
           toastEl.style.fontWeight = "500";
-          const closeBtn = toastEl.querySelector(".Polaris-Frame-Toast__CloseButton") as HTMLElement | null;
+          const closeBtn = toastEl.querySelector(
+            ".Polaris-Frame-Toast__CloseButton"
+          ) as HTMLElement | null;
           if (closeBtn) closeBtn.style.color = "#fff";
           clearInterval(interval);
         }
@@ -127,7 +137,7 @@ export default function NewCatalogPage() {
     "align",
   ];
 
-  // ⭐ カタログ編集時のロード
+  /** ⭐ カタログ編集ロード */
   useEffect(() => {
     if (!id) return;
 
@@ -135,18 +145,19 @@ export default function NewCatalogPage() {
       try {
         const res = await fetch(`/api/catalogs?id=${id}`);
         const data = await res.json();
+
         if (res.ok && data.catalog) {
           setTitle(data.catalog.title || "");
           setLabel(data.catalog.label || "");
           setLeadText(data.catalog.leadText || "");
 
-          // ⭐ 過去の catalog.products に onlineStoreUrl が欠けていても壊れないよう補完
-          const fixedProducts: CatalogProduct[] = (data.catalog.products || []).map(
-            (p: CatalogProduct) => ({
-              ...p,
-              onlineStoreUrl: p.onlineStoreUrl ?? null,
-            })
-          );
+          // ⭐ null を undefined に補正
+          const fixedProducts: CatalogProduct[] = (
+            data.catalog.products || []
+          ).map((p: CatalogProduct) => ({
+            ...p,
+            onlineStoreUrl: p.onlineStoreUrl ?? undefined,
+          }));
 
           setSelectedProducts(fixedProducts);
           setColumnCount(data.catalog.columnCount || 3);
@@ -157,7 +168,10 @@ export default function NewCatalogPage() {
             const d = new Date(data.catalog.expiresAt);
             d.setHours(0, 0, 0, 0);
             setExpiresDate(d);
-            setDate({ month: d.getMonth(), year: d.getFullYear() });
+            setDate({
+              month: d.getMonth(),
+              year: d.getFullYear(),
+            });
           }
         }
       } catch (err) {
@@ -168,7 +182,7 @@ export default function NewCatalogPage() {
     fetchCatalog();
   }, [id]);
 
-  // ⭐ 保存処理
+  /** ⭐ 保存処理 */
   const handleSave = async () => {
     const shop = localStorage.getItem("shopify_shop") || "";
 
@@ -193,7 +207,7 @@ export default function NewCatalogPage() {
         title,
         label,
         leadText,
-        products: selectedProducts, // ⭐ onlineStoreUrl を含んだ商品が保存される
+        products: selectedProducts,
         columnCount,
         username,
         password,
@@ -223,7 +237,7 @@ export default function NewCatalogPage() {
     }
   };
 
-  // ⭐ 商品検索（onlineStoreUrl 含めて UI へ渡す）
+  /** ⭐ 商品検索（onlineStoreUrl を undefined で保持する） */
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
@@ -235,7 +249,7 @@ export default function NewCatalogPage() {
 
       const fixed = (data.products || []).map((p: CatalogProduct) => ({
         ...p,
-        onlineStoreUrl: p.onlineStoreUrl ?? null,
+        onlineStoreUrl: p.onlineStoreUrl ?? undefined,
       }));
 
       setSearchResults(fixed);
@@ -255,24 +269,28 @@ export default function NewCatalogPage() {
           </Text>
         </div>
 
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
           <AdminHeader />
           <Button variant="primary" onClick={handleSave} loading={saving}>
             {id ? "Update Record" : "New Record"}
           </Button>
         </div>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "3fr 1fr",
-          gap: "20px",
-        }}>
-          {/* 左：プレビュー */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "3fr 1fr",
+            gap: "20px",
+          }}
+        >
+          {/* -------- 左：Preview -------- */}
           <div>
             <PreviewCatalog
               title={title}
@@ -281,13 +299,15 @@ export default function NewCatalogPage() {
               editable
               onReorder={setSelectedProducts}
               onRemove={(id) =>
-                setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
+                setSelectedProducts(
+                  selectedProducts.filter((p) => p.id !== id)
+                )
               }
               columnCount={columnCount}
             />
           </div>
 
-          {/* 右：フォーム */}
+          {/* -------- 右：フォーム -------- */}
           <Card>
             <BlockStack gap="400">
               <TextField label="タイトル" value={title} onChange={setTitle} />
@@ -296,7 +316,8 @@ export default function NewCatalogPage() {
                 label="ラベル"
                 value={label}
                 onChange={setLabel}
-                placeholder="任意のラベルを入力"
+                autoComplete="off"
+                placeholder="任意のラベル"
               />
 
               <Select
@@ -307,18 +328,19 @@ export default function NewCatalogPage() {
                   { label: "4列", value: "4" },
                 ]}
                 value={String(columnCount)}
-                onChange={(val) => setColumnCount(Number(val))}
+                onChange={(v) => setColumnCount(Number(v))}
               />
 
               <TextField
                 label="検索キーワード"
                 value={searchQuery}
-                onChange={(value) => {
-                  setSearchQuery(value);
-                  if (value.trim() !== "") handleSearch(value);
+                onChange={(v) => {
+                  setSearchQuery(v);
+                  if (v.trim()) handleSearch(v);
                   else setSearchResults([]);
                 }}
-                placeholder="作家名・作品タイトルで検索"
+                autoComplete="off"
+                placeholder="作家名・作品タイトル"
               />
 
               {loading ? (
@@ -333,6 +355,7 @@ export default function NewCatalogPage() {
                   renderItem={(item) => (
                     <ResourceItem
                       id={item.id}
+                      accessibilityLabel={`${item.title} を追加`}
                       onClick={() => {
                         if (!selectedProducts.find((p) => p.id === item.id)) {
                           setSelectedProducts([...selectedProducts, item]);
@@ -372,11 +395,11 @@ export default function NewCatalogPage() {
 
               <TextField
                 label="パスワード"
-                value={password}
                 type={showPassword ? "text" : "password"}
+                value={password}
                 onChange={setPassword}
-                placeholder="パスワード"
                 autoComplete="off"
+                placeholder="パスワード"
                 suffix={
                   <button
                     type="button"
@@ -410,8 +433,8 @@ export default function NewCatalogPage() {
                         : ""
                     }
                     prefix={<Icon source={CalendarIcon} />}
-                    placeholder="yyyy/mm/dd"
                     onFocus={() => setDatePickerActive(true)}
+                    placeholder="yyyy/mm/dd"
                     onChange={() => {}}
                   />
                 }
