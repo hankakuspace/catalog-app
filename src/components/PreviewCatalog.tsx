@@ -64,6 +64,13 @@ const globalShakeKeyframes = `
 }
 `;
 
+
+const formatPrice = (value?: string) => {
+  if (!value) return "";
+  return Number(value).toLocaleString("ja-JP");
+};
+
+
 function SortableItem({
   id,
   editable,
@@ -292,11 +299,11 @@ export default function PreviewCatalog({
                         {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
                         <Text as="p">
-                          {item.customPrice
-                            ? `${item.customPrice} 円（税込）`
-                            : item.price
-                            ? `${item.price} 円（税込）`
-                            : ""}
+                         {item.customPrice
+  ? `${formatPrice(item.customPrice)} 円（税込）`
+  : item.price
+  ? `${formatPrice(item.price)} 円（税込）`
+  : ""}
                         </Text>
 
                         {editable && (
