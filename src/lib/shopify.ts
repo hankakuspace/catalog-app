@@ -6,23 +6,28 @@ console.log("🔥 Firebase ENV:", {
   privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length,
 });
 
-const firestore = new Firestore({
-  projectId: process.env.FIREBASE_PROJECT_ID,
-});
-console.log("✅ Firestore Initialized with Project:", process.env.FIREBASE_PROJECT_ID);
-
-
 import "@shopify/shopify-api/adapters/node";
 import { shopifyApi, ApiVersion, Session } from "@shopify/shopify-api";
 import { Firestore } from "@google-cloud/firestore";
 import { SessionStorage } from "@shopify/shopify-app-session-storage";
 
 // =======================================
-// ✅ Firestore 初期化
+// 🔥 Firestore 初期化（admin SDK と同じ認証情報を使用）
+// =======================================
+const firestore = new Firestore({
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  credentials: {
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  },
+});
+
+console.log("✅ Firestore Initialized with Project:", process.env.FIREBASE_PROJECT_ID);
+
+// =======================================
+// ✅ Shopify セッションストレージ Firestore 実装
 // =======================================
 
-
-// ✅ Shopify セッションストレージを Firestore で実装
 class FirestoreSessionStorageAdapter implements SessionStorage {
   private collectionName: string;
 
@@ -63,7 +68,7 @@ class FirestoreSessionStorageAdapter implements SessionStorage {
 
 const sessionStorage = new FirestoreSessionStorageAdapter(
   firestore,
-  "shopify_sessions_catalog_app" // Firestoreコレクション名
+  "shopify_sessions_catalog_app"
 );
 
 // =======================================
