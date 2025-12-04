@@ -7,7 +7,7 @@ interface ProductNode {
   id: string;
   title: string;
   vendor: string;
-  onlineStoreUrl: string | null; // ⭐ 追加
+  onlineStorePreviewUrl: string | null; // ⭐ 修正
   images: {
     edges: { node: { originalSrc: string } }[];
   };
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ⭐ onlineStoreUrl を追加
+    // ⭐ onlineStorePreviewUrl を取得（正しいフィールド名）
     const gqlQuery = gql`
       {
         products(first: 50) {
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               id
               title
               vendor
-              onlineStoreUrl   # ⭐ 追加
+              onlineStorePreviewUrl   # ⭐ 修正ポイント
               images(first: 1) {
                 edges {
                   node {
@@ -116,8 +116,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         imageUrl: p.images.edges[0]?.node.originalSrc || null,
         price: p.variants?.edges[0]?.node?.price || "0.00",
 
-        // ⭐ ECサイトの本物の商品ページURL
-        onlineStoreUrl: p.onlineStoreUrl || null, // ← 必須
+        // ⭐ 正しい商品ページURL（プレビューURL）
+        onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
 
         // ⭐ 作品情報
         year: metafields["year"] || "",
@@ -125,7 +125,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         medium: metafields["medium"] || "",
         frame: metafields["frame"] || "",
 
-        // ⭐ 追加項目
         material: metafields["material"] || "",
         size: metafields["size"] || "",
         technique: metafields["technique"] || "",
