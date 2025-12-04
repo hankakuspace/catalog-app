@@ -1,6 +1,9 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
+// ❗ Edge Runtime は ReactQuill と相性最悪なので削除（白画面原因）
+// export const config = { runtime: "experimental-edge" };
+
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
@@ -24,7 +27,26 @@ import {
 } from "@shopify/polaris";
 import { CalendarIcon, ViewIcon, HideIcon } from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
-import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
+import PreviewCatalog from "@/components/PreviewCatalog";
+
+// ⭐ Product 型を new.tsx 内で完全定義（PreviewCatalog と合わせる）
+export interface CatalogProduct {
+  id: string;
+  title: string;
+  price?: string;
+  customPrice?: string;
+  imageUrl?: string;
+  artist?: string;
+  year?: string;
+  dimensions?: string;
+  medium?: string;
+  frame?: string;
+  material?: string;
+  size?: string;
+  technique?: string;
+  certificate?: string;
+  onlineStoreUrl?: string | null; // ⭐ 最重要
+}
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -35,17 +57,20 @@ export default function NewCatalogPage() {
   const [title, setTitle] = useState("");
   const [label, setLabel] = useState("");
   const [leadText, setLeadText] = useState("");
+
+  // ⭐ 型を CatalogProduct[] に統一
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [searchResults, setSearchResults] = useState<CatalogProduct[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<CatalogProduct[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Toast
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState("");
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
-
   const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
 
   useEffect(() => {
@@ -65,12 +90,15 @@ export default function NewCatalogPage() {
     }
   }, [toastActive, toastColor]);
 
-  const toastMarkup = toastActive ? <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} /> : null;
+  const toastMarkup = toastActive ? (
+    <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} />
+  ) : null;
 
   const [columnCount, setColumnCount] = useState(3);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
+
   const today = new Date();
   const [{ month, year }, setDate] = useState({
     month: today.getMonth(),
@@ -79,12 +107,30 @@ export default function NewCatalogPage() {
   const [datePickerActive, setDatePickerActive] = useState(false);
 
   const quillModules = {
-    toolbar: [["clean"], [{ font: [] }, { size: [] }], ["bold", "italic", "underline", "strike"], [{ color: [] }, { background: [] }], [{ align: [] }]],
+    toolbar: [
+      ["clean"],
+      [{ font: [] }, { size: [] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }],
+      [{ align: [] }],
+    ],
   };
-  const quillFormats = ["font", "size", "bold", "italic", "underline", "strike", "color", "background", "align"];
+  const quillFormats = [
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "color",
+    "background",
+    "align",
+  ];
 
+  // ⭐ カタログ編集時のロード
   useEffect(() => {
     if (!id) return;
+
     const fetchCatalog = async () => {
       try {
         const res = await fetch(`/api/catalogs?id=${id}`);
@@ -93,10 +139,20 @@ export default function NewCatalogPage() {
           setTitle(data.catalog.title || "");
           setLabel(data.catalog.label || "");
           setLeadText(data.catalog.leadText || "");
-          setSelectedProducts(data.catalog.products || []);
+
+          // ⭐ 過去の catalog.products に onlineStoreUrl が欠けていても壊れないよう補完
+          const fixedProducts: CatalogProduct[] = (data.catalog.products || []).map(
+            (p: CatalogProduct) => ({
+              ...p,
+              onlineStoreUrl: p.onlineStoreUrl ?? null,
+            })
+          );
+
+          setSelectedProducts(fixedProducts);
           setColumnCount(data.catalog.columnCount || 3);
           setUsername(data.catalog.username || "");
           setPassword(data.catalog.password || "");
+
           if (data.catalog.expiresAt) {
             const d = new Date(data.catalog.expiresAt);
             d.setHours(0, 0, 0, 0);
@@ -108,9 +164,11 @@ export default function NewCatalogPage() {
         console.error("カタログ取得エラー:", err);
       }
     };
+
     fetchCatalog();
   }, [id]);
 
+  // ⭐ 保存処理
   const handleSave = async () => {
     const shop = localStorage.getItem("shopify_shop") || "";
 
@@ -128,13 +186,14 @@ export default function NewCatalogPage() {
     }
 
     setSaving(true);
+
     try {
       const body = {
         id,
         title,
         label,
         leadText,
-        products: selectedProducts, // ⭐ onlineStoreUrl を含んだ products が保存されるようになる
+        products: selectedProducts, // ⭐ onlineStoreUrl を含んだ商品が保存される
         columnCount,
         username,
         password,
@@ -164,10 +223,7 @@ export default function NewCatalogPage() {
     }
   };
 
-  /**  
-   * 🔥 修正ポイント  
-   * ここで onlineStoreUrl を UI に反映しなければ PreviewCatalog に伝わらない。
-   */
+  // ⭐ 商品検索（onlineStoreUrl 含めて UI へ渡す）
   const handleSearch = async (query: string) => {
     setLoading(true);
     try {
@@ -177,13 +233,12 @@ export default function NewCatalogPage() {
       const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
 
-      // ⭐ 必ず onlineStoreUrl を保持した Product 型に変換
-      setSearchResults(
-        (data.products || []).map((p: Product) => ({
-          ...p,
-          onlineStoreUrl: p.onlineStoreUrl ?? null, // ⭐ 追加
-        }))
-      );
+      const fixed = (data.products || []).map((p: CatalogProduct) => ({
+        ...p,
+        onlineStoreUrl: p.onlineStoreUrl ?? null,
+      }));
+
+      setSearchResults(fixed);
     } catch (err) {
       console.error("商品検索エラー:", err);
     } finally {
@@ -193,34 +248,197 @@ export default function NewCatalogPage() {
 
   return (
     <Frame>
-      {/* 中略：あなたのコードを構成変更せず全保持 */}
+      <div style={{ width: "100%", padding: "20px", backgroundColor: "#fff" }}>
+        <div style={{ marginBottom: "40px" }}>
+          <Text as="h1" variant="headingLg" fontWeight="regular">
+            Catalog Edit
+          </Text>
+        </div>
 
-      {/* 重要：商品選択時の処理も onlineStoreUrl を含んだまま追加される */}
-      <ResourceList
-        resourceName={{ singular: "product", plural: "products" }}
-        items={searchResults}
-        renderItem={(item) => (
-          <ResourceItem
-            id={item.id}
-            onClick={() => {
-              if (!selectedProducts.find((p) => p.id === item.id)) {
-                setSelectedProducts([...selectedProducts, item]); // ⭐ onlineStoreUrl を保持した状態で保存
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}>
+          <AdminHeader />
+          <Button variant="primary" onClick={handleSave} loading={saving}>
+            {id ? "Update Record" : "New Record"}
+          </Button>
+        </div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "3fr 1fr",
+          gap: "20px",
+        }}>
+          {/* 左：プレビュー */}
+          <div>
+            <PreviewCatalog
+              title={title}
+              leadText={leadText}
+              products={selectedProducts}
+              editable
+              onReorder={setSelectedProducts}
+              onRemove={(id) =>
+                setSelectedProducts(selectedProducts.filter((p) => p.id !== id))
               }
-            }}
-            media={
-              item.imageUrl ? (
-                <Thumbnail source={item.imageUrl} alt={item.title} size="small" />
-              ) : undefined
-            }
-          >
-            {item.artist ? `${item.artist}, ` : ""}
-            {item.title}
-          </ResourceItem>
-        )}
-      />
+              columnCount={columnCount}
+            />
+          </div>
 
-      {/* 中略 */}
+          {/* 右：フォーム */}
+          <Card>
+            <BlockStack gap="400">
+              <TextField label="タイトル" value={title} onChange={setTitle} />
 
+              <TextField
+                label="ラベル"
+                value={label}
+                onChange={setLabel}
+                placeholder="任意のラベルを入力"
+              />
+
+              <Select
+                label="列数"
+                options={[
+                  { label: "2列", value: "2" },
+                  { label: "3列", value: "3" },
+                  { label: "4列", value: "4" },
+                ]}
+                value={String(columnCount)}
+                onChange={(val) => setColumnCount(Number(val))}
+              />
+
+              <TextField
+                label="検索キーワード"
+                value={searchQuery}
+                onChange={(value) => {
+                  setSearchQuery(value);
+                  if (value.trim() !== "") handleSearch(value);
+                  else setSearchResults([]);
+                }}
+                placeholder="作家名・作品タイトルで検索"
+              />
+
+              {loading ? (
+                <Spinner accessibilityLabel="検索中" size="large" />
+              ) : (
+                <ResourceList
+                  resourceName={{
+                    singular: "product",
+                    plural: "products",
+                  }}
+                  items={searchResults}
+                  renderItem={(item) => (
+                    <ResourceItem
+                      id={item.id}
+                      onClick={() => {
+                        if (!selectedProducts.find((p) => p.id === item.id)) {
+                          setSelectedProducts([...selectedProducts, item]);
+                        }
+                      }}
+                      media={
+                        item.imageUrl ? (
+                          <Thumbnail
+                            source={item.imageUrl}
+                            alt={item.title}
+                            size="small"
+                          />
+                        ) : undefined
+                      }
+                    >
+                      {item.artist ? `${item.artist}, ` : ""}
+                      {item.title}
+                    </ResourceItem>
+                  )}
+                />
+              )}
+
+              <ReactQuill
+                theme="snow"
+                value={leadText}
+                onChange={setLeadText}
+                modules={quillModules}
+                formats={quillFormats}
+              />
+
+              <TextField
+                label="ユーザー名"
+                value={username}
+                onChange={setUsername}
+                autoComplete="off"
+              />
+
+              <TextField
+                label="パスワード"
+                value={password}
+                type={showPassword ? "text" : "password"}
+                onChange={setPassword}
+                placeholder="パスワード"
+                autoComplete="off"
+                suffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Icon source={showPassword ? HideIcon : ViewIcon} />
+                  </button>
+                }
+              />
+
+              <Popover
+                active={datePickerActive}
+                activator={
+                  <TextField
+                    label="有効期限"
+                    value={
+                      expiresDate
+                        ? `${expiresDate.getFullYear()}/${String(
+                            expiresDate.getMonth() + 1
+                          ).padStart(2, "0")}/${String(
+                            expiresDate.getDate()
+                          ).padStart(2, "0")}`
+                        : ""
+                    }
+                    prefix={<Icon source={CalendarIcon} />}
+                    placeholder="yyyy/mm/dd"
+                    onFocus={() => setDatePickerActive(true)}
+                    onChange={() => {}}
+                  />
+                }
+                onClose={() => setDatePickerActive(false)}
+              >
+                <DatePicker
+                  month={month}
+                  year={year}
+                  selected={expiresDate || new Date()}
+                  onChange={({ start }) => {
+                    const d = new Date(start);
+                    d.setHours(0, 0, 0, 0);
+                    setExpiresDate(d);
+                    setDate({
+                      month: d.getMonth(),
+                      year: d.getFullYear(),
+                    });
+                    setDatePickerActive(false);
+                  }}
+                />
+              </Popover>
+            </BlockStack>
+          </Card>
+        </div>
+      </div>
+
+      {toastMarkup}
     </Frame>
   );
 }
