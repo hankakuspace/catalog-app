@@ -2,8 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
 import { shopify, sessionStorage } from "@/lib/shopify";
-import { Session } from "@shopify/shopify-api"; // 既存
-import { sessionToObject } from "@shopify/shopify-api/session"; // ★ 追加：Session を JSON 化
+import { Session } from "@shopify/shopify-api";
 
 const apiKey = process.env.SHOPIFY_API_KEY!;
 const apiSecretKey = process.env.SHOPIFY_API_SECRET!;
@@ -80,10 +79,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     offlineSession.accessToken = tokenData.access_token;
 
-    // 🔥 Firestore は Session クラスを保存できない → JSON に変換
-    const plainSession = sessionToObject(offlineSession);
+    // 🔥 Shopify Session → プレーンオブジェクト（公式メソッド）
+    const plainSession = offlineSession.toObject();
 
-    // 🔥 Firestore 保存（ここが 500 → 正常動作に変わる）
+    // 🔥 Firestore 保存（Sessionのままは保存不可）
     await sessionStorage.storeSession(plainSession);
 
     console.log("🔥 Session stored (converted JSON):", {
@@ -92,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken: plainSession.accessToken ? "存在する" : "なし",
     });
 
-    // ✅ exitiframe にリダイレクト
+    // ✅ exitiframe へ
     return res.redirect(
       `/exitiframe?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`
     );
