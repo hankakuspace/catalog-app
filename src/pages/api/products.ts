@@ -31,9 +31,9 @@ interface GraphQLResponse {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const shop = req.query.shop as string | undefined;
-    const search = (req.query.query as string) || ""; // 検索ワード
+    const search = (req.query.query as string) || "";
 
-    // Firestore からオフラインセッションをロード
+    // Firestoreより offline セッションロード
     let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
 
     if (!session) {
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    // ✅ GraphQL 側では全件取得
+    // ⭐ namespace: "product" を指定して明示的にメタフィールドを取得
     const gqlQuery = gql`
       {
         products(first: 50) {
@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   }
                 }
               }
-              metafields(first: 20) {
+              metafields(namespace: "product", first: 50) {
                 edges {
                   node {
                     namespace
@@ -99,10 +99,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = await client.request<GraphQLResponse>(gqlQuery);
 
-    // 整形
     let formatted = data.products.edges.map((edge) => {
       const p = edge.node;
 
+      // ⭐ product namespace のメタフィールドマップ
       const metafields: Record<string, string> = {};
       p.metafields?.edges.forEach((mf) => {
         const { key, value } = mf.node;
@@ -115,35 +115,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         artist: p.vendor,
         imageUrl: p.images.edges[0]?.node.originalSrc || null,
         price: p.variants?.edges[0]?.node?.price || "0.00",
+
+        // ⭐ 基本フィールド
         year: metafields["year"] || "",
-        credit: metafields["credit"] || "",
-        type: metafields["type"] || "",
-        importance: metafields["importance"] || "",
-        edition: metafields["edition"] || "",
-        signed: metafields["signed"] || "",
         dimensions: metafields["dimensions"] || "",
         medium: metafields["medium"] || "",
         frame: metafields["frame"] || "",
+
+        // ⭐ 今回追加（素材 / サイズ区分 / 技法 / 真正証明）
+        material: metafields["material"] || "",
+        size: metafields["size"] || "",
+        technique: metafields["technique"] || "",
+        certificate: metafields["certificate"] || "",
       };
     });
 
-    // ✅ サーバー側で prefix match を適用
+    // ⭐ 検索フィルタ
     if (search) {
       const q = search.toLowerCase().trim();
-      const before = formatted.length;
-
       formatted = formatted.filter((p) => {
-        const titleMatch = q && p.title?.toLowerCase().startsWith(q);
-        const artistMatch = q && p.artist?.toLowerCase().startsWith(q);
+        const titleMatch = p.title?.toLowerCase().startsWith(q);
+        const artistMatch = p.artist?.toLowerCase().startsWith(q);
         return Boolean(titleMatch || artistMatch);
       });
-
-      console.log("🔍 検索ワード:", search);
-      console.log("🔍 フィルタ前件数:", before);
-      console.log("🔍 フィルタ後件数:", formatted.length);
-      formatted.forEach((p) =>
-        console.log("👉 残った商品:", p.title, "/", p.artist)
-      );
     }
 
     return res.status(200).json({ products: formatted });
