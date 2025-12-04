@@ -108,19 +108,21 @@ export default function PreviewCatalog({
   );
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
-  const [storeHandle, setStoreHandle] = useState<string>("catalog-app-dev-2");
 
-  // ✅ 編集中のアイテムと一時価格、チェック状態
+  // ❗ 修正：ハードコードを削除し、動的なストアハンドルを使用
+  const [storeHandle, setStoreHandle] = useState<string>("");
+
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const shopParam = params.get("shop");
-      if (shopParam) {
-        const handle = shopParam.replace(".myshopify.com", "");
+      // AppBridgeProvider.tsx で保存されている
+      const shop = localStorage.getItem("shopify_shop");
+
+      if (shop) {
+        const handle = shop.replace(".myshopify.com", "");
         setStoreHandle(handle);
       }
     }
@@ -136,7 +138,6 @@ export default function PreviewCatalog({
     }
   };
 
-  // ✅ カスタム価格設定
   const handleSetCustomPrice = (id: string) => {
     if (!tempPrice.trim()) return;
     onReorder?.(
@@ -148,7 +149,6 @@ export default function PreviewCatalog({
     setTempPrice("");
   };
 
-  // ✅ 標準価格に戻す
   const handleResetToDefault = (id: string) => {
     onReorder?.(
       products.map((p) => {
@@ -163,7 +163,6 @@ export default function PreviewCatalog({
     setCheckedItems((prev) => ({ ...prev, [id]: false }));
   };
 
-  // ✅ チェック状態変更
   const handleCheckboxChange = (id: string, checked: boolean) => {
     setCheckedItems((prev) => ({ ...prev, [id]: checked }));
     if (checked) {
@@ -176,9 +175,11 @@ export default function PreviewCatalog({
 
   const openShopifyEditPage = (productId: string) => {
     if (!productId || !storeHandle) return;
+
     const numericId = productId.includes("gid://")
       ? productId.replace("gid://shopify/Product/", "")
       : productId;
+
     const editUrl = `https://admin.shopify.com/store/${storeHandle}/products/${numericId}`;
     window.open(editUrl, "_blank");
   };
@@ -201,7 +202,6 @@ export default function PreviewCatalog({
       <style>{globalShakeKeyframes}</style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
-        {/* ヘッダー */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -216,7 +216,6 @@ export default function PreviewCatalog({
           )}
         </header>
 
-        {/* メイン */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
@@ -229,7 +228,6 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-                      {/* 編集メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <div className="preview-catalog-popover">
@@ -279,7 +277,6 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 画像 */}
                       {item.imageUrl && (
                         <img
                           src={item.imageUrl}
@@ -288,7 +285,6 @@ export default function PreviewCatalog({
                         />
                       )}
 
-                      {/* テキスト */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
@@ -303,7 +299,6 @@ export default function PreviewCatalog({
                             : ""}
                         </Text>
 
-                        {/* ✅ カタログ専用価格設定UI */}
                         {editable && (
                           <div className="mt-3 border-t border-gray-700 pt-2 text-sm">
                             {!item.customPrice ? (
@@ -313,32 +308,37 @@ export default function PreviewCatalog({
                                     type="checkbox"
                                     checked={!!checkedItems[item.id]}
                                     onChange={(e) =>
-                                      handleCheckboxChange(item.id, e.target.checked)
+                                      handleCheckboxChange(
+                                        item.id,
+                                        e.target.checked
+                                      )
                                     }
                                   />
                                   <span>カタログ専用価格を設定</span>
                                 </label>
 
-                                {/* ✅ チェックONのときのみフォーム表示 */}
-                                {checkedItems[item.id] && editingItemId === item.id && (
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <input
-                                      type="number"
-                                      placeholder="例：85000"
-                                      value={tempPrice}
-                                      onChange={(e) =>
-                                        setTempPrice(e.target.value)
-                                      }
-                                      className="bg-gray-800 text-white border border-gray-600 p-1 w-24 text-right"
-                                    />
-                                    <Button
-                                      size="slim"
-                                      onClick={() => handleSetCustomPrice(item.id)}
-                                    >
-                                      設定
-                                    </Button>
-                                  </div>
-                                )}
+                                {checkedItems[item.id] &&
+                                  editingItemId === item.id && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <input
+                                        type="number"
+                                        placeholder="例：85000"
+                                        value={tempPrice}
+                                        onChange={(e) =>
+                                          setTempPrice(e.target.value)
+                                        }
+                                        className="bg-gray-800 text-white border border-gray-600 p-1 w-24 text-right"
+                                      />
+                                      <Button
+                                        size="slim"
+                                        onClick={() =>
+                                          handleSetCustomPrice(item.id)
+                                        }
+                                      >
+                                        設定
+                                      </Button>
+                                    </div>
+                                  )}
                               </>
                             ) : (
                               <label className="flex items-center gap-2">
