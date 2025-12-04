@@ -38,11 +38,13 @@ export interface Product {
   medium?: string;
   frame?: string;
 
-  // ⭐ 新追加（素材・サイズ区分・技法・真正証明）
   material?: string;
   size?: string;
   technique?: string;
   certificate?: string;
+
+  // ⭐ 追加（すでに GraphQL で取得済み）
+  onlineStoreUrl?: string;
 }
 
 interface Props {
@@ -79,7 +81,6 @@ const formatTechnique = (value?: string) => {
     return value;
   }
 };
-
 
 function SortableItem({
   id,
@@ -137,21 +138,16 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // ⭐ ハードコード廃止 → 実ストアから動的取得
   const [storeHandle, setStoreHandle] = useState<string>("");
 
-  // ⭐ 価格カンマ付け関数
   const formatPrice = (value?: string) => {
     if (!value) return "";
     return Number(value).toLocaleString("ja-JP");
   };
 
-  // ⭐ 編集用 state
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
-  const [checkedItems, setCheckedItems] = useState<
-    Record<string, boolean>
-  >({});
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -235,7 +231,6 @@ export default function PreviewCatalog({
       <style>{globalShakeKeyframes}</style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
-        {/* ヘッダー */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -250,17 +245,13 @@ export default function PreviewCatalog({
           )}
         </header>
 
-        {/* メイン */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={products.map((p) => p.id)}
-              strategy={rectSortingStrategy}
-            >
+            <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
               <div className={gridClass}>
                 {products.map((item) => (
                   <SortableItem
@@ -270,7 +261,7 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-                      {/* 編集メニュー */}
+
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -318,16 +309,21 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 作品画像 */}
+                      {/* ⭐ 商品画像 → Shopify 商品ページへリンク化 */}
                       {item.imageUrl && (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="block w-full object-contain"
-                        />
+                        <a
+                          href={item.onlineStoreUrl ?? "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="block w-full object-contain hover:opacity-80 transition"
+                          />
+                        </a>
                       )}
 
-                      {/* 作品情報（表示部分） */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
@@ -335,7 +331,9 @@ export default function PreviewCatalog({
                         {item.frame && <Text as="p">{item.frame}</Text>}
                         {item.material && <Text as="p">{item.material}</Text>}
                         {item.size && <Text as="p">{item.size}</Text>}
-                        {item.technique && <Text as="p">{formatTechnique(item.technique)}</Text>}
+                        {item.technique && (
+                          <Text as="p">{formatTechnique(item.technique)}</Text>
+                        )}
                         {item.certificate && (
                           <Text as="p">{item.certificate}</Text>
                         )}
@@ -361,9 +359,7 @@ export default function PreviewCatalog({
         </main>
 
         <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
-          Copyright ©
-          {" "}
-          2025 Clue Co.,Ltd. all rights reserved.
+          Copyright © 2025 Clue Co.,Ltd. all rights reserved.
         </footer>
       </div>
     </>
