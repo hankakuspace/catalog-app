@@ -38,7 +38,7 @@ export default function CatalogPreviewPage() {
     setAuthChecked(true);
   }, [data, id]);
 
-  // ✅ ログイン処理（sessionStorageへ保存）
+  // ✅ ログイン処理
   const handleLogin = () => {
     const catalog = data?.catalog;
     if (!catalog) return;
@@ -114,7 +114,8 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // ✅ 認証済み or 認証不要 → プレビュー表示
+  // ⭐ プレビュー画面でも "編集 UI を常時表示" させるため editable=true にする
+  // ⭐ Firestore には保存しないので、onReorder/onRemove はダミーを渡す
   return (
     <div className="p-4">
       <PreviewCatalog
@@ -122,7 +123,9 @@ export default function CatalogPreviewPage() {
         leadText={catalog.leadText}
         products={catalog.products as Product[]}
         columnCount={catalog.columnCount || 3}
-        editable={false}
+        editable={true}               // ← 価格編集UIが表示される
+        onReorder={() => {}}          // ← 必須：SSRがUIを削除しないようダミー関数
+        onRemove={() => {}}           // ← 必須：削除UIが生存する
       />
     </div>
   );
