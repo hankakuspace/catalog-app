@@ -1,20 +1,19 @@
 // src/components/PreviewCatalog.tsx
-"use client";
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useEffect } from "react";
+"use client";
+
+import React, { useState } from "react";
 import {
   DndContext,
   closestCenter,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
   rectSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -116,7 +115,7 @@ export default function PreviewCatalog({
   title,
   leadText,
   products,
-  editable = false,
+  editable = false,     // ⭐ クライアント側は false
   onReorder,
   onRemove,
   columnCount = 3,
@@ -128,15 +127,12 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
+  // ⭐ 価格編集関連の state（editable=false では UI を出さない）
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
 
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
-
-  // ============================================================
-  // ⭐ 必須：価格ロジック関数（ビルドエラーの原因だった部分）
-  // ============================================================
 
   const handleSetCustomPrice = (id: string) => {
     const newPrice = tempPrices[id]?.trim();
@@ -174,8 +170,6 @@ export default function PreviewCatalog({
     }
   };
 
-  // ============================================================
-
   return (
     <>
       <style>{globalShakeKeyframes}</style>
@@ -199,10 +193,7 @@ export default function PreviewCatalog({
         {/* MAIN */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext sensors={sensors} collisionDetection={closestCenter}>
-            <SortableContext
-              items={products.map((p) => p.id)}
-              strategy={rectSortingStrategy}
-            >
+            <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
               <div
                 className={
                   columnCount === 2
@@ -221,7 +212,7 @@ export default function PreviewCatalog({
                   >
                     <BlockStack gap="200">
 
-                      {/* 編集メニュー（管理画面のみ） */}
+                      {/* ⭐ 編集メニュー（editable=true のときだけ） */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -303,7 +294,7 @@ export default function PreviewCatalog({
                         )}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
-                        {/* 価格 */}
+                        {/* ⭐ 価格表示（customPrice > price） */}
                         <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
@@ -312,50 +303,48 @@ export default function PreviewCatalog({
                             : ""}
                         </Text>
 
-                        {/* ===================================================== */}
-                        {/* ⭐⭐ 完全常時表示：価格編集 UI（価格の直下） ⭐⭐ */}
-                        {/* ===================================================== */}
+                        {/* ⭐⭐ editable=false のときは価格編集 UI を完全に非表示 ⭐⭐ */}
+                        {editable && (
+                          <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
+                            <Checkbox
+                              label="価格を変更する"
+                              checked={checkedItems[item.id] || false}
+                              onChange={(checked) =>
+                                handleCheckboxChange(item.id, checked)
+                              }
+                            />
 
-                        <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
+                            {checkedItems[item.id] && (
+                              <div className="mt-3 space-y-3">
+                                <TextField
+                                  label="新しい価格"
+                                  value={tempPrices[item.id] || ""}
+                                  onChange={(val) =>
+                                    setTempPrices((prev) => ({
+                                      ...prev,
+                                      [item.id]: val,
+                                    }))
+                                  }
+                                  autoComplete="off"
+                                />
 
-                          <Checkbox
-                            label="価格を変更する"
-                            checked={checkedItems[item.id] || false}
-                            onChange={(checked) =>
-                              handleCheckboxChange(item.id, checked)
-                            }
-                          />
+                                <Button
+                                  variant="primary"
+                                  onClick={() => handleSetCustomPrice(item.id)}
+                                >
+                                  変更する
+                                </Button>
 
-                          {checkedItems[item.id] && (
-                            <div className="mt-3 space-y-3">
-                              <TextField
-                                label="新しい価格"
-                                value={tempPrices[item.id] || ""}
-                                onChange={(val) =>
-                                  setTempPrices((prev) => ({
-                                    ...prev,
-                                    [item.id]: val,
-                                  }))
-                                }
-                                autoComplete="off"
-                              />
-
-                              <Button
-                                variant="primary"
-                                onClick={() => handleSetCustomPrice(item.id)}
-                              >
-                                変更する
-                              </Button>
-
-                              <Button
-                                variant="monochromePlain"
-                                onClick={() => handleResetToDefault(item.id)}
-                              >
-                                元の価格に戻す
-                              </Button>
-                            </div>
-                          )}
-                        </div>
+                                <Button
+                                  variant="monochromePlain"
+                                  onClick={() => handleResetToDefault(item.id)}
+                                >
+                                  元の価格に戻す
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </BlockStack>
                   </SortableItem>
