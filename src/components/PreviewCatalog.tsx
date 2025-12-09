@@ -81,17 +81,7 @@ const formatTechnique = (value?: string) => {
   }
 };
 
-function SortableItem({
-  id,
-  editable,
-  isReorderMode,
-  children,
-}: {
-  id: string;
-  editable: boolean;
-  isReorderMode: boolean;
-  children: React.ReactNode;
-}) {
+function SortableItem({ id, editable, isReorderMode, children }: any) {
   const {
     attributes,
     listeners,
@@ -108,15 +98,15 @@ function SortableItem({
     zIndex: isDragging ? 50 : "auto",
   };
 
-  const shakeActive = editable && (isDragging || isReorderMode);
-
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...(editable ? { ...attributes, ...listeners } : {})}
     >
-      <div className={shakeActive ? "shake-inner" : ""}>{children}</div>
+      <div className={editable && (isDragging || isReorderMode) ? "shake-inner" : ""}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -136,37 +126,22 @@ export default function PreviewCatalog({
 
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
-
   const [storeHandle, setStoreHandle] = useState<string>("");
-
-  const formatPrice = (value?: string) => {
-    if (!value) return "";
-    return Number(value).toLocaleString("ja-JP");
-  };
 
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
+  const formatPrice = (value?: string) =>
+    value ? Number(value).toLocaleString("ja-JP") : "";
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const shop = localStorage.getItem("shopify_shop");
-      if (shop) {
-        const handle = shop.replace(".myshopify.com", "");
-        setStoreHandle(handle);
-      }
+    const shop = localStorage.getItem("shopify_shop");
+    if (shop) {
+      const handle = shop.replace(".myshopify.com", "");
+      setStoreHandle(handle);
     }
   }, []);
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    if (!editable || !onReorder) return;
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = products.findIndex((p) => p.id === active.id);
-      const newIndex = products.findIndex((p) => p.id === over.id);
-      onReorder(arrayMove(products, oldIndex, newIndex));
-    }
-  };
 
   const handleSetCustomPrice = (id: string) => {
     if (!tempPrice.trim()) return;
@@ -183,47 +158,15 @@ export default function PreviewCatalog({
     onReorder?.(
       products.map((p) => {
         if (p.id === id) {
-          const copy = { ...p };
-          delete copy.customPrice;
-          return copy;
+          const next = { ...p };
+          delete next.customPrice;
+          return next;
         }
         return p;
       })
     );
     setCheckedItems((prev) => ({ ...prev, [id]: false }));
   };
-
-  const handleCheckboxChange = (id: string, checked: boolean) => {
-    setCheckedItems((prev) => ({ ...prev, [id]: checked }));
-    if (checked) {
-      setEditingItemId(id);
-    } else {
-      setEditingItemId(null);
-      setTempPrice("");
-    }
-  };
-
-  const openShopifyEditPage = (productId: string) => {
-    if (!productId || !storeHandle) return;
-    const numericId = productId.includes("gid://")
-      ? productId.replace("gid://shopify/Product/", "")
-      : productId;
-    const editUrl = `https://admin.shopify.com/store/${storeHandle}/products/${numericId}`;
-    window.open(editUrl, "_blank");
-  };
-
-  const gridClass =
-    columnCount === 2
-      ? `${styles.previewGrid} ${styles["cols-2"]}`
-      : columnCount === 4
-      ? `${styles.previewGrid} ${styles["cols-4"]}`
-      : `${styles.previewGrid} ${styles["cols-3"]}`;
-
-  const sanitizedLead = leadText
-    ? leadText
-        .replace(/color\s*:\s*rgb\(0,\s*0,\s*0\)/gi, "color: #fff")
-        .replace(/color\s*:\s*#000/gi, "color: #fff")
-    : "";
 
   return (
     <>
@@ -234,20 +177,28 @@ export default function PreviewCatalog({
           <img
             src="/andcollection.svg"
             alt="AND COLLECTION"
-            className="mx-auto h-12 w-auto filter invert"
+            className="mx-auto h-12 filter invert"
           />
-          {sanitizedLead && (
+          {leadText && (
             <div
               className="max-w-3xl mx-auto text-center mt-10 mb-5"
-              dangerouslySetInnerHTML={{ __html: sanitizedLead }}
+              dangerouslySetInnerHTML={{ __html: leadText }}
             />
           )}
         </header>
 
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter}>
             <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
-              <div className={gridClass}>
+              <div
+                className={
+                  columnCount === 2
+                    ? `${styles.previewGrid} ${styles["cols-2"]}`
+                    : columnCount === 4
+                    ? `${styles.previewGrid} ${styles["cols-4"]}`
+                    : `${styles.previewGrid} ${styles["cols-3"]}`
+                }
+              >
                 {products.map((item) => (
                   <SortableItem
                     key={item.id}
@@ -256,54 +207,6 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-
-                      {/* --- 編集アイコン（管理画面のみ）--- */}
-                      {editable && (
-                        <div className="flex justify-end mb-2">
-                          <Popover
-                            active={activePopoverId === item.id}
-                            activator={
-                              <Button
-                                variant="plain"
-                                icon={MenuHorizontalIcon}
-                                onClick={() =>
-                                  setActivePopoverId(
-                                    activePopoverId === item.id ? null : item.id
-                                  )
-                                }
-                              />
-                            }
-                            onClose={() => setActivePopoverId(null)}
-                          >
-                            <ActionList
-                              items={[
-                                {
-                                  content: isReorderMode ? "移動を完了" : "移動",
-                                  onAction: () => {
-                                    setIsReorderMode(!isReorderMode);
-                                    setActivePopoverId(null);
-                                  },
-                                },
-                                {
-                                  content: "編集",
-                                  onAction: () => {
-                                    openShopifyEditPage(item.id);
-                                    setActivePopoverId(null);
-                                  },
-                                },
-                                {
-                                  destructive: true,
-                                  content: "削除",
-                                  onAction: () => {
-                                    onRemove?.(item.id);
-                                    setActivePopoverId(null);
-                                  },
-                                },
-                              ]}
-                            />
-                          </Popover>
-                        </div>
-                      )}
 
                       {/* --- 商品画像 --- */}
                       {item.imageUrl && (
@@ -315,13 +218,13 @@ export default function PreviewCatalog({
                           <img
                             src={item.imageUrl}
                             alt={item.title}
-                            className="block w-full object-contain hover:opacity-80 transition"
+                            className="block w-full object-contain"
                           />
                         </a>
                       )}
 
                       {/* --- 商品情報 --- */}
-                      <div className="text-white mt-2 px-2">
+                      <div className="text-white mt-2 px-2 w-full">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
                         {item.year && <Text as="p">{item.year}</Text>}
@@ -335,7 +238,6 @@ export default function PreviewCatalog({
                         {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
-                        {/* --- 価格 --- */}
                         <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
@@ -345,19 +247,22 @@ export default function PreviewCatalog({
                         </Text>
 
                         {/* ================================================= */}
-                        {/* ⭐⭐ 価格編集 UI（必ず表示・価格の直下に配置） ⭐⭐ */}
+                        {/* ⭐⭐ 価格編集 UI（常時表示 & 価格直下） ⭐⭐ */}
                         {/* ================================================= */}
-                        <div className="mt-3 p-3 border border-gray-700 rounded bg-black/30">
+                        <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
                           <Checkbox
                             label="価格を変更する"
                             checked={checkedItems[item.id] || false}
                             onChange={(checked) =>
-                              handleCheckboxChange(item.id, checked)
+                              setCheckedItems((prev) => ({
+                                ...prev,
+                                [item.id]: checked,
+                              }))
                             }
                           />
 
                           {checkedItems[item.id] && (
-                            <div className="mt-3 space-y-3">
+                            <div className="mt-3 space-y-3 w-full">
                               <TextField
                                 label="新しい価格"
                                 value={tempPrice}
@@ -382,7 +287,7 @@ export default function PreviewCatalog({
                           )}
                         </div>
                         {/* ================================================= */}
-                        {/* ⭐⭐ 完全復元・常時表示の価格編集 UI ⭐⭐ */}
+                        {/* ⭐⭐ 完全復元 UI END ⭐⭐ */}
                         {/* ================================================= */}
                       </div>
                     </BlockStack>
