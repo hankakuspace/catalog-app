@@ -1,35 +1,31 @@
-// src/pages/preview/[id].tsx
+// src/pages/preview/[id]/client.tsx
+"use client";
+
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 
-// ⭐ PreviewCatalog を SSR 無効化でロード（Pages Router の Next16対策）
+// ⭐ PreviewCatalog は Polaris/dnd-kit を含むため SSR 完全禁止
 const PreviewCatalog = dynamic(
   () => import("@/components/PreviewCatalog"),
   { ssr: false }
 );
 
-export default function CatalogPreviewPage() {
+export default function ClientPreviewPage() {
   const router = useRouter();
   const { id } = router.query;
 
-  // ⭐ SSR中は絶対レンダリングさせない
+  // ⭐ 初期SSRを完全に無効化するフラグ
   const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
 
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  if (!hydrated) return <div className="p-6">読み込み中...</div>;
 
-  if (!hydrated) {
-    return <div className="p-6">読み込み中...</div>;
-  }
-
-  // ⭐ idが取れるまで fetch を開始しない（「読み込み中」ループ対策）
+  // ⭐ id が取れたときのみ API を叩く（未定義フェーズで落ちないようにする）
   const shouldFetch = typeof id === "string" && id.length > 0;
 
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
   const { data, error } = useSWR(
     shouldFetch ? `/api/catalogs?id=${id}` : null,
     fetcher
@@ -41,12 +37,12 @@ export default function CatalogPreviewPage() {
   const [inputPass, setInputPass] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // ⭐ sessionStorage はクライアントのみ
   useEffect(() => {
     if (!data?.catalog || !shouldFetch) return;
 
     const catalog = data.catalog;
 
+    // ⭐ sessionStorage → SSR で呼ばれると crash する → client.tsx で安全に呼べる
     if (catalog.username && catalog.password) {
       const saved = sessionStorage.getItem(`catalog-auth-${id}`);
       if (saved === "ok") {
@@ -59,20 +55,11 @@ export default function CatalogPreviewPage() {
     setAuthChecked(true);
   }, [data, shouldFetch, id]);
 
-  if (!shouldFetch) {
-    return <div className="p-6">読み込み中...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-red-600">エラーが発生しました</div>;
-  }
-
-  if (!data) {
-    return <div className="p-6">読み込み中...</div>;
-  }
+  if (!shouldFetch) return <div className="p-6">読み込み中...</div>;
+  if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
+  if (!data) return <div className="p-6">読み込み中...</div>;
 
   const catalog = data.catalog;
-
   if (!catalog) {
     return (
       <div className="p-6 bg-red-100 text-red-700 rounded">
@@ -144,7 +131,7 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // ⭐ プレビュー本体
+  // ⭐ プレビュー本体は完全に CSR で安定動作する
   return (
     <div className="p-4">
       <PreviewCatalog
