@@ -126,7 +126,6 @@ export default function PreviewCatalog({
 
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
-  const [storeHandle, setStoreHandle] = useState<string>("");
 
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
@@ -135,44 +134,12 @@ export default function PreviewCatalog({
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
 
-  useEffect(() => {
-    const shop = localStorage.getItem("shopify_shop");
-    if (shop) {
-      const handle = shop.replace(".myshopify.com", "");
-      setStoreHandle(handle);
-    }
-  }, []);
-
-  const handleSetCustomPrice = (id: string) => {
-    if (!tempPrice.trim()) return;
-    onReorder?.(
-      products.map((p) =>
-        p.id === id ? { ...p, customPrice: tempPrice.trim() } : p
-      )
-    );
-    setEditingItemId(null);
-    setTempPrice("");
-  };
-
-  const handleResetToDefault = (id: string) => {
-    onReorder?.(
-      products.map((p) => {
-        if (p.id === id) {
-          const next = { ...p };
-          delete next.customPrice;
-          return next;
-        }
-        return p;
-      })
-    );
-    setCheckedItems((prev) => ({ ...prev, [id]: false }));
-  };
-
   return (
     <>
       <style>{globalShakeKeyframes}</style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
+        {/* HEADER */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -187,6 +154,7 @@ export default function PreviewCatalog({
           )}
         </header>
 
+        {/* MAIN */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext sensors={sensors} collisionDetection={closestCenter}>
             <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
@@ -199,6 +167,7 @@ export default function PreviewCatalog({
                     : `${styles.previewGrid} ${styles["cols-3"]}`
                 }
               >
+
                 {products.map((item) => (
                   <SortableItem
                     key={item.id}
@@ -208,7 +177,55 @@ export default function PreviewCatalog({
                   >
                     <BlockStack gap="200">
 
-                      {/* --- 商品画像 --- */}
+                      {/* 編集メニュー（管理画面のみ） */}
+                      {editable && (
+                        <div className="flex justify-end mb-2">
+                          <Popover
+                            active={activePopoverId === item.id}
+                            activator={
+                              <Button
+                                variant="plain"
+                                icon={MenuHorizontalIcon}
+                                onClick={() =>
+                                  setActivePopoverId(
+                                    activePopoverId === item.id ? null : item.id
+                                  )
+                                }
+                              />
+                            }
+                            onClose={() => setActivePopoverId(null)}
+                          >
+                            <ActionList
+                              items={[
+                                {
+                                  content: isReorderMode ? "移動を完了" : "移動",
+                                  onAction: () => {
+                                    setIsReorderMode(!isReorderMode);
+                                    setActivePopoverId(null);
+                                  },
+                                },
+                                {
+                                  content: "編集",
+                                  onAction: () => {
+                                    console.log("edit item", item.id);
+                                    setActivePopoverId(null);
+                                  },
+                                },
+                                {
+                                  destructive: true,
+                                  content: "削除",
+                                  onAction: () => {
+                                    onRemove?.(item.id);
+                                    setActivePopoverId(null);
+                                  },
+                                },
+                              ]}
+                            />
+                          </Popover>
+                        </div>
+                      )}
+
+                      {/* 商品画像 */}
                       {item.imageUrl && (
                         <a
                           href={item.onlineStoreUrl ?? "#"}
@@ -223,7 +240,7 @@ export default function PreviewCatalog({
                         </a>
                       )}
 
-                      {/* --- 商品情報 --- */}
+                      {/* 商品情報 */}
                       <div className="text-white mt-2 px-2 w-full">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
@@ -238,6 +255,7 @@ export default function PreviewCatalog({
                         {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
+                        {/* 価格 */}
                         <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
@@ -247,9 +265,11 @@ export default function PreviewCatalog({
                         </Text>
 
                         {/* ================================================= */}
-                        {/* ⭐⭐ 価格編集 UI（常時表示 & 価格直下） ⭐⭐ */}
+                        {/* ⭐⭐ 完全常時表示：価格編集 UI（価格の直下） ⭐⭐ */}
                         {/* ================================================= */}
                         <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
+
+                          {/* 常時チェックボックス表示 */}
                           <Checkbox
                             label="価格を変更する"
                             checked={checkedItems[item.id] || false}
@@ -261,6 +281,7 @@ export default function PreviewCatalog({
                             }
                           />
 
+                          {/* チェックON時のUI */}
                           {checkedItems[item.id] && (
                             <div className="mt-3 space-y-3 w-full">
                               <TextField
@@ -286,13 +307,15 @@ export default function PreviewCatalog({
                             </div>
                           )}
                         </div>
+
                         {/* ================================================= */}
-                        {/* ⭐⭐ 完全復元 UI END ⭐⭐ */}
+                        {/* ⭐⭐ END UI ⭐⭐ */}
                         {/* ================================================= */}
                       </div>
                     </BlockStack>
                   </SortableItem>
                 ))}
+
               </div>
             </SortableContext>
           </DndContext>
