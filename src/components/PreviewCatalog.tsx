@@ -127,12 +127,53 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [tempPrice, setTempPrice] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
 
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
+
+  // ============================================================
+  // ⭐ 必須：価格ロジック関数（ビルドエラーの原因だった部分）
+  // ============================================================
+
+  const handleSetCustomPrice = (id: string) => {
+    const newPrice = tempPrices[id]?.trim();
+    if (!newPrice) return;
+
+    if (onReorder) {
+      onReorder(
+        products.map((p) =>
+          p.id === id ? { ...p, customPrice: newPrice } : p
+        )
+      );
+    }
+  };
+
+  const handleResetToDefault = (id: string) => {
+    if (onReorder) {
+      onReorder(
+        products.map((p) => {
+          if (p.id === id) {
+            const newP = { ...p };
+            delete newP.customPrice;
+            return newP;
+          }
+          return p;
+        })
+      );
+    }
+    setCheckedItems((prev) => ({ ...prev, [id]: false }));
+  };
+
+  const handleCheckboxChange = (id: string, checked: boolean) => {
+    setCheckedItems((prev) => ({ ...prev, [id]: checked }));
+    if (!checked) {
+      setTempPrices((prev) => ({ ...prev, [id]: "" }));
+    }
+  };
+
+  // ============================================================
 
   return (
     <>
@@ -157,7 +198,10 @@ export default function PreviewCatalog({
         {/* MAIN */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
           <DndContext sensors={sensors} collisionDetection={closestCenter}>
-            <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
+            <SortableContext
+              items={products.map((p) => p.id)}
+              strategy={rectSortingStrategy}
+            >
               <div
                 className={
                   columnCount === 2
@@ -167,7 +211,6 @@ export default function PreviewCatalog({
                     : `${styles.previewGrid} ${styles["cols-3"]}`
                 }
               >
-
                 {products.map((item) => (
                   <SortableItem
                     key={item.id}
@@ -207,7 +250,7 @@ export default function PreviewCatalog({
                                 {
                                   content: "編集",
                                   onAction: () => {
-                                    console.log("edit item", item.id);
+                                    console.log("edit", item.id);
                                     setActivePopoverId(null);
                                   },
                                 },
@@ -251,8 +294,12 @@ export default function PreviewCatalog({
                         {item.technique && (
                           <Text as="p">{formatTechnique(item.technique)}</Text>
                         )}
-                        {item.certificate && <Text as="p">{item.certificate}</Text>}
-                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
+                        {item.certificate && (
+                          <Text as="p">{item.certificate}</Text>
+                        )}
+                        {item.dimensions && (
+                          <Text as="p">{item.dimensions}</Text>
+                        )}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
                         {/* 価格 */}
@@ -264,30 +311,31 @@ export default function PreviewCatalog({
                             : ""}
                         </Text>
 
-                        {/* ================================================= */}
+                        {/* ===================================================== */}
                         {/* ⭐⭐ 完全常時表示：価格編集 UI（価格の直下） ⭐⭐ */}
-                        {/* ================================================= */}
+                        {/* ===================================================== */}
+
                         <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
 
-                          {/* 常時チェックボックス表示 */}
                           <Checkbox
                             label="価格を変更する"
                             checked={checkedItems[item.id] || false}
                             onChange={(checked) =>
-                              setCheckedItems((prev) => ({
-                                ...prev,
-                                [item.id]: checked,
-                              }))
+                              handleCheckboxChange(item.id, checked)
                             }
                           />
 
-                          {/* チェックON時のUI */}
                           {checkedItems[item.id] && (
-                            <div className="mt-3 space-y-3 w-full">
+                            <div className="mt-3 space-y-3">
                               <TextField
                                 label="新しい価格"
-                                value={tempPrice}
-                                onChange={setTempPrice}
+                                value={tempPrices[item.id] || ""}
+                                onChange={(val) =>
+                                  setTempPrices((prev) => ({
+                                    ...prev,
+                                    [item.id]: val,
+                                  }))
+                                }
                                 autoComplete="off"
                               />
 
@@ -307,22 +355,17 @@ export default function PreviewCatalog({
                             </div>
                           )}
                         </div>
-
-                        {/* ================================================= */}
-                        {/* ⭐⭐ END UI ⭐⭐ */}
-                        {/* ================================================= */}
                       </div>
                     </BlockStack>
                   </SortableItem>
                 ))}
-
               </div>
             </SortableContext>
           </DndContext>
         </main>
 
         <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
-          Copyright © 2025 Clue Co.,Ltd. all rights reserved.
+          © 2025 Clue Co.,Ltd. All rights reserved.
         </footer>
       </div>
     </>
