@@ -50,7 +50,7 @@ interface Props {
   title: string;
   leadText?: string;
   products: Product[];
-  editable?: boolean;
+  editable?: boolean; // ← UI 非依存になるが保持
   onReorder?: (products: Product[]) => void;
   onRemove?: (id: string) => void;
   columnCount?: number;
@@ -144,6 +144,7 @@ export default function PreviewCatalog({
     return Number(value).toLocaleString("ja-JP");
   };
 
+  // ⭐ price editing state
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -228,6 +229,7 @@ export default function PreviewCatalog({
   return (
     <>
       <style>{globalShakeKeyframes}</style>
+
       <div className="min-h-screen bg-black text-white flex flex-col">
         <header className="text-center py-8 border-b border-gray-700">
           <img
@@ -255,8 +257,7 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-                      
-                      {/* 編集メニュー */}
+                      {/* 編集メニュー（editable=true の場合のみ） */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -334,7 +335,7 @@ export default function PreviewCatalog({
                         {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
-                        {/* 価格表示 */}
+                        {/* 価格 */}
                         <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
@@ -344,46 +345,44 @@ export default function PreviewCatalog({
                         </Text>
 
                         {/* ================================================= */}
-                        {/* ⭐⭐ 価格編集 UI 復元（Polaris v13 対応済み） ⭐⭐ */}
+                        {/* ⭐⭐ 価格編集 UI（常時表示版 / editable 無視） ⭐⭐ */}
                         {/* ================================================= */}
-                        {editable && (
-                          <div className="mt-2 p-3 border border-gray-700 rounded">
-                            <Checkbox
-                              label="価格を変更する"
-                              checked={checkedItems[item.id] || false}
-                              onChange={(checked) =>
-                                handleCheckboxChange(item.id, checked)
-                              }
-                            />
+                        <div className="mt-3 p-3 border border-gray-700 rounded">
+                          <Checkbox
+                            label="価格を変更する"
+                            checked={checkedItems[item.id] || false}
+                            onChange={(checked) =>
+                              handleCheckboxChange(item.id, checked)
+                            }
+                          />
 
-                            {checkedItems[item.id] && (
-                              <div className="mt-3 space-y-3">
-                                <TextField
-                                  label="新しい価格"
-                                  value={tempPrice}
-                                  onChange={setTempPrice}
-                                  autoComplete="off"
-                                />
+                          {checkedItems[item.id] && (
+                            <div className="mt-3 space-y-3">
+                              <TextField
+                                label="新しい価格"
+                                value={tempPrice}
+                                onChange={setTempPrice}
+                                autoComplete="off"
+                              />
 
-                                <Button
-                                  variant="primary"
-                                  onClick={() => handleSetCustomPrice(item.id)}
-                                >
-                                  変更する
-                                </Button>
+                              <Button
+                                variant="primary"
+                                onClick={() => handleSetCustomPrice(item.id)}
+                              >
+                                変更する
+                              </Button>
 
-                                <Button
-                                  variant="monochromePlain"
-                                  onClick={() => handleResetToDefault(item.id)}
-                                >
-                                  元の価格に戻す
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                              <Button
+                                variant="monochromePlain"
+                                onClick={() => handleResetToDefault(item.id)}
+                              >
+                                元の価格に戻す
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         {/* ================================================= */}
-                        {/* ⭐⭐ 価格編集 UI 復元 完了 ⭐⭐ */}
+                        {/* ⭐⭐ 価格編集 UI 完全復元 / いつでも表示 ⭐⭐ */}
                         {/* ================================================= */}
                       </div>
                     </BlockStack>
