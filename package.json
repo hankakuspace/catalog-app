@@ -27,7 +27,7 @@
     "firebase": "^12.3.0",
     "firebase-admin": "^13.5.0",
     "graphql-request": "^7.2.0",
-    "next": "15.5.4",                 // ← ★修正点ここだけ★
+    "next": "15.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-quill": "^2.0.0",
