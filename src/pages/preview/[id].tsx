@@ -1,16 +1,16 @@
-// src/pages/preview/[id].tsx
+// src/app/preview/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function CatalogPreviewPage() {
-  const router = useRouter();
-  const { id } = router.query;
+  const params = useSearchParams();
+  const id = params.get("id");
 
   const { data, error } = useSWR(
     id ? `/api/catalogs?id=${id}` : null,
@@ -23,25 +23,26 @@ export default function CatalogPreviewPage() {
   const [inputPass, setInputPass] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // ✅ 認証状態チェック（sessionStorage使用）
   useEffect(() => {
     if (!data?.catalog || !id) return;
     const catalog = data.catalog;
+
     if (catalog.username && catalog.password) {
       const saved = sessionStorage.getItem(`catalog-auth-${id}`);
       if (saved === "ok") {
         setIsAuthed(true);
       }
     } else {
-      setIsAuthed(true); // 認証不要
+      setIsAuthed(true);
     }
+
     setAuthChecked(true);
   }, [data, id]);
 
-  // ✅ ログイン処理
   const handleLogin = () => {
     const catalog = data?.catalog;
     if (!catalog) return;
+
     if (inputUser === catalog.username && inputPass === catalog.password) {
       sessionStorage.setItem(`catalog-auth-${id}`, "ok");
       setIsAuthed(true);
@@ -51,8 +52,7 @@ export default function CatalogPreviewPage() {
     }
   };
 
-  if (error)
-    return <div className="p-6 text-red-600">エラーが発生しました</div>;
+  if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
   if (!data) return <div className="p-6">読み込み中...</div>;
 
   const catalog = data.catalog;
@@ -65,7 +65,7 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // ✅ 有効期限チェック
+  // 有効期限チェック
   if (catalog.expiresAt) {
     const exp = new Date(catalog.expiresAt);
     const now = new Date();
@@ -78,34 +78,38 @@ export default function CatalogPreviewPage() {
     }
   }
 
-  // ✅ 認証必要で未ログイン時
+  // 認証必要で未ログイン
   if (authChecked && !isAuthed) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-sm">
           <h2 className="text-lg font-bold mb-4">ログイン認証</h2>
+
           <input
             type="text"
             placeholder="ユーザー名"
             value={inputUser}
             onChange={(e) => setInputUser(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
           />
+
           <input
             type="password"
             placeholder="パスワード"
             value={inputPass}
             onChange={(e) => setInputPass(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
           />
+
           {loginError && (
             <div className="bg-red-100 text-red-700 text-sm px-3 py-2 rounded mb-3">
               {loginError}
             </div>
           )}
+
           <button
             onClick={handleLogin}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            className="w-full bg-blue-600 text-white py-2 rounded"
           >
             ログイン
           </button>
@@ -114,8 +118,7 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // ⭐ プレビュー画面でも "編集 UI を常時表示" させるため editable=true にする
-  // ⭐ Firestore には保存しないので、onReorder/onRemove はダミーを渡す
+  // プレビュー本体
   return (
     <div className="p-4">
       <PreviewCatalog
@@ -123,9 +126,9 @@ export default function CatalogPreviewPage() {
         leadText={catalog.leadText}
         products={catalog.products as Product[]}
         columnCount={catalog.columnCount || 3}
-        editable={true}               // ← 価格編集UIが表示される
-        onReorder={() => {}}          // ← 必須：SSRがUIを削除しないようダミー関数
-        onRemove={() => {}}           // ← 必須：削除UIが生存する
+        editable={true}
+        onReorder={() => {}}
+        onRemove={() => {}}
       />
     </div>
   );
