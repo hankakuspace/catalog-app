@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 
-// ⭐ PreviewCatalog は Polaris/dnd-kit を含むため SSR 完全禁止
+// ⭐ dnd-kit + Polaris を含むため SSRは禁止
 const PreviewCatalog = dynamic(
   () => import("@/components/PreviewCatalog"),
   { ssr: false }
@@ -16,21 +16,21 @@ export default function ClientPreviewPage() {
   const router = useRouter();
   const { id } = router.query;
 
-  // ⭐ 初期SSRを完全に無効化するフラグ
+  // ⭐ まずは「クライアントであること」を確認（SSR無効化）
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  if (!hydrated) return <div className="p-6">読み込み中...</div>;
-
-  // ⭐ id が取れたときのみ API を叩く（未定義フェーズで落ちないようにする）
+  // ⭐ id の取得（常にHooksの外で実行）
   const shouldFetch = typeof id === "string" && id.length > 0;
 
+  // ⭐ APIフェッチ（Hooksは条件の外で呼ぶ）
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
   const { data, error } = useSWR(
     shouldFetch ? `/api/catalogs?id=${id}` : null,
     fetcher
   );
 
+  // ⭐ 認証
   const [isAuthed, setIsAuthed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [inputUser, setInputUser] = useState("");
@@ -38,37 +38,39 @@ export default function ClientPreviewPage() {
   const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
-    if (!data?.catalog || !shouldFetch) return;
+    if (!hydrated) return;
+    if (!shouldFetch) return;
+    if (!data?.catalog) return;
 
     const catalog = data.catalog;
 
-    // ⭐ sessionStorage → SSR で呼ばれると crash する → client.tsx で安全に呼べる
     if (catalog.username && catalog.password) {
       const saved = sessionStorage.getItem(`catalog-auth-${id}`);
-      if (saved === "ok") {
-        setIsAuthed(true);
-      }
+      if (saved === "ok") setIsAuthed(true);
     } else {
       setIsAuthed(true);
     }
 
     setAuthChecked(true);
-  }, [data, shouldFetch, id]);
+  }, [hydrated, shouldFetch, data, id]);
 
+  // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+  // ⭐ UI レンダリング（Hooks の後で全て分岐）
+  // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+  if (!hydrated) return <div className="p-6">読み込み中...</div>;
   if (!shouldFetch) return <div className="p-6">読み込み中...</div>;
   if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
   if (!data) return <div className="p-6">読み込み中...</div>;
 
   const catalog = data.catalog;
-  if (!catalog) {
+  if (!catalog)
     return (
       <div className="p-6 bg-red-100 text-red-700 rounded">
         カタログが見つかりませんでした
       </div>
     );
-  }
 
-  // ⭐ 有効期限チェック
   if (catalog.expiresAt) {
     const exp = new Date(catalog.expiresAt);
     if (exp.getTime() < Date.now()) {
@@ -80,7 +82,6 @@ export default function ClientPreviewPage() {
     }
   }
 
-  // ⭐ 認証必要 & 未ログイン
   if (authChecked && !isAuthed) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -131,7 +132,7 @@ export default function ClientPreviewPage() {
     );
   }
 
-  // ⭐ プレビュー本体は完全に CSR で安定動作する
+  // ⭐ 最終 Preview 表示
   return (
     <div className="p-4">
       <PreviewCatalog
