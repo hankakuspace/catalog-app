@@ -39,12 +39,10 @@ export interface Product {
   dimensions?: string;
   medium?: string;
   frame?: string;
-
   material?: string;
   size?: string;
   technique?: string;
   certificate?: string;
-
   onlineStoreUrl?: string;
 }
 
@@ -146,7 +144,6 @@ export default function PreviewCatalog({
     return Number(value).toLocaleString("ja-JP");
   };
 
-  // ⭐ 価格編集 state（以前の実装が残っているのでそのまま利用）
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -231,7 +228,6 @@ export default function PreviewCatalog({
   return (
     <>
       <style>{globalShakeKeyframes}</style>
-
       <div className="min-h-screen bg-black text-white flex flex-col">
         <header className="text-center py-8 border-b border-gray-700">
           <img
@@ -259,6 +255,7 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
+                      
                       {/* 編集メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
@@ -307,7 +304,7 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 商品画像リンク */}
+                      {/* 商品画像 */}
                       {item.imageUrl && (
                         <a
                           href={item.onlineStoreUrl ?? "#"}
@@ -346,19 +343,21 @@ export default function PreviewCatalog({
                             : ""}
                         </Text>
 
-                        {/* ================================ */}
-                        {/* ⭐⭐ ここから「価格変更 UI」復元 ⭐⭐ */}
-                        {/* ================================ */}
+                        {/* ================================================= */}
+                        {/* ⭐⭐ 価格編集 UI 復元（Polaris v13 対応済み） ⭐⭐ */}
+                        {/* ================================================= */}
                         {editable && (
-                          <div className="mt-2 p-2 border border-gray-700 rounded">
+                          <div className="mt-2 p-3 border border-gray-700 rounded">
                             <Checkbox
                               label="価格を変更する"
                               checked={checkedItems[item.id] || false}
-                              onChange={(checked) => handleCheckboxChange(item.id, checked)}
+                              onChange={(checked) =>
+                                handleCheckboxChange(item.id, checked)
+                              }
                             />
 
                             {checkedItems[item.id] && (
-                              <div className="mt-2 space-y-2">
+                              <div className="mt-3 space-y-3">
                                 <TextField
                                   label="新しい価格"
                                   value={tempPrice}
@@ -367,14 +366,14 @@ export default function PreviewCatalog({
                                 />
 
                                 <Button
-                                  onClick={() => handleSetCustomPrice(item.id)}
                                   variant="primary"
+                                  onClick={() => handleSetCustomPrice(item.id)}
                                 >
                                   変更する
                                 </Button>
 
                                 <Button
-                                  plain
+                                  variant="monochromePlain"
                                   onClick={() => handleResetToDefault(item.id)}
                                 >
                                   元の価格に戻す
@@ -383,9 +382,9 @@ export default function PreviewCatalog({
                             )}
                           </div>
                         )}
-                        {/* ================================ */}
-                        {/* ⭐⭐ 価格編集 UI 復元完了 ⭐⭐ */}
-                        {/* ================================ */}
+                        {/* ================================================= */}
+                        {/* ⭐⭐ 価格編集 UI 復元 完了 ⭐⭐ */}
+                        {/* ================================================= */}
                       </div>
                     </BlockStack>
                   </SortableItem>
