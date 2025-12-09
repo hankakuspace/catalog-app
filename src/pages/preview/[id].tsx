@@ -1,19 +1,37 @@
-// src/app/preview/[id]/page.tsx
-"use client";
-
+// src/pages/preview/[id].tsx
+import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
-import PreviewCatalog, { Product } from "@/components/PreviewCatalog";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+// ⭐ PreviewCatalog を SSR 無効化でロード（Pages Router の Next16対策）
+const PreviewCatalog = dynamic(
+  () => import("@/components/PreviewCatalog"),
+  { ssr: false }
+);
 
 export default function CatalogPreviewPage() {
-  const params = useSearchParams();
-  const id = params.get("id");
+  const router = useRouter();
+  const { id } = router.query;
+
+  // ⭐ SSR中は絶対レンダリングさせない
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  if (!hydrated) {
+    return <div className="p-6">読み込み中...</div>;
+  }
+
+  // ⭐ idが取れるまで fetch を開始しない（「読み込み中」ループ対策）
+  const shouldFetch = typeof id === "string" && id.length > 0;
+
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
   const { data, error } = useSWR(
-    id ? `/api/catalogs?id=${id}` : null,
+    shouldFetch ? `/api/catalogs?id=${id}` : null,
     fetcher
   );
 
@@ -23,8 +41,10 @@ export default function CatalogPreviewPage() {
   const [inputPass, setInputPass] = useState("");
   const [loginError, setLoginError] = useState("");
 
+  // ⭐ sessionStorage はクライアントのみ
   useEffect(() => {
-    if (!data?.catalog || !id) return;
+    if (!data?.catalog || !shouldFetch) return;
+
     const catalog = data.catalog;
 
     if (catalog.username && catalog.password) {
@@ -37,23 +57,19 @@ export default function CatalogPreviewPage() {
     }
 
     setAuthChecked(true);
-  }, [data, id]);
+  }, [data, shouldFetch, id]);
 
-  const handleLogin = () => {
-    const catalog = data?.catalog;
-    if (!catalog) return;
+  if (!shouldFetch) {
+    return <div className="p-6">読み込み中...</div>;
+  }
 
-    if (inputUser === catalog.username && inputPass === catalog.password) {
-      sessionStorage.setItem(`catalog-auth-${id}`, "ok");
-      setIsAuthed(true);
-      setLoginError("");
-    } else {
-      setLoginError("ユーザー名またはパスワードが正しくありません");
-    }
-  };
+  if (error) {
+    return <div className="p-6 text-red-600">エラーが発生しました</div>;
+  }
 
-  if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
-  if (!data) return <div className="p-6">読み込み中...</div>;
+  if (!data) {
+    return <div className="p-6">読み込み中...</div>;
+  }
 
   const catalog = data.catalog;
 
@@ -65,11 +81,10 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // 有効期限チェック
+  // ⭐ 有効期限チェック
   if (catalog.expiresAt) {
     const exp = new Date(catalog.expiresAt);
-    const now = new Date();
-    if (exp.getTime() < now.getTime()) {
+    if (exp.getTime() < Date.now()) {
       return (
         <div className="p-6 bg-red-100 text-red-700 rounded">
           このカタログの有効期限は終了しました
@@ -78,7 +93,7 @@ export default function CatalogPreviewPage() {
     }
   }
 
-  // 認証必要で未ログイン
+  // ⭐ 認証必要 & 未ログイン
   if (authChecked && !isAuthed) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -108,7 +123,18 @@ export default function CatalogPreviewPage() {
           )}
 
           <button
-            onClick={handleLogin}
+            onClick={() => {
+              if (
+                inputUser === catalog.username &&
+                inputPass === catalog.password
+              ) {
+                sessionStorage.setItem(`catalog-auth-${id}`, "ok");
+                setIsAuthed(true);
+                setLoginError("");
+              } else {
+                setLoginError("ユーザー名またはパスワードが正しくありません");
+              }
+            }}
             className="w-full bg-blue-600 text-white py-2 rounded"
           >
             ログイン
@@ -118,13 +144,13 @@ export default function CatalogPreviewPage() {
     );
   }
 
-  // プレビュー本体
+  // ⭐ プレビュー本体
   return (
     <div className="p-4">
       <PreviewCatalog
         title={catalog.title}
         leadText={catalog.leadText}
-        products={catalog.products as Product[]}
+        products={catalog.products}
         columnCount={catalog.columnCount || 3}
         editable={true}
         onReorder={() => {}}
