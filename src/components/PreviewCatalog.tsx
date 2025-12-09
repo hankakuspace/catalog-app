@@ -22,6 +22,8 @@ import {
   Popover,
   ActionList,
   Button,
+  TextField,
+  Checkbox,
 } from "@shopify/polaris";
 import { MenuHorizontalIcon } from "@shopify/polaris-icons";
 import styles from "@/pages/admin/catalogs/new.module.css";
@@ -43,7 +45,6 @@ export interface Product {
   technique?: string;
   certificate?: string;
 
-  // ⭐ 追加（すでに GraphQL で取得済み）
   onlineStoreUrl?: string;
 }
 
@@ -145,6 +146,7 @@ export default function PreviewCatalog({
     return Number(value).toLocaleString("ja-JP");
   };
 
+  // ⭐ 価格編集 state（以前の実装が残っているのでそのまま利用）
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -246,11 +248,7 @@ export default function PreviewCatalog({
         </header>
 
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
               <div className={gridClass}>
                 {products.map((item) => (
@@ -261,7 +259,7 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-
+                      {/* 編集メニュー */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -309,7 +307,7 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* ⭐ 商品画像 → Shopify 商品ページへリンク化 */}
+                      {/* 商品画像リンク */}
                       {item.imageUrl && (
                         <a
                           href={item.onlineStoreUrl ?? "#"}
@@ -324,6 +322,7 @@ export default function PreviewCatalog({
                         </a>
                       )}
 
+                      {/* 商品情報 */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
@@ -334,21 +333,59 @@ export default function PreviewCatalog({
                         {item.technique && (
                           <Text as="p">{formatTechnique(item.technique)}</Text>
                         )}
-                        {item.certificate && (
-                          <Text as="p">{item.certificate}</Text>
-                        )}
-                        {item.dimensions && (
-                          <Text as="p">{item.dimensions}</Text>
-                        )}
+                        {item.certificate && <Text as="p">{item.certificate}</Text>}
+                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
-                        <Text as="p">
+                        {/* 価格表示 */}
+                        <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
                             : item.price
                             ? `${formatPrice(item.price)} 円（税込）`
                             : ""}
                         </Text>
+
+                        {/* ================================ */}
+                        {/* ⭐⭐ ここから「価格変更 UI」復元 ⭐⭐ */}
+                        {/* ================================ */}
+                        {editable && (
+                          <div className="mt-2 p-2 border border-gray-700 rounded">
+                            <Checkbox
+                              label="価格を変更する"
+                              checked={checkedItems[item.id] || false}
+                              onChange={(checked) => handleCheckboxChange(item.id, checked)}
+                            />
+
+                            {checkedItems[item.id] && (
+                              <div className="mt-2 space-y-2">
+                                <TextField
+                                  label="新しい価格"
+                                  value={tempPrice}
+                                  onChange={setTempPrice}
+                                  autoComplete="off"
+                                />
+
+                                <Button
+                                  onClick={() => handleSetCustomPrice(item.id)}
+                                  variant="primary"
+                                >
+                                  変更する
+                                </Button>
+
+                                <Button
+                                  plain
+                                  onClick={() => handleResetToDefault(item.id)}
+                                >
+                                  元の価格に戻す
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {/* ================================ */}
+                        {/* ⭐⭐ 価格編集 UI 復元完了 ⭐⭐ */}
+                        {/* ================================ */}
                       </div>
                     </BlockStack>
                   </SortableItem>
