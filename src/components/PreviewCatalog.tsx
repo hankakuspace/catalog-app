@@ -50,7 +50,7 @@ interface Props {
   title: string;
   leadText?: string;
   products: Product[];
-  editable?: boolean; // ← UI 非依存になるが保持
+  editable?: boolean;
   onReorder?: (products: Product[]) => void;
   onRemove?: (id: string) => void;
   columnCount?: number;
@@ -144,7 +144,6 @@ export default function PreviewCatalog({
     return Number(value).toLocaleString("ja-JP");
   };
 
-  // ⭐ price editing state
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState("");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -257,7 +256,8 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-                      {/* 編集メニュー（editable=true の場合のみ） */}
+
+                      {/* --- 編集アイコン（管理画面のみ）--- */}
                       {editable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -305,7 +305,7 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 商品画像 */}
+                      {/* --- 商品画像 --- */}
                       {item.imageUrl && (
                         <a
                           href={item.onlineStoreUrl ?? "#"}
@@ -320,7 +320,7 @@ export default function PreviewCatalog({
                         </a>
                       )}
 
-                      {/* 商品情報 */}
+                      {/* --- 商品情報 --- */}
                       <div className="text-white mt-2 px-2">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
@@ -335,7 +335,7 @@ export default function PreviewCatalog({
                         {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
-                        {/* 価格 */}
+                        {/* --- 価格 --- */}
                         <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
@@ -345,9 +345,9 @@ export default function PreviewCatalog({
                         </Text>
 
                         {/* ================================================= */}
-                        {/* ⭐⭐ 価格編集 UI（常時表示版 / editable 無視） ⭐⭐ */}
+                        {/* ⭐⭐ 価格編集 UI（必ず表示・価格の直下に配置） ⭐⭐ */}
                         {/* ================================================= */}
-                        <div className="mt-3 p-3 border border-gray-700 rounded">
+                        <div className="mt-3 p-3 border border-gray-700 rounded bg-black/30">
                           <Checkbox
                             label="価格を変更する"
                             checked={checkedItems[item.id] || false}
@@ -382,7 +382,7 @@ export default function PreviewCatalog({
                           )}
                         </div>
                         {/* ================================================= */}
-                        {/* ⭐⭐ 価格編集 UI 完全復元 / いつでも表示 ⭐⭐ */}
+                        {/* ⭐⭐ 完全復元・常時表示の価格編集 UI ⭐⭐ */}
                         {/* ================================================= */}
                       </div>
                     </BlockStack>
