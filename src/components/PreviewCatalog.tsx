@@ -115,18 +115,16 @@ export default function PreviewCatalog({
   title,
   leadText,
   products,
-  editable = false,     // まず editable は props として受け取る
+  editable = false,
   onReorder,
   onRemove,
   columnCount = 3,
 }: Props) {
 
-  // ⭐ URL で preview ページかどうかを判定
   const isPreviewPage =
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/preview/");
 
-  // ⭐ クライアント画面では強制 editable=false にする
   const isEditable = editable && !isPreviewPage;
 
   const sensors = useSensors(
@@ -136,7 +134,6 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // ⭐ editable=false の時、価格編集 state も UI も動かないようにそのままにする
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
 
@@ -184,9 +181,19 @@ export default function PreviewCatalog({
 
   return (
     <>
-      <style>{globalShakeKeyframes}</style>
+      {/* ⭐ ここで leadText の色を白に強制 */}
+      <style>
+        {`
+          ${globalShakeKeyframes}
+
+          .leadtext-wrapper * {
+            color: white !important;
+          }
+        `}
+      </style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
+
         {/* HEADER */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
@@ -194,9 +201,10 @@ export default function PreviewCatalog({
             alt="AND COLLECTION"
             className="mx-auto h-12 filter invert"
           />
+
           {leadText && (
             <div
-              className="max-w-3xl mx-auto text-center mt-10 mb-5"
+              className="max-w-3xl mx-auto text-center mt-10 mb-5 leadtext-wrapper"
               dangerouslySetInnerHTML={{ __html: leadText }}
             />
           )}
@@ -224,7 +232,6 @@ export default function PreviewCatalog({
                   >
                     <BlockStack gap="200">
 
-                      {/* ⭐ 編集メニュー（管理画面のみ） */}
                       {isEditable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -272,7 +279,6 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* 商品画像 */}
                       {item.imageUrl && (
                         <a
                           href={item.onlineStoreUrl ?? "#"}
@@ -287,7 +293,6 @@ export default function PreviewCatalog({
                         </a>
                       )}
 
-                      {/* 商品情報 */}
                       <div className="text-white mt-2 px-2 w-full">
                         {item.artist && <Text as="p">{item.artist}</Text>}
                         {item.title && <Text as="p">{item.title}</Text>}
@@ -306,7 +311,6 @@ export default function PreviewCatalog({
                         )}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
-                        {/* ⭐ 価格 */}
                         <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
@@ -315,7 +319,6 @@ export default function PreviewCatalog({
                             : ""}
                         </Text>
 
-                        {/* ⭐ 価格変更 UI（管理画面のみ表示） */}
                         {isEditable && (
                           <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
 
