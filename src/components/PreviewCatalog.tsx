@@ -81,7 +81,7 @@ const formatTechnique = (value?: string) => {
   }
 };
 
-function SortableItem({ id, editable, isReorderMode, children }: any) {
+function SortableItem({ id, isEditable, isReorderMode, children }: any) {
   const {
     attributes,
     listeners,
@@ -94,7 +94,7 @@ function SortableItem({ id, editable, isReorderMode, children }: any) {
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    cursor: editable ? "grab" : "default",
+    cursor: isEditable ? "grab" : "default",
     zIndex: isDragging ? 50 : "auto",
   };
 
@@ -102,9 +102,9 @@ function SortableItem({ id, editable, isReorderMode, children }: any) {
     <div
       ref={setNodeRef}
       style={style}
-      {...(editable ? { ...attributes, ...listeners } : {})}
+      {...(isEditable ? { ...attributes, ...listeners } : {})}
     >
-      <div className={editable && (isDragging || isReorderMode) ? "shake-inner" : ""}>
+      <div className={isEditable && (isDragging || isReorderMode) ? "shake-inner" : ""}>
         {children}
       </div>
     </div>
@@ -115,11 +115,20 @@ export default function PreviewCatalog({
   title,
   leadText,
   products,
-  editable = false,     // ⭐ クライアント側は false
+  editable = false,     // まず editable は props として受け取る
   onReorder,
   onRemove,
   columnCount = 3,
 }: Props) {
+
+  // ⭐ URL で preview ページかどうかを判定
+  const isPreviewPage =
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/preview/");
+
+  // ⭐ クライアント画面では強制 editable=false にする
+  const isEditable = editable && !isPreviewPage;
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
@@ -127,7 +136,7 @@ export default function PreviewCatalog({
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
-  // ⭐ 価格編集関連の state（editable=false では UI を出さない）
+  // ⭐ editable=false の時、価格編集 state も UI も動かないようにそのままにする
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
 
@@ -135,6 +144,7 @@ export default function PreviewCatalog({
     value ? Number(value).toLocaleString("ja-JP") : "";
 
   const handleSetCustomPrice = (id: string) => {
+    if (!isEditable) return;
     const newPrice = tempPrices[id]?.trim();
     if (!newPrice) return;
 
@@ -148,6 +158,7 @@ export default function PreviewCatalog({
   };
 
   const handleResetToDefault = (id: string) => {
+    if (!isEditable) return;
     if (onReorder) {
       onReorder(
         products.map((p) => {
@@ -164,6 +175,7 @@ export default function PreviewCatalog({
   };
 
   const handleCheckboxChange = (id: string, checked: boolean) => {
+    if (!isEditable) return;
     setCheckedItems((prev) => ({ ...prev, [id]: checked }));
     if (!checked) {
       setTempPrices((prev) => ({ ...prev, [id]: "" }));
@@ -207,13 +219,13 @@ export default function PreviewCatalog({
                   <SortableItem
                     key={item.id}
                     id={item.id}
-                    editable={editable}
+                    isEditable={isEditable}
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
 
-                      {/* ⭐ 編集メニュー（editable=true のときだけ） */}
-                      {editable && (
+                      {/* ⭐ 編集メニュー（管理画面のみ） */}
+                      {isEditable && (
                         <div className="flex justify-end mb-2">
                           <Popover
                             active={activePopoverId === item.id}
@@ -294,7 +306,7 @@ export default function PreviewCatalog({
                         )}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
-                        {/* ⭐ 価格表示（customPrice > price） */}
+                        {/* ⭐ 価格 */}
                         <Text as="p" variant="bodyMd" fontWeight="medium">
                           {item.customPrice
                             ? `${formatPrice(item.customPrice)} 円（税込）`
@@ -303,9 +315,10 @@ export default function PreviewCatalog({
                             : ""}
                         </Text>
 
-                        {/* ⭐⭐ editable=false のときは価格編集 UI を完全に非表示 ⭐⭐ */}
-                        {editable && (
+                        {/* ⭐ 価格変更 UI（管理画面のみ表示） */}
+                        {isEditable && (
                           <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
+
                             <Checkbox
                               label="価格を変更する"
                               checked={checkedItems[item.id] || false}
