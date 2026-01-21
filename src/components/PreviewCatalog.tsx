@@ -14,7 +14,9 @@ import {
   SortableContext,
   useSortable,
   rectSortingStrategy,
+  arrayMove, // ⭐ 追加
 } from "@dnd-kit/sortable";
+import type { DragEndEvent } from "@dnd-kit/core"; // ⭐ 追加
 import { CSS } from "@dnd-kit/utilities";
 import {
   BlockStack,
@@ -140,6 +142,22 @@ export default function PreviewCatalog({
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
 
+  // ⭐ 追加：DnD 並び替え確定処理
+  const handleDragEnd = (event: DragEndEvent) => {
+    if (!onReorder) return;
+
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = products.findIndex((p) => p.id === active.id);
+    const newIndex = products.findIndex((p) => p.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newProducts = arrayMove(products, oldIndex, newIndex);
+    onReorder(newProducts);
+  };
+
   const handleSetCustomPrice = (id: string) => {
     if (!isEditable) return;
     const newPrice = tempPrices[id]?.trim();
@@ -181,7 +199,6 @@ export default function PreviewCatalog({
 
   return (
     <>
-      {/* ⭐ ここで leadText の色を白に強制 */}
       <style>
         {`
           ${globalShakeKeyframes}
@@ -194,7 +211,6 @@ export default function PreviewCatalog({
 
       <div className="min-h-screen bg-black text-white flex flex-col">
 
-        {/* HEADER */}
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -210,9 +226,12 @@ export default function PreviewCatalog({
           )}
         </header>
 
-        {/* MAIN */}
         <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
-          <DndContext sensors={sensors} collisionDetection={closestCenter}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd} // ⭐ 追加
+          >
             <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
               <div
                 className={
