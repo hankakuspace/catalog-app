@@ -16,6 +16,11 @@
 .cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+.previewGrid {
+  align-items: stretch;
+  grid-auto-rows: 1fr;
+}
+
 
 .previewGrid > div {
   display: flex;
