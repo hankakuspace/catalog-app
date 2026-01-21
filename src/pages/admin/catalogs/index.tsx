@@ -39,7 +39,7 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ★ 追加：コピー済み状態管理
+  // ★ コピー済み状態管理
   const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({});
 
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
@@ -99,6 +99,12 @@ export default function CatalogListPage() {
       console.error("コピーに失敗しました:", err);
       alert("URLのコピーに失敗しました");
     }
+  };
+
+  // ★ 表示用URL短縮（表示のみ）
+  const getShortUrl = (url: string) => {
+    if (url.length <= 40) return url;
+    return `${url.slice(0, 20)}…${url.slice(-16)}`;
   };
 
   return (
@@ -184,15 +190,17 @@ export default function CatalogListPage() {
                   <IndexTable.Cell>
                     {catalog.previewUrl ? (
                       <InlineStack gap="200" align="center">
-                        <a
-                          href={catalog.previewUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-sky-600 hover:underline"
-                        >
-                          {catalog.previewUrl}
-                        </a>
+                        <Tooltip content={catalog.previewUrl}>
+                          <a
+                            href={catalog.previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sky-600 hover:underline"
+                          >
+                            {getShortUrl(catalog.previewUrl)}
+                          </a>
+                        </Tooltip>
 
                         {/* プレビュー */}
                         <span onClick={(e) => e.stopPropagation()}>
