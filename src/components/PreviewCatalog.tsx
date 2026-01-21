@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -145,6 +145,47 @@ export default function PreviewCatalog({
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
 
+  /* ================================
+   * ★ 追加：catalog-image 高さ揃え
+   * ================================ */
+  const imageRefs = useRef<HTMLDivElement[]>([]);
+
+  useEffect(() => {
+    if (!imageRefs.current.length) return;
+
+    const applySameHeight = () => {
+      // 一旦高さリセット（再計測用）
+      imageRefs.current.forEach((el) => {
+        if (el) el.style.height = "auto";
+      });
+
+      const heights = imageRefs.current.map(
+        (el) => el?.getBoundingClientRect().height || 0
+      );
+      const maxHeight = Math.max(...heights);
+
+      imageRefs.current.forEach((el) => {
+        if (el) el.style.height = `${maxHeight}px`;
+      });
+    };
+
+    const observer = new ResizeObserver(() => {
+      applySameHeight();
+    });
+
+    imageRefs.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    // 初回実行（画像ロード後対策）
+    window.requestAnimationFrame(applySameHeight);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [products, columnCount]);
+  /* ================================ */
+
   const handleDragEnd = (event: DragEndEvent) => {
     if (!onReorder) return;
 
@@ -207,10 +248,9 @@ export default function PreviewCatalog({
             color: white !important;
           }
 
-          /* ★ 追加：カードを2段構造にしてテキスト位置を揃える */
           .catalog-card {
             display: grid;
-            grid-template-rows: 1fr auto;
+            grid-template-rows: auto auto;
             height: 100%;
           }
 
@@ -263,7 +303,7 @@ export default function PreviewCatalog({
                     : `${styles.previewGrid} ${styles["cols-3"]}`
                 }
               >
-                {products.map((item) => (
+                {products.map((item, index) => (
                   <SortableItem
                     key={item.id}
                     id={item.id}
@@ -322,9 +362,13 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {/* ★ ここから card 構造追加（既存要素は削除していない） */}
                       <div className="catalog-card">
-                        <div className="catalog-image">
+                        <div
+                          className="catalog-image"
+                          ref={(el) => {
+                            if (el) imageRefs.current[index] = el;
+                          }}
+                        >
                           {item.imageUrl &&
                             (isEditable ? (
                               <a
@@ -332,16 +376,10 @@ export default function PreviewCatalog({
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.title}
-                                />
+                                <img src={item.imageUrl} alt={item.title} />
                               </a>
                             ) : (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.title}
-                              />
+                              <img src={item.imageUrl} alt={item.title} />
                             ))}
                         </div>
 
@@ -435,7 +473,6 @@ export default function PreviewCatalog({
                           )}
                         </div>
                       </div>
-                      {/* ★ card 構造ここまで */}
                     </BlockStack>
                   </SortableItem>
                 ))}
