@@ -17,8 +17,13 @@ import {
   Icon,
   useIndexResourceState,
   Banner,
+  Tooltip,
 } from "@shopify/polaris";
-import { ExternalIcon, DeleteIcon } from "@shopify/polaris-icons";
+import {
+  ExternalIcon,
+  DeleteIcon,
+  ClipboardIcon,
+} from "@shopify/polaris-icons";
 import AdminHeader from "@/components/AdminHeader";
 
 interface Catalog {
@@ -78,6 +83,15 @@ export default function CatalogListPage() {
     }
   };
 
+  const handleCopy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch (err) {
+      console.error("コピーに失敗しました:", err);
+      alert("URLのコピーに失敗しました");
+    }
+  };
+
   return (
     <div style={{ width: "100%", padding: "20px" }}>
       <div style={{ marginBottom: "40px" }}>
@@ -120,102 +134,114 @@ export default function CatalogListPage() {
         </EmptyState>
       ) : (
         <BlockStack gap="400">
-          <div style={{ border: "none", borderRadius: "0", boxShadow: "none" }}>
-            <IndexTable
-              resourceName={{ singular: "catalog", plural: "catalogs" }}
-              itemCount={catalogs.length}
-              selectedItemsCount={
-                allResourcesSelected ? "All" : selectedResources.length
-              }
-              onSelectionChange={handleSelectionChange}
-              selectable
-              headings={[
-                { title: "タイトル" },
-                { title: "作成日" },
-                { title: "プレビューURL" },
-                { title: "ラベル" },
-                { title: "操作" },
-              ]}
-            >
-              {catalogs.map((catalog, index) => {
-                const createdAtDate = catalog.createdAt
-                  ? new Date(catalog.createdAt).toLocaleString()
-                  : "-";
+          <IndexTable
+            resourceName={{ singular: "catalog", plural: "catalogs" }}
+            itemCount={catalogs.length}
+            selectedItemsCount={
+              allResourcesSelected ? "All" : selectedResources.length
+            }
+            onSelectionChange={handleSelectionChange}
+            selectable
+            headings={[
+              { title: "タイトル" },
+              { title: "作成日" },
+              { title: "プレビューURL" },
+              { title: "ラベル" },
+              { title: "操作" },
+            ]}
+          >
+            {catalogs.map((catalog, index) => {
+              const createdAtDate = catalog.createdAt
+                ? new Date(catalog.createdAt).toLocaleString()
+                : "-";
 
-                return (
-                  <IndexTable.Row
-                    id={catalog.id}
-                    key={catalog.id}
-                    selected={selectedResources.includes(catalog.id)}
-                    position={index}
-                  >
-                    {/* タイトル */}
-                    <IndexTable.Cell>
-                      <Text as="span" fontWeight="semibold">
-                        {catalog.title || "(無題)"}
-                      </Text>
-                    </IndexTable.Cell>
+              return (
+                <IndexTable.Row
+                  id={catalog.id}
+                  key={catalog.id}
+                  selected={selectedResources.includes(catalog.id)}
+                  position={index}
+                >
+                  {/* タイトル */}
+                  <IndexTable.Cell>
+                    <Text as="span" fontWeight="semibold">
+                      {catalog.title || "(無題)"}
+                    </Text>
+                  </IndexTable.Cell>
 
-                    {/* 作成日 */}
-                    <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
+                  {/* 作成日 */}
+                  <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-                    {/* ✅ プレビューURL（内部要素で stopPropagation） */}
-                    <IndexTable.Cell>
-                      {catalog.previewUrl ? (
+                  {/* プレビューURL + アイコン */}
+                  <IndexTable.Cell>
+                    {catalog.previewUrl ? (
+                      <InlineStack gap="200" align="center">
                         <a
                           href={catalog.previewUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()} // ← ここでクリックイベント停止
-                          className="text-sky-600 hover:underline inline-flex items-center"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-sky-600 hover:underline"
                         >
                           {catalog.previewUrl}
-                          <span style={{ marginLeft: "10px" }}>
-                            <Icon source={ExternalIcon} tone="base" />
-                          </span>
                         </a>
-                      ) : (
-                        "-"
-                      )}
-                    </IndexTable.Cell>
 
-                    {/* ✅ ラベル */}
-                    <IndexTable.Cell>
-                      {catalog.label && catalog.label.trim() !== ""
-                        ? catalog.label
-                        : "-"}
-                    </IndexTable.Cell>
+                        {/* 別タブ */}
+                        <span onClick={(e) => e.stopPropagation()}>
+                          <Icon source={ExternalIcon} tone="base" />
+                        </span>
 
-                    {/* ✅ 編集ボタン（内部でstopPropagation） */}
-                    <IndexTable.Cell>
-  <div onClick={(e) => e.stopPropagation()}>
-    <Button
-      size="slim"
-      variant="plain"
-      url={`/admin/catalogs/new?id=${catalog.id}`}
-    >
-      編集
-    </Button>
-  </div>
-</IndexTable.Cell>
+                        {/* コピー */}
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopy(catalog.previewUrl!);
+                          }}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <Tooltip content="URLをコピー">
+                            <Icon source={ClipboardIcon} tone="base" />
+                          </Tooltip>
+                        </span>
+                      </InlineStack>
+                    ) : (
+                      "-"
+                    )}
+                  </IndexTable.Cell>
 
-                  </IndexTable.Row>
-                );
-              })}
-            </IndexTable>
-          </div>
+                  {/* ラベル */}
+                  <IndexTable.Cell>
+                    {catalog.label && catalog.label.trim() !== ""
+                      ? catalog.label
+                      : "-"}
+                  </IndexTable.Cell>
+
+                  {/* 操作 */}
+                  <IndexTable.Cell>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        size="slim"
+                        variant="plain"
+                        url={`/admin/catalogs/new?id=${catalog.id}`}
+                      >
+                        編集
+                      </Button>
+                    </div>
+                  </IndexTable.Cell>
+                </IndexTable.Row>
+              );
+            })}
+          </IndexTable>
 
           <InlineStack align="space-between">
-            <div>
-              <Button
-                tone="critical"
-                icon={DeleteIcon}
-                onClick={handleDelete}
-                disabled={selectedResources.length === 0}
-              >
-                削除
-              </Button>
-            </div>
+            <Button
+              tone="critical"
+              icon={DeleteIcon}
+              onClick={handleDelete}
+              disabled={selectedResources.length === 0}
+            >
+              削除
+            </Button>
 
             <Button variant="primary" url="/admin/catalogs/new">
               New Record
