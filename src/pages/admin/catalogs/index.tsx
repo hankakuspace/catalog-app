@@ -190,6 +190,7 @@ export default function CatalogListPage() {
                   <IndexTable.Cell>
                     {catalog.previewUrl ? (
                       <InlineStack gap="200" align="center">
+                        {/* URL（短縮表示） */}
                         <Tooltip content={catalog.previewUrl}>
                           <a
                             href={catalog.previewUrl}
@@ -202,12 +203,17 @@ export default function CatalogListPage() {
                           </a>
                         </Tooltip>
 
-                        {/* プレビュー */}
-                        <span onClick={(e) => e.stopPropagation()}>
+                        {/* ページ確認（外部リンク） */}
+                        <a
+                          href={catalog.previewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Tooltip content="ページを確認">
                             <Icon source={ExternalIcon} tone="base" />
                           </Tooltip>
-                        </span>
+                        </a>
 
                         {/* コピー */}
                         <span
