@@ -81,7 +81,7 @@ export default function NewCatalogPage() {
           clearInterval(interval);
         }
       }, 50);
-      setTimeout(() => clearInterval(interval), 1000);
+      setTimeout(() => clearTimeout(interval), 1000);
     }
   }, [toastActive, toastColor]);
 
@@ -208,6 +208,34 @@ export default function NewCatalogPage() {
     }
   };
 
+  // ✅ ★追加：並び替え・削除の変更を即保存（以前できてた挙動の復活）
+  const handleReorder = (products: CatalogProduct[]) => {
+    setSelectedProducts(products);
+
+    if (!id) return;
+
+    const shop = localStorage.getItem("shopify_shop") || "";
+
+    fetch("/api/catalogs", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        title,
+        label,
+        leadText,
+        products,
+        columnCount,
+        username,
+        password,
+        expiresAt: expiresDate ? expiresDate.toISOString() : null,
+        shop,
+      }),
+    }).catch((err) => {
+      console.error("並び替え保存失敗:", err);
+    });
+  };
+
   // ⭐ 商品検索（onlineStoreUrl を保持）
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -255,8 +283,10 @@ export default function NewCatalogPage() {
               leadText={leadText}
               products={selectedProducts}
               editable
-              onReorder={setSelectedProducts}
-              onRemove={(id) => setSelectedProducts(selectedProducts.filter((p) => p.id !== id))}
+              onReorder={handleReorder}
+              onRemove={(removeId) =>
+                handleReorder(selectedProducts.filter((p) => p.id !== removeId))
+              }
               columnCount={columnCount}
             />
           </div>
