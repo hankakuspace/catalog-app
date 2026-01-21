@@ -94,7 +94,8 @@ export default function ClientPreviewPage() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <Head>
           <title>AND COLLECTION Private View</title>
-          <link rel="icon" href="/Private-View.png" />
+          <link rel="icon" href="/Private-View.png?v=1" />
+        <link rel="apple-touch-icon" href="/Private-View.png?v=1" />
         </Head>
 
         <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-sm">
@@ -151,7 +152,8 @@ export default function ClientPreviewPage() {
     <AppProvider i18n={{}}>
       <Head>
         <title>AND COLLECTION Private View</title>
-        <link rel="icon" href="/Private-View.png" />
+        <link rel="icon" href="/Private-View.png?v=1" />
+      <link rel="apple-touch-icon" href="/Private-View.png?v=1" />
       </Head>
 
       <div className="p-4">
