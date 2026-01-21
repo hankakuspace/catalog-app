@@ -14,9 +14,9 @@ import {
   SortableContext,
   useSortable,
   rectSortingStrategy,
-  arrayMove, // ⭐ 追加
+  arrayMove,
 } from "@dnd-kit/sortable";
-import type { DragEndEvent } from "@dnd-kit/core"; // ⭐ 追加
+import type { DragEndEvent } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
   BlockStack,
@@ -142,7 +142,6 @@ export default function PreviewCatalog({
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
 
-  // ⭐ 追加：DnD 並び替え確定処理
   const handleDragEnd = (event: DragEndEvent) => {
     if (!onReorder) return;
 
@@ -163,29 +162,27 @@ export default function PreviewCatalog({
     const newPrice = tempPrices[id]?.trim();
     if (!newPrice) return;
 
-    if (onReorder) {
-      onReorder(
-        products.map((p) =>
-          p.id === id ? { ...p, customPrice: newPrice } : p
-        )
-      );
-    }
+    onReorder?.(
+      products.map((p) =>
+        p.id === id ? { ...p, customPrice: newPrice } : p
+      )
+    );
   };
 
   const handleResetToDefault = (id: string) => {
     if (!isEditable) return;
-    if (onReorder) {
-      onReorder(
-        products.map((p) => {
-          if (p.id === id) {
-            const newP = { ...p };
-            delete newP.customPrice;
-            return newP;
-          }
-          return p;
-        })
-      );
-    }
+
+    onReorder?.(
+      products.map((p) => {
+        if (p.id === id) {
+          const newP = { ...p };
+          delete newP.customPrice;
+          return newP;
+        }
+        return p;
+      })
+    );
+
     setCheckedItems((prev) => ({ ...prev, [id]: false }));
   };
 
@@ -230,9 +227,12 @@ export default function PreviewCatalog({
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd} // ⭐ 追加
+            onDragEnd={handleDragEnd}
           >
-            <SortableContext items={products.map((p) => p.id)} strategy={rectSortingStrategy}>
+            <SortableContext
+              items={products.map((p) => p.id)}
+              strategy={rectSortingStrategy}
+            >
               <div
                 className={
                   columnCount === 2
@@ -299,17 +299,25 @@ export default function PreviewCatalog({
                       )}
 
                       {item.imageUrl && (
-                        <a
-                          href={item.onlineStoreUrl ?? "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        isEditable ? (
+                          <a
+                            href={item.onlineStoreUrl ?? "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="block w-full object-contain"
+                            />
+                          </a>
+                        ) : (
                           <img
                             src={item.imageUrl}
                             alt={item.title}
                             className="block w-full object-contain"
                           />
-                        </a>
+                        )
                       )}
 
                       <div className="text-white mt-2 px-2 w-full">
@@ -319,15 +327,9 @@ export default function PreviewCatalog({
                         {item.frame && <Text as="p">{item.frame}</Text>}
                         {item.material && <Text as="p">{item.material}</Text>}
                         {item.size && <Text as="p">{item.size}</Text>}
-                        {item.technique && (
-                          <Text as="p">{formatTechnique(item.technique)}</Text>
-                        )}
-                        {item.certificate && (
-                          <Text as="p">{item.certificate}</Text>
-                        )}
-                        {item.dimensions && (
-                          <Text as="p">{item.dimensions}</Text>
-                        )}
+                        {item.technique && <Text as="p">{formatTechnique(item.technique)}</Text>}
+                        {item.certificate && <Text as="p">{item.certificate}</Text>}
+                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                         {item.medium && <Text as="p">{item.medium}</Text>}
 
                         <Text as="p" variant="bodyMd" fontWeight="medium">
