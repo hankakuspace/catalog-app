@@ -15,7 +15,7 @@ export default function Page() {
         <link rel="icon" href="/Private-View.png?v=1" />
         <link rel="apple-touch-icon" href="/Private-View.png?v=1" />
         <link rel="shortcut icon" href="/favicon.ico" />
-<link rel="icon" type="image/png" href="/icon-192x192.png" />
+<link rel="icon" type="image/png" href="/Private-View.png?v=1" />
 
       </Head>
 
