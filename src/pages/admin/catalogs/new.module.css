@@ -17,14 +17,18 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .previewGrid {
+  display: grid;
+  gap: 60px 40px;
+  justify-content: center;
   align-items: stretch;
   grid-auto-rows: 1fr;
 }
+
 .catalog-image {
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1 / 1; /* ← ★これが最後のピース */
+  aspect-ratio: 1 / 1;
 }
 
 
