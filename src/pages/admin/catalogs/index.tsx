@@ -39,6 +39,9 @@ export default function CatalogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ★ 追加：コピー済み状態管理
+  const [copiedMap, setCopiedMap] = useState<Record<string, boolean>>({});
+
   const resourceItems = catalogs.map((c) => ({ id: c.id }));
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState<{ id: string }>(resourceItems);
@@ -83,9 +86,15 @@ export default function CatalogListPage() {
     }
   };
 
-  const handleCopy = async (url: string) => {
+  // ★ コピー処理
+  const handleCopy = async (catalogId: string, url: string) => {
     try {
       await navigator.clipboard.writeText(url);
+      setCopiedMap((prev) => ({ ...prev, [catalogId]: true }));
+
+      setTimeout(() => {
+        setCopiedMap((prev) => ({ ...prev, [catalogId]: false }));
+      }, 2000);
     } catch (err) {
       console.error("コピーに失敗しました:", err);
       alert("URLのコピーに失敗しました");
@@ -155,6 +164,8 @@ export default function CatalogListPage() {
                 ? new Date(catalog.createdAt).toLocaleString()
                 : "-";
 
+              const isCopied = copiedMap[catalog.id];
+
               return (
                 <IndexTable.Row
                   id={catalog.id}
@@ -162,17 +173,14 @@ export default function CatalogListPage() {
                   selected={selectedResources.includes(catalog.id)}
                   position={index}
                 >
-                  {/* タイトル */}
                   <IndexTable.Cell>
                     <Text as="span" fontWeight="semibold">
                       {catalog.title || "(無題)"}
                     </Text>
                   </IndexTable.Cell>
 
-                  {/* 作成日 */}
                   <IndexTable.Cell>{createdAtDate}</IndexTable.Cell>
 
-                  {/* プレビューURL + アイコン */}
                   <IndexTable.Cell>
                     {catalog.previewUrl ? (
                       <InlineStack gap="200" align="center">
@@ -186,20 +194,26 @@ export default function CatalogListPage() {
                           {catalog.previewUrl}
                         </a>
 
-                        {/* 別タブ */}
+                        {/* プレビュー */}
                         <span onClick={(e) => e.stopPropagation()}>
-                          <Icon source={ExternalIcon} tone="base" />
+                          <Tooltip content="ページを確認">
+                            <Icon source={ExternalIcon} tone="base" />
+                          </Tooltip>
                         </span>
 
                         {/* コピー */}
                         <span
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCopy(catalog.previewUrl!);
+                            handleCopy(catalog.id, catalog.previewUrl!);
                           }}
                           style={{ cursor: "pointer" }}
                         >
-                          <Tooltip content="URLをコピー">
+                          <Tooltip
+                            content={
+                              isCopied ? "コピーしました" : "URLをコピー"
+                            }
+                          >
                             <Icon source={ClipboardIcon} tone="base" />
                           </Tooltip>
                         </span>
@@ -209,14 +223,12 @@ export default function CatalogListPage() {
                     )}
                   </IndexTable.Cell>
 
-                  {/* ラベル */}
                   <IndexTable.Cell>
                     {catalog.label && catalog.label.trim() !== ""
                       ? catalog.label
                       : "-"}
                   </IndexTable.Cell>
 
-                  {/* 操作 */}
                   <IndexTable.Cell>
                     <div onClick={(e) => e.stopPropagation()}>
                       <Button
