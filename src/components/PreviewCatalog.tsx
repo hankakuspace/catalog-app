@@ -106,7 +106,11 @@ function SortableItem({ id, isEditable, isReorderMode, children }: any) {
       style={style}
       {...(isEditable ? { ...attributes, ...listeners } : {})}
     >
-      <div className={isEditable && (isDragging || isReorderMode) ? "shake-inner" : ""}>
+      <div
+        className={
+          isEditable && (isDragging || isReorderMode) ? "shake-inner" : ""
+        }
+      >
         {children}
       </div>
     </div>
@@ -122,7 +126,6 @@ export default function PreviewCatalog({
   onRemove,
   columnCount = 3,
 }: Props) {
-
   const isPreviewPage =
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/preview/");
@@ -203,11 +206,29 @@ export default function PreviewCatalog({
           .leadtext-wrapper * {
             color: white !important;
           }
+
+          /* ★ 追加：カードを2段構造にしてテキスト位置を揃える */
+          .catalog-card {
+            display: grid;
+            grid-template-rows: 1fr auto;
+            height: 100%;
+          }
+
+          .catalog-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .catalog-image img {
+            max-height: 100%;
+            width: 100%;
+            object-fit: contain;
+          }
         `}
       </style>
 
       <div className="min-h-screen bg-black text-white flex flex-col">
-
         <header className="text-center py-8 border-b border-gray-700">
           <img
             src="/andcollection.svg"
@@ -250,7 +271,6 @@ export default function PreviewCatalog({
                     isReorderMode={isReorderMode}
                   >
                     <BlockStack gap="200">
-
                       {isEditable && (
                         <div className="flex justify-end mb-2">
                           <Popover
@@ -261,7 +281,9 @@ export default function PreviewCatalog({
                                 icon={MenuHorizontalIcon}
                                 onClick={() =>
                                   setActivePopoverId(
-                                    activePopoverId === item.id ? null : item.id
+                                    activePopoverId === item.id
+                                      ? null
+                                      : item.id
                                   )
                                 }
                               />
@@ -271,7 +293,9 @@ export default function PreviewCatalog({
                             <ActionList
                               items={[
                                 {
-                                  content: isReorderMode ? "移動を完了" : "移動",
+                                  content: isReorderMode
+                                    ? "移動を完了"
+                                    : "移動",
                                   onAction: () => {
                                     setIsReorderMode(!isReorderMode);
                                     setActivePopoverId(null);
@@ -298,91 +322,120 @@ export default function PreviewCatalog({
                         </div>
                       )}
 
-                      {item.imageUrl && (
-                        isEditable ? (
-                          <a
-                            href={item.onlineStoreUrl ?? "#"}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title}
-                              className="block w-full object-contain"
-                            />
-                          </a>
-                        ) : (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title}
-                            className="block w-full object-contain"
-                          />
-                        )
-                      )}
-
-                      <div className="text-white mt-2 px-2 w-full">
-                        {item.artist && <Text as="p">{item.artist}</Text>}
-                        {item.title && <Text as="p">{item.title}</Text>}
-                        {item.year && <Text as="p">{item.year}</Text>}
-                        {item.frame && <Text as="p">{item.frame}</Text>}
-                        {item.material && <Text as="p">{item.material}</Text>}
-                        {item.size && <Text as="p">{item.size}</Text>}
-                        {item.technique && <Text as="p">{formatTechnique(item.technique)}</Text>}
-                        {item.certificate && <Text as="p">{item.certificate}</Text>}
-                        {item.dimensions && <Text as="p">{item.dimensions}</Text>}
-                        {item.medium && <Text as="p">{item.medium}</Text>}
-
-                        <Text as="p" variant="bodyMd" fontWeight="medium">
-                          {item.customPrice
-                            ? `${formatPrice(item.customPrice)} 円（税込）`
-                            : item.price
-                            ? `${formatPrice(item.price)} 円（税込）`
-                            : ""}
-                        </Text>
-
-                        {isEditable && (
-                          <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
-
-                            <Checkbox
-                              label="価格を変更する"
-                              checked={checkedItems[item.id] || false}
-                              onChange={(checked) =>
-                                handleCheckboxChange(item.id, checked)
-                              }
-                            />
-
-                            {checkedItems[item.id] && (
-                              <div className="mt-3 space-y-3">
-                                <TextField
-                                  label="新しい価格"
-                                  value={tempPrices[item.id] || ""}
-                                  onChange={(val) =>
-                                    setTempPrices((prev) => ({
-                                      ...prev,
-                                      [item.id]: val,
-                                    }))
-                                  }
-                                  autoComplete="off"
+                      {/* ★ ここから card 構造追加（既存要素は削除していない） */}
+                      <div className="catalog-card">
+                        <div className="catalog-image">
+                          {item.imageUrl &&
+                            (isEditable ? (
+                              <a
+                                href={item.onlineStoreUrl ?? "#"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.title}
                                 />
+                              </a>
+                            ) : (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                              />
+                            ))}
+                        </div>
 
-                                <Button
-                                  variant="primary"
-                                  onClick={() => handleSetCustomPrice(item.id)}
-                                >
-                                  変更する
-                                </Button>
+                        <div className="text-white mt-3 px-2 w-full">
+                          {item.artist && <Text as="p">{item.artist}</Text>}
+                          {item.title && <Text as="p">{item.title}</Text>}
+                          {item.year && <Text as="p">{item.year}</Text>}
+                          {item.frame && <Text as="p">{item.frame}</Text>}
+                          {item.material && (
+                            <Text as="p">{item.material}</Text>
+                          )}
+                          {item.size && <Text as="p">{item.size}</Text>}
+                          {item.technique && (
+                            <Text as="p">
+                              {formatTechnique(item.technique)}
+                            </Text>
+                          )}
+                          {item.certificate && (
+                            <Text as="p">{item.certificate}</Text>
+                          )}
+                          {item.dimensions && (
+                            <Text as="p">{item.dimensions}</Text>
+                          )}
+                          {item.medium && <Text as="p">{item.medium}</Text>}
 
-                                <Button
-                                  variant="monochromePlain"
-                                  onClick={() => handleResetToDefault(item.id)}
-                                >
-                                  元の価格に戻す
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          <Text
+                            as="p"
+                            variant="bodyMd"
+                            fontWeight="medium"
+                          >
+                            {item.customPrice
+                              ? `${formatPrice(
+                                  item.customPrice
+                                )} 円（税込）`
+                              : item.price
+                              ? `${formatPrice(item.price)} 円（税込）`
+                              : ""}
+                          </Text>
+
+                          {isEditable && (
+                            <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
+                              <Checkbox
+                                label="価格を変更する"
+                                checked={
+                                  checkedItems[item.id] || false
+                                }
+                                onChange={(checked) =>
+                                  handleCheckboxChange(
+                                    item.id,
+                                    checked
+                                  )
+                                }
+                              />
+
+                              {checkedItems[item.id] && (
+                                <div className="mt-3 space-y-3">
+                                  <TextField
+                                    label="新しい価格"
+                                    value={
+                                      tempPrices[item.id] || ""
+                                    }
+                                    onChange={(val) =>
+                                      setTempPrices((prev) => ({
+                                        ...prev,
+                                        [item.id]: val,
+                                      }))
+                                    }
+                                    autoComplete="off"
+                                  />
+
+                                  <Button
+                                    variant="primary"
+                                    onClick={() =>
+                                      handleSetCustomPrice(item.id)
+                                    }
+                                  >
+                                    変更する
+                                  </Button>
+
+                                  <Button
+                                    variant="monochromePlain"
+                                    onClick={() =>
+                                      handleResetToDefault(item.id)
+                                    }
+                                  >
+                                    元の価格に戻す
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      {/* ★ card 構造ここまで */}
                     </BlockStack>
                   </SortableItem>
                 ))}
