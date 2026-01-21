@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
+import Head from "next/head"; // ★ 追加
 import { AppProvider } from "@shopify/polaris";    // ⭐ Polaris に必須
 import "@shopify/polaris/build/esm/styles.css";   // ⭐ Polaris のスタイル
 
@@ -91,6 +92,11 @@ export default function ClientPreviewPage() {
   if (authChecked && !isAuthed) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Head>
+          <title>AND COLLECTION Private View</title>
+          <link rel="icon" href="/Private-View.png" />
+        </Head>
+
         <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-sm">
           <h2 className="text-lg font-bold mb-4">ログイン認証</h2>
 
@@ -143,6 +149,11 @@ export default function ClientPreviewPage() {
 
   return (
     <AppProvider i18n={{}}>
+      <Head>
+        <title>AND COLLECTION Private View</title>
+        <link rel="icon" href="/Private-View.png" />
+      </Head>
+
       <div className="p-4">
         <PreviewCatalog
           title={catalog.title}
