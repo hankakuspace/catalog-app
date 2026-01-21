@@ -20,6 +20,12 @@
   align-items: stretch;
   grid-auto-rows: 1fr;
 }
+.catalog-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1; /* ← ★これが最後のピース */
+}
 
 
 .previewGrid > div {
