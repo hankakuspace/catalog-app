@@ -78,8 +78,8 @@ const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY!,
   apiSecretKey: process.env.SHOPIFY_API_SECRET!,
   scopes: process.env.SHOPIFY_SCOPES!.split(","),
-  hostName: "catalog-app-swart.vercel.app", // ← 固定
-  apiVersion: ApiVersion.July25,
+  hostName: "catalog-app-swart.vercel.app",
+  apiVersion: ApiVersion.July24,
   isEmbeddedApp: true,
   sessionStorage,
 });
