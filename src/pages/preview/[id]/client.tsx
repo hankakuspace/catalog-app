@@ -5,11 +5,10 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import Head from "next/head"; // ★ 追加
-import { AppProvider } from "@shopify/polaris";    // ⭐ Polaris に必須
-import "@shopify/polaris/build/esm/styles.css";   // ⭐ Polaris のスタイル
+import Head from "next/head";
+import { AppProvider } from "@shopify/polaris";
+import "@shopify/polaris/build/esm/styles.css";
 
-// ⭐ Polaris や dnd-kit を含む → SSR 禁止
 const PreviewCatalog = dynamic(
   () => import("@/components/PreviewCatalog"),
   { ssr: false }
@@ -20,17 +19,17 @@ export default function ClientPreviewPage() {
   const { id } = router.query;
 
   const [hydrated, setHydrated] = useState(false);
+  const [readyToRender, setReadyToRender] = useState(false); // ⭐ 追加
+
   useEffect(() => {
     setHydrated(true);
   }, []);
 
-  const shouldFetch =
-    typeof id === "string" && id.length > 0;
+  const shouldFetch = typeof id === "string" && id.length > 0;
 
   const fetcher = (url: string) =>
     fetch(url).then((res) => res.json());
 
-  // ⭐ Hooks は条件の外に出す
   const { data, error } = useSWR(
     shouldFetch ? `/api/catalogs?id=${id}` : null,
     fetcher
@@ -59,11 +58,12 @@ export default function ClientPreviewPage() {
     }
 
     setAuthChecked(true);
-  }, [hydrated, shouldFetch, data, id]);
 
-  // ===================================================
-  // ⭐ UI はここから先に分岐（Hooks の後に return）
-  // ===================================================
+    // ⭐ ここが肝：1フレーム遅らせて描画許可
+    requestAnimationFrame(() => {
+      setReadyToRender(true);
+    });
+  }, [hydrated, shouldFetch, data, id]);
 
   if (!hydrated) return <div className="p-6">読み込み中...</div>;
   if (!shouldFetch) return <div className="p-6">読み込み中...</div>;
@@ -71,12 +71,13 @@ export default function ClientPreviewPage() {
   if (!data) return <div className="p-6">読み込み中...</div>;
 
   const catalog = data.catalog;
-  if (!catalog)
+  if (!catalog) {
     return (
       <div className="p-6 bg-red-100 text-red-700 rounded">
         カタログが見つかりませんでした
       </div>
     );
+  }
 
   if (catalog.expiresAt) {
     const exp = new Date(catalog.expiresAt);
@@ -95,7 +96,7 @@ export default function ClientPreviewPage() {
         <Head>
           <title>AND COLLECTION Private View</title>
           <link rel="icon" href="/Private-View.png?v=1" />
-        <link rel="apple-touch-icon" href="/Private-View.png?v=1" />
+          <link rel="apple-touch-icon" href="/Private-View.png?v=1" />
         </Head>
 
         <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-sm">
@@ -144,28 +145,26 @@ export default function ClientPreviewPage() {
     );
   }
 
-  // ===================================================
-  // ⭐ PreviewCatalog を AppProvider で包む（必須）
-  // ===================================================
-
   return (
     <AppProvider i18n={{}}>
       <Head>
         <title>AND COLLECTION Private View</title>
         <link rel="icon" href="/Private-View.png?v=1" />
-      <link rel="apple-touch-icon" href="/Private-View.png?v=1" />
+        <link rel="apple-touch-icon" href="/Private-View.png?v=1" />
       </Head>
 
       <div className="p-4">
-        <PreviewCatalog
-          title={catalog.title}
-          leadText={catalog.leadText}
-          products={catalog.products}
-          columnCount={catalog.columnCount || 3}
-          editable={true}
-          onReorder={() => {}}
-          onRemove={() => {}}
-        />
+        {readyToRender && (
+          <PreviewCatalog
+            title={catalog.title}
+            leadText={catalog.leadText}
+            products={catalog.products}
+            columnCount={catalog.columnCount || 3}
+            editable={true}
+            onReorder={() => {}}
+            onRemove={() => {}}
+          />
+        )}
       </div>
     </AppProvider>
   );
