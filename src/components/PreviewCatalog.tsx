@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react"; // ★ useCallback 追加
 import {
   DndContext,
   closestCenter,
@@ -146,28 +146,32 @@ export default function PreviewCatalog({
     value ? Number(value).toLocaleString("ja-JP") : "";
 
   /* ================================
-   * ★ 追加：catalog-image 高さ揃え
+   * ★ catalog-image 高さ揃え
    * ================================ */
   const imageRefs = useRef<HTMLDivElement[]>([]);
 
-  useEffect(() => {
+  // ★ 追加：高さ計測関数を useCallback 化（既存ロジックは変更なし）
+  const applySameHeight = useCallback(() => {
     if (!imageRefs.current.length) return;
 
-    const applySameHeight = () => {
-      // 一旦高さリセット（再計測用）
-      imageRefs.current.forEach((el) => {
-        if (el) el.style.height = "auto";
-      });
+    imageRefs.current.forEach((el) => {
+      if (el) el.style.height = "auto";
+    });
 
-      const heights = imageRefs.current.map(
-        (el) => el?.getBoundingClientRect().height || 0
-      );
-      const maxHeight = Math.max(...heights);
+    const heights = imageRefs.current.map(
+      (el) => el?.getBoundingClientRect().height || 0
+    );
+    const maxHeight = Math.max(...heights);
 
+    if (maxHeight > 0) {
       imageRefs.current.forEach((el) => {
         if (el) el.style.height = `${maxHeight}px`;
       });
-    };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!imageRefs.current.length) return;
 
     const observer = new ResizeObserver(() => {
       applySameHeight();
@@ -177,13 +181,13 @@ export default function PreviewCatalog({
       if (el) observer.observe(el);
     });
 
-    // 初回実行（画像ロード後対策）
+    // 初回実行
     window.requestAnimationFrame(applySameHeight);
 
     return () => {
       observer.disconnect();
     };
-  }, [products, columnCount]);
+  }, [products, columnCount, applySameHeight]);
   /* ================================ */
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -376,10 +380,24 @@ export default function PreviewCatalog({
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <img src={item.imageUrl} alt={item.title} />
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.title}
+                                  // ★ 追加：画像ロード後に再計測
+                                  onLoad={() => {
+                                    requestAnimationFrame(applySameHeight);
+                                  }}
+                                />
                               </a>
                             ) : (
-                              <img src={item.imageUrl} alt={item.title} />
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                // ★ 追加：画像ロード後に再計測
+                                onLoad={() => {
+                                  requestAnimationFrame(applySameHeight);
+                                }}
+                              />
                             ))}
                         </div>
 
@@ -405,11 +423,7 @@ export default function PreviewCatalog({
                           )}
                           {item.medium && <Text as="p">{item.medium}</Text>}
 
-                          <Text
-                            as="p"
-                            variant="bodyMd"
-                            fontWeight="medium"
-                          >
+                          <Text as="p" variant="bodyMd" fontWeight="medium">
                             {item.customPrice
                               ? `${formatPrice(
                                   item.customPrice
@@ -423,14 +437,9 @@ export default function PreviewCatalog({
                             <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
                               <Checkbox
                                 label="価格を変更する"
-                                checked={
-                                  checkedItems[item.id] || false
-                                }
+                                checked={checkedItems[item.id] || false}
                                 onChange={(checked) =>
-                                  handleCheckboxChange(
-                                    item.id,
-                                    checked
-                                  )
+                                  handleCheckboxChange(item.id, checked)
                                 }
                               />
 
@@ -438,9 +447,7 @@ export default function PreviewCatalog({
                                 <div className="mt-3 space-y-3">
                                   <TextField
                                     label="新しい価格"
-                                    value={
-                                      tempPrices[item.id] || ""
-                                    }
+                                    value={tempPrices[item.id] || ""}
                                     onChange={(val) =>
                                       setTempPrices((prev) => ({
                                         ...prev,
