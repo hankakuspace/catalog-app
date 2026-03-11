@@ -57,7 +57,9 @@ export default function NewCatalogPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CatalogProduct[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<CatalogProduct[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<CatalogProduct[]>(
+    [],
+  );
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -71,12 +73,17 @@ export default function NewCatalogPage() {
   useEffect(() => {
     if (toastActive) {
       const interval = setInterval(() => {
-        const toastEl = document.querySelector(".Polaris-Frame-Toast") as HTMLElement | null;
+        const toastEl = document.querySelector(
+          ".Polaris-Frame-Toast",
+        ) as HTMLElement | null;
         if (toastEl) {
-          toastEl.style.backgroundColor = toastColor === "success" ? "#36B37E" : "#DE3618";
+          toastEl.style.backgroundColor =
+            toastColor === "success" ? "#36B37E" : "#DE3618";
           toastEl.style.color = "#fff";
           toastEl.style.fontWeight = "500";
-          const closeBtn = toastEl.querySelector(".Polaris-Frame-Toast__CloseButton") as HTMLElement | null;
+          const closeBtn = toastEl.querySelector(
+            ".Polaris-Frame-Toast__CloseButton",
+          ) as HTMLElement | null;
           if (closeBtn) closeBtn.style.color = "#fff";
           clearInterval(interval);
         }
@@ -85,8 +92,13 @@ export default function NewCatalogPage() {
     }
   }, [toastActive, toastColor]);
 
-  const toastMarkup =
-    toastActive ? <Toast content={toastContent} onDismiss={toggleToastActive} duration={3000} /> : null;
+  const toastMarkup = toastActive ? (
+    <Toast
+      content={toastContent}
+      onDismiss={toggleToastActive}
+      duration={3000}
+    />
+  ) : null;
 
   const [columnCount, setColumnCount] = useState(3);
   const [username, setUsername] = useState("");
@@ -109,7 +121,17 @@ export default function NewCatalogPage() {
       [{ align: [] }],
     ],
   };
-  const quillFormats = ["font", "size", "bold", "italic", "underline", "strike", "color", "background", "align"];
+  const quillFormats = [
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "color",
+    "background",
+    "align",
+  ];
 
   // ⭐ 編集時ロード
   useEffect(() => {
@@ -125,12 +147,12 @@ export default function NewCatalogPage() {
           setLabel(data.catalog.label || "");
           setLeadText(data.catalog.leadText || "");
 
-          const fixedProducts: CatalogProduct[] = (data.catalog.products || []).map(
-            (p: CatalogProduct) => ({
-              ...p,
-              onlineStoreUrl: p.onlineStoreUrl ?? undefined,
-            })
-          );
+          const fixedProducts: CatalogProduct[] = (
+            data.catalog.products || []
+          ).map((p: CatalogProduct) => ({
+            ...p,
+            onlineStoreUrl: p.onlineStoreUrl ?? undefined,
+          }));
 
           setSelectedProducts(fixedProducts);
           setColumnCount(data.catalog.columnCount || 3);
@@ -268,14 +290,27 @@ export default function NewCatalogPage() {
           </Text>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
           <AdminHeader />
           <Button variant="primary" onClick={handleSave} loading={saving}>
             {id ? "Update Record" : "New Record"}
           </Button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "20px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "3fr 1fr",
+            gap: "20px",
+          }}
+        >
           {/* ▼ 左：プレビュー */}
           <div>
             <PreviewCatalog
@@ -347,17 +382,30 @@ export default function NewCatalogPage() {
                         }
                       }}
                       media={
-                        item.imageUrl ? <Thumbnail source={item.imageUrl} alt={item.title} size="small" /> : undefined
+                        item.imageUrl ? (
+                          <Thumbnail
+                            source={item.imageUrl}
+                            alt={item.title}
+                            size="small"
+                          />
+                        ) : undefined
                       }
                     >
-                      {item.artist ? `${item.artist}, ` : ""}
-                      {item.title}
+                      {`${item.title}${
+                        item.year ? ` ,${item.year}` : ""
+                      }${item.size ? ` ${item.size}` : ""} / ${item.artist}`}
                     </ResourceItem>
                   )}
                 />
               )}
 
-              <ReactQuill theme="snow" value={leadText} onChange={setLeadText} modules={quillModules} formats={quillFormats} />
+              <ReactQuill
+                theme="snow"
+                value={leadText}
+                onChange={setLeadText}
+                modules={quillModules}
+                formats={quillFormats}
+              />
 
               <TextField
                 label="ユーザー名"
@@ -399,7 +447,7 @@ export default function NewCatalogPage() {
                     value={
                       expiresDate
                         ? `${expiresDate.getFullYear()}/${String(expiresDate.getMonth() + 1).padStart(2, "0")}/${String(
-                            expiresDate.getDate()
+                            expiresDate.getDate(),
                           ).padStart(2, "0")}`
                         : ""
                     }
