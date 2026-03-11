@@ -51,40 +51,39 @@ function yearMatches(raw: string, yearValue: string | null): boolean {
     const start = Number(q) * 1000;
     return year >= start && year <= start + 999;
   }
-
   if (q.length === 2) {
     const start = Number(q) * 100;
     return year >= start && year <= start + 99;
   }
-
   if (q.length === 3) {
     const start = Number(q) * 10;
     return year >= start && year <= start + 9;
   }
-
   if (q.length === 4) {
     return year === Number(q);
   }
-
   return false;
 }
 
-function textMatches(raw: string, title: string): boolean {
+function textMatches(raw: string, title: string, artist: string): boolean {
   const q = normalizeText(raw);
   if (!q) return true;
 
   const normalizedTitle = normalizeText(title);
-  if (!normalizedTitle) return false;
+  const normalizedArtist = normalizeText(artist);
 
-  return normalizedTitle.startsWith(q);
+  return normalizedTitle.startsWith(q) || normalizedArtist.startsWith(q);
 }
 
-function getSearchRank(raw: string, title: string): number {
+function getSearchRank(raw: string, title: string, artist: string): number {
   const q = normalizeText(raw);
   if (!q) return 0;
 
   const normalizedTitle = normalizeText(title);
+  const normalizedArtist = normalizeText(artist);
+
   if (normalizedTitle.startsWith(q)) return 1;
+  if (normalizedArtist.startsWith(q)) return 2;
 
   return 99;
 }
@@ -171,8 +170,7 @@ export default async function handler(
 
         const metafields: Record<string, string> = {};
         p.metafields?.edges.forEach((mf) => {
-          const { key, value } = mf.node;
-          metafields[key] = value;
+          metafields[mf.node.key] = mf.node.value;
         });
 
         return {
@@ -183,13 +181,7 @@ export default async function handler(
           price: p.variants?.edges[0]?.node?.price || "0.00",
           onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
           year: metafields["year"] || null,
-          dimensions: metafields["dimensions"] || "",
-          medium: metafields["medium"] || "",
-          frame: metafields["frame"] || "",
-          material: metafields["material"] || "",
           size: metafields["size"] || "",
-          technique: metafields["technique"] || "",
-          certificate: metafields["certificate"] || "",
           status: p.status,
         };
       })
@@ -203,23 +195,22 @@ export default async function handler(
           return yearMatches(rawQuery, product.year);
         }
 
-        return textMatches(rawQuery, product.title);
+        return textMatches(rawQuery, product.title, product.artist);
       })
       .sort((a, b) => {
         const rankDiff =
-          getSearchRank(rawQuery, a.title) - getSearchRank(rawQuery, b.title);
+          getSearchRank(rawQuery, a.title, a.artist) -
+          getSearchRank(rawQuery, b.title, b.artist);
+
         if (rankDiff !== 0) return rankDiff;
 
         return a.title.localeCompare(b.title, "ja");
       })
-      .map(({ status, ...rest }) => ({
-        ...rest,
-      }));
+      .map(({ status, ...rest }) => rest);
 
     return res.status(200).json({ products });
   } catch (err: unknown) {
     const error = err as Error;
-    console.error("❌ /api/products エラー詳細:", error);
     return res.status(500).json({ error: error.message });
   }
 }
