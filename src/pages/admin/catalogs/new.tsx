@@ -391,9 +391,16 @@ export default function NewCatalogPage() {
                         ) : undefined
                       }
                     >
-                      {`${item.title}${
-                        item.year ? ` ,${item.year}` : ""
-                      }${item.size ? ` ${item.size}` : ""} / ${item.artist}`}
+                      <div style={{ lineHeight: "1.4" }}>
+                        <Text as="div" variant="bodySm" fontWeight="medium">
+                          {`${item.title}${
+                            item.year ? ` ,${item.year}` : ""
+                          }${item.size ? ` ${item.size}` : ""}`}
+                        </Text>
+                        <Text as="div" variant="bodySm" tone="subdued">
+                          {item.artist}
+                        </Text>
+                      </div>
                     </ResourceItem>
                   )}
                 />
