@@ -7,7 +7,9 @@ interface ProductNode {
   id: string;
   title: string;
   vendor: string;
-  onlineStorePreviewUrl: string | null; // ⭐ 修正
+  onlineStorePreviewUrl: string | null;
+  status: string;
+  handle: string;
   images: {
     edges: { node: { originalSrc: string } }[];
   };
@@ -29,12 +31,75 @@ interface GraphQLResponse {
   };
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+function normalizeText(value: string): string {
+  return value.normalize("NFKC").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function isNumericQuery(raw: string): boolean {
+  return /^\d+$/.test(raw.trim());
+}
+
+function yearMatches(raw: string, yearValue: string | null): boolean {
+  const q = raw.trim();
+  if (!isNumericQuery(q)) return true;
+  if (!yearValue) return false;
+
+  const year = Number(yearValue);
+  if (Number.isNaN(year)) return false;
+
+  if (q.length === 1) {
+    const start = Number(q) * 1000;
+    return year >= start && year <= start + 999;
+  }
+
+  if (q.length === 2) {
+    const start = Number(q) * 100;
+    return year >= start && year <= start + 99;
+  }
+
+  if (q.length === 3) {
+    const start = Number(q) * 10;
+    return year >= start && year <= start + 9;
+  }
+
+  if (q.length === 4) {
+    return year === Number(q);
+  }
+
+  return false;
+}
+
+function textMatches(raw: string, title: string): boolean {
+  const q = normalizeText(raw);
+  if (!q) return true;
+
+  const normalizedTitle = normalizeText(title);
+  if (!normalizedTitle) return false;
+
+  return normalizedTitle.startsWith(q);
+}
+
+function getSearchRank(raw: string, title: string): number {
+  const q = normalizeText(raw);
+  if (!q) return 0;
+
+  const normalizedTitle = normalizeText(title);
+  if (normalizedTitle.startsWith(q)) return 1;
+
+  return 99;
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
     const shop = req.query.shop as string | undefined;
-    const search = (req.query.query as string) || "";
+    const rawQuery = (req.query.query as string) || "";
 
-    let session = shop ? await sessionStorage.loadSession(`offline_${shop}`) : null;
+    let session = shop
+      ? await sessionStorage.loadSession(`offline_${shop}`)
+      : null;
 
     if (!session) {
       const sessionId = await shopify.session.getCurrentId({
@@ -46,8 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (!session) {
-      console.error("❌ セッションが見つからない", { shop });
-      return res.status(401).json({ error: "Unauthorized: セッションがロードできません" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const client = new GraphQLClient(
@@ -56,19 +120,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         headers: {
           "X-Shopify-Access-Token": session.accessToken!,
         },
-      }
+      },
     );
 
-    // ⭐ onlineStorePreviewUrl を取得（正しいフィールド名）
     const gqlQuery = gql`
       {
-        products(first: 50) {
+        products(first: 100, sortKey: TITLE, query: "status:ACTIVE") {
           edges {
             node {
               id
               title
               vendor
-              onlineStorePreviewUrl   # ⭐ 修正ポイント
+              handle
+              status
+              onlineStorePreviewUrl
               images(first: 1) {
                 edges {
                   node {
@@ -100,51 +165,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = await client.request<GraphQLResponse>(gqlQuery);
 
-    let formatted = data.products.edges.map((edge) => {
-      const p = edge.node;
+    let formatted = data.products.edges
+      .map((edge) => {
+        const p = edge.node;
 
-      const metafields: Record<string, string> = {};
-      p.metafields?.edges.forEach((mf) => {
-        const { key, value } = mf.node;
-        metafields[key] = value;
-      });
+        const metafields: Record<string, string> = {};
+        p.metafields?.edges.forEach((mf) => {
+          const { key, value } = mf.node;
+          metafields[key] = value;
+        });
 
-      return {
-        id: p.id,
-        title: p.title,
-        artist: p.vendor,
-        imageUrl: p.images.edges[0]?.node.originalSrc || null,
-        price: p.variants?.edges[0]?.node?.price || "0.00",
+        return {
+          id: p.id,
+          title: p.title,
+          artist: p.vendor,
+          imageUrl: p.images.edges[0]?.node.originalSrc || null,
+          price: p.variants?.edges[0]?.node?.price || "0.00",
+          onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
+          year: metafields["year"] || null,
+          dimensions: metafields["dimensions"] || "",
+          medium: metafields["medium"] || "",
+          frame: metafields["frame"] || "",
+          material: metafields["material"] || "",
+          size: metafields["size"] || "",
+          technique: metafields["technique"] || "",
+          certificate: metafields["certificate"] || "",
+          status: p.status,
+        };
+      })
+      .filter((p) => p.status === "ACTIVE");
 
-        // ⭐ 正しい商品ページURL（プレビューURL）
-        onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
+    const products = formatted
+      .filter((product) => {
+        if (!rawQuery) return true;
 
-        // ⭐ 作品情報
-        year: metafields["year"] || "",
-        dimensions: metafields["dimensions"] || "",
-        medium: metafields["medium"] || "",
-        frame: metafields["frame"] || "",
+        if (isNumericQuery(rawQuery)) {
+          return yearMatches(rawQuery, product.year);
+        }
 
-        material: metafields["material"] || "",
-        size: metafields["size"] || "",
-        technique: metafields["technique"] || "",
-        certificate: metafields["certificate"] || "",
-      };
-    });
+        return textMatches(rawQuery, product.title);
+      })
+      .sort((a, b) => {
+        const rankDiff =
+          getSearchRank(rawQuery, a.title) - getSearchRank(rawQuery, b.title);
+        if (rankDiff !== 0) return rankDiff;
 
-    if (search) {
-      const q = search.toLowerCase().trim();
+        return a.title.localeCompare(b.title, "ja");
+      })
+      .map(({ status, ...rest }) => ({
+        ...rest,
+      }));
 
-      formatted = formatted.filter((p) => {
-        const titleMatch = p.title?.toLowerCase().includes(q);
-        const artistMatch = p.artist?.toLowerCase().includes(q);
-        const yearMatch = p.year?.toLowerCase().includes(q);
-
-        return Boolean(titleMatch || artistMatch || yearMatch);
-      });
-    }
-
-    return res.status(200).json({ products: formatted });
+    return res.status(200).json({ products });
   } catch (err: unknown) {
     const error = err as Error;
     console.error("❌ /api/products エラー詳細:", error);
