@@ -369,6 +369,12 @@ export default function NewCatalogPage() {
 
               {loading ? (
                 <Spinner accessibilityLabel="検索中" size="large" />
+              ) : searchQuery.trim() !== "" && searchResults.length === 0 ? (
+                <div style={{ padding: "12px 0" }}>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    検索結果がありませんでした
+                  </Text>
+                </div>
               ) : (
                 <ResourceList
                   resourceName={{ singular: "product", plural: "products" }}
