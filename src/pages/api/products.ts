@@ -124,7 +124,7 @@ export default async function handler(
 
     const gqlQuery = gql`
       {
-        products(first: 100, sortKey: TITLE, query: "status:ACTIVE") {
+        products(first: 100, sortKey: TITLE) {
           edges {
             node {
               id
@@ -164,28 +164,26 @@ export default async function handler(
 
     const data = await client.request<GraphQLResponse>(gqlQuery);
 
-    let formatted = data.products.edges
-      .map((edge) => {
-        const p = edge.node;
+    const formatted = data.products.edges.map((edge) => {
+      const p = edge.node;
 
-        const metafields: Record<string, string> = {};
-        p.metafields?.edges.forEach((mf) => {
-          metafields[mf.node.key] = mf.node.value;
-        });
+      const metafields: Record<string, string> = {};
+      p.metafields?.edges.forEach((mf) => {
+        metafields[mf.node.key] = mf.node.value;
+      });
 
-        return {
-          id: p.id,
-          title: p.title,
-          artist: p.vendor,
-          imageUrl: p.images.edges[0]?.node.originalSrc || null,
-          price: p.variants?.edges[0]?.node?.price || "0.00",
-          onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
-          year: metafields["year"] || null,
-          size: metafields["size"] || "",
-          status: p.status,
-        };
-      })
-      .filter((p) => p.status === "ACTIVE");
+      return {
+        id: p.id,
+        title: p.title,
+        artist: p.vendor,
+        imageUrl: p.images.edges[0]?.node.originalSrc || null,
+        price: p.variants?.edges[0]?.node?.price || "0.00",
+        onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
+        year: metafields["year"] || null,
+        size: metafields["size"] || "",
+        status: p.status,
+      };
+    });
 
     const products = formatted
       .filter((product) => {
