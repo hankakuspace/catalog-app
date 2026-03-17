@@ -1,7 +1,7 @@
 // src/pages/admin/catalogs/new.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
@@ -70,6 +70,9 @@ export default function NewCatalogPage() {
   const [toastColor, setToastColor] = useState<"success" | "error">("success");
   const toggleToastActive = useCallback(() => setToastActive((a) => !a), []);
 
+  const searchAbortRef = useRef<AbortController | null>(null);
+  const latestSearchIdRef = useRef(0);
+
   useEffect(() => {
     if (toastActive) {
       const interval = setInterval(() => {
@@ -91,6 +94,14 @@ export default function NewCatalogPage() {
       setTimeout(() => clearTimeout(interval), 1000);
     }
   }, [toastActive, toastColor]);
+
+  useEffect(() => {
+    return () => {
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
+      }
+    };
+  }, []);
 
   const toastMarkup = toastActive ? (
     <Toast
@@ -260,13 +271,46 @@ export default function NewCatalogPage() {
 
   // ⭐ 商品検索（onlineStoreUrl を保持）
   const handleSearch = async (query: string) => {
+    const trimmedQuery = query.trim();
+
+    if (trimmedQuery === "") {
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
+      }
+      latestSearchIdRef.current += 1;
+      setSearchResults([]);
+      setLoading(false);
+      return;
+    }
+
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
+    const currentSearchId = latestSearchIdRef.current + 1;
+    latestSearchIdRef.current = currentSearchId;
+
     setLoading(true);
+
     try {
       const shop = localStorage.getItem("shopify_shop") || "";
-      const params = new URLSearchParams({ shop, query });
+      const params = new URLSearchParams({ shop, query: trimmedQuery });
 
-      const res = await fetch(`/api/products?${params.toString()}`);
+      const res = await fetch(`/api/products?${params.toString()}`, {
+        signal: controller.signal,
+      });
       const data = await res.json();
+
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      if (currentSearchId !== latestSearchIdRef.current) {
+        return;
+      }
 
       const fixed = (data.products || []).map((p: CatalogProduct) => ({
         ...p,
@@ -274,10 +318,22 @@ export default function NewCatalogPage() {
       }));
 
       setSearchResults(fixed);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        return;
+      }
       console.error("商品検索エラー:", err);
+
+      if (currentSearchId === latestSearchIdRef.current) {
+        setSearchResults([]);
+      }
     } finally {
-      setLoading(false);
+      if (
+        currentSearchId === latestSearchIdRef.current &&
+        !controller.signal.aborted
+      ) {
+        setLoading(false);
+      }
     }
   };
 
@@ -333,14 +389,14 @@ export default function NewCatalogPage() {
                 label="タイトル"
                 value={title}
                 onChange={setTitle}
-                autoComplete="off" // ⭐ 必須
+                autoComplete="off"
               />
 
               <TextField
                 label="ラベル"
                 value={label}
                 onChange={setLabel}
-                autoComplete="off" // ⭐
+                autoComplete="off"
                 placeholder="任意のラベル"
               />
 
@@ -360,10 +416,9 @@ export default function NewCatalogPage() {
                 value={searchQuery}
                 onChange={(value) => {
                   setSearchQuery(value);
-                  if (value.trim() !== "") handleSearch(value);
-                  else setSearchResults([]);
+                  handleSearch(value);
                 }}
-                autoComplete="off" // ⭐
+                autoComplete="off"
                 placeholder="作家名・作品タイトル"
               />
 
@@ -424,7 +479,7 @@ export default function NewCatalogPage() {
                 label="ユーザー名"
                 value={username}
                 onChange={setUsername}
-                autoComplete="off" // ⭐
+                autoComplete="off"
               />
 
               <TextField
@@ -432,7 +487,7 @@ export default function NewCatalogPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={setPassword}
-                autoComplete="off" // ⭐元々OK
+                autoComplete="off"
                 placeholder="パスワード"
                 suffix={
                   <button
@@ -465,7 +520,7 @@ export default function NewCatalogPage() {
                         : ""
                     }
                     prefix={<Icon source={CalendarIcon} />}
-                    autoComplete="off" // ⭐ 追加
+                    autoComplete="off"
                     placeholder="yyyy/mm/dd"
                     onFocus={() => setDatePickerActive(true)}
                     onChange={() => {}}
