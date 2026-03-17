@@ -22,14 +22,31 @@ interface ProductNode {
 }
 
 interface ProductEdge {
+  cursor: string;
   node: ProductNode;
 }
 
 interface GraphQLResponse {
   products: {
     edges: ProductEdge[];
+    pageInfo: {
+      hasNextPage: boolean;
+      endCursor: string | null;
+    };
   };
 }
+
+type FormattedProduct = {
+  id: string;
+  title: string;
+  artist: string;
+  imageUrl: string | null;
+  price: string;
+  onlineStoreUrl?: string;
+  year: string | null;
+  size: string;
+  status: string;
+};
 
 function normalizeText(value: string): string {
   return value.normalize("NFKC").trim().toLowerCase().replace(/\s+/g, " ");
@@ -88,6 +105,110 @@ function getSearchRank(raw: string, title: string, artist: string): number {
   return 99;
 }
 
+function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
+  return edges.map((edge) => {
+    const p = edge.node;
+
+    const metafields: Record<string, string> = {};
+    p.metafields?.edges.forEach((mf) => {
+      metafields[mf.node.key] = mf.node.value;
+    });
+
+    return {
+      id: p.id,
+      title: p.title,
+      artist: p.vendor,
+      imageUrl: p.images.edges[0]?.node.originalSrc || null,
+      price: p.variants?.edges[0]?.node?.price || "0.00",
+      onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
+      year: metafields["year"] || null,
+      size: metafields["size"] || "",
+      status: p.status,
+    };
+  });
+}
+
+async function fetchProductsPage(
+  client: GraphQLClient,
+  first: number,
+  after?: string,
+): Promise<GraphQLResponse> {
+  const gqlQuery = gql`
+    query Products($first: Int!, $after: String) {
+      products(first: $first, sortKey: TITLE, after: $after) {
+        edges {
+          cursor
+          node {
+            id
+            title
+            vendor
+            handle
+            status
+            onlineStorePreviewUrl
+            images(first: 1) {
+              edges {
+                node {
+                  originalSrc
+                }
+              }
+            }
+            variants(first: 1) {
+              edges {
+                node {
+                  price
+                }
+              }
+            }
+            metafields(namespace: "product", first: 50) {
+              edges {
+                node {
+                  namespace
+                  key
+                  value
+                }
+              }
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  `;
+
+  return client.request<GraphQLResponse>(gqlQuery, {
+    first,
+    after: after ?? null,
+  });
+}
+
+async function fetchInitialProducts(
+  client: GraphQLClient,
+): Promise<FormattedProduct[]> {
+  const data = await fetchProductsPage(client, 100);
+  return formatProducts(data.products.edges);
+}
+
+async function fetchAllProductsForSearch(
+  client: GraphQLClient,
+): Promise<FormattedProduct[]> {
+  const allEdges: ProductEdge[] = [];
+  let hasNextPage = true;
+  let after: string | undefined = undefined;
+
+  while (hasNextPage) {
+    const data = await fetchProductsPage(client, 100, after);
+
+    allEdges.push(...data.products.edges);
+    hasNextPage = data.products.pageInfo.hasNextPage;
+    after = data.products.pageInfo.endCursor ?? undefined;
+  }
+
+  return formatProducts(allEdges);
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -122,68 +243,11 @@ export default async function handler(
       },
     );
 
-    const gqlQuery = gql`
-      {
-        products(first: 100, sortKey: TITLE) {
-          edges {
-            node {
-              id
-              title
-              vendor
-              handle
-              status
-              onlineStorePreviewUrl
-              images(first: 1) {
-                edges {
-                  node {
-                    originalSrc
-                  }
-                }
-              }
-              variants(first: 1) {
-                edges {
-                  node {
-                    price
-                  }
-                }
-              }
-              metafields(namespace: "product", first: 50) {
-                edges {
-                  node {
-                    namespace
-                    key
-                    value
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
+    const hasSearchQuery = rawQuery.trim().length > 0;
 
-    const data = await client.request<GraphQLResponse>(gqlQuery);
-
-    const formatted = data.products.edges.map((edge) => {
-      const p = edge.node;
-
-      const metafields: Record<string, string> = {};
-      p.metafields?.edges.forEach((mf) => {
-        metafields[mf.node.key] = mf.node.value;
-      });
-
-      return {
-        id: p.id,
-        title: p.title,
-        artist: p.vendor,
-        imageUrl: p.images.edges[0]?.node.originalSrc || null,
-        price: p.variants?.edges[0]?.node?.price || "0.00",
-        onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
-        year: metafields["year"] || null,
-        size: metafields["size"] || "",
-        status: p.status,
-      };
-    });
+    const formatted = hasSearchQuery
+      ? await fetchAllProductsForSearch(client)
+      : await fetchInitialProducts(client);
 
     const products = formatted
       .filter((product) => {
