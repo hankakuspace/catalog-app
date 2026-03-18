@@ -72,6 +72,9 @@ export default function NewCatalogPage() {
 
   const searchAbortRef = useRef<AbortController | null>(null);
   const latestSearchIdRef = useRef(0);
+  const searchDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   useEffect(() => {
     if (toastActive) {
@@ -97,6 +100,9 @@ export default function NewCatalogPage() {
 
   useEffect(() => {
     return () => {
+      if (searchDebounceTimerRef.current) {
+        clearTimeout(searchDebounceTimerRef.current);
+      }
       if (searchAbortRef.current) {
         searchAbortRef.current.abort();
       }
@@ -274,6 +280,10 @@ export default function NewCatalogPage() {
     const trimmedQuery = query.trim();
 
     if (trimmedQuery === "") {
+      if (searchDebounceTimerRef.current) {
+        clearTimeout(searchDebounceTimerRef.current);
+        searchDebounceTimerRef.current = null;
+      }
       if (searchAbortRef.current) {
         searchAbortRef.current.abort();
       }
@@ -283,58 +293,64 @@ export default function NewCatalogPage() {
       return;
     }
 
-    if (searchAbortRef.current) {
-      searchAbortRef.current.abort();
+    if (searchDebounceTimerRef.current) {
+      clearTimeout(searchDebounceTimerRef.current);
     }
-
-    const controller = new AbortController();
-    searchAbortRef.current = controller;
-
-    const currentSearchId = latestSearchIdRef.current + 1;
-    latestSearchIdRef.current = currentSearchId;
 
     setLoading(true);
 
-    try {
-      const shop = localStorage.getItem("shopify_shop") || "";
-      const params = new URLSearchParams({ shop, query: trimmedQuery });
-
-      const res = await fetch(`/api/products?${params.toString()}`, {
-        signal: controller.signal,
-      });
-      const data = await res.json();
-
-      if (controller.signal.aborted) {
-        return;
+    searchDebounceTimerRef.current = setTimeout(async () => {
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
       }
 
-      if (currentSearchId !== latestSearchIdRef.current) {
-        return;
-      }
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
 
-      const fixed = (data.products || []).map((p: CatalogProduct) => ({
-        ...p,
-        onlineStoreUrl: p.onlineStoreUrl ?? undefined,
-      }));
+      const currentSearchId = latestSearchIdRef.current + 1;
+      latestSearchIdRef.current = currentSearchId;
 
-      setSearchResults(fixed);
-    } catch (err: any) {
-      if (err?.name === "AbortError") {
-        return;
-      }
-      console.error("商品検索エラー:", err);
+      try {
+        const shop = localStorage.getItem("shopify_shop") || "";
+        const params = new URLSearchParams({ shop, query: trimmedQuery });
 
-      if (currentSearchId === latestSearchIdRef.current) {
-        setSearchResults([]);
+        const res = await fetch(`/api/products?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        const data = await res.json();
+
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        if (currentSearchId !== latestSearchIdRef.current) {
+          return;
+        }
+
+        const fixed = (data.products || []).map((p: CatalogProduct) => ({
+          ...p,
+          onlineStoreUrl: p.onlineStoreUrl ?? undefined,
+        }));
+
+        setSearchResults(fixed);
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          return;
+        }
+        console.error("商品検索エラー:", err);
+
+        if (currentSearchId === latestSearchIdRef.current) {
+          setSearchResults([]);
+        }
+      } finally {
+        if (
+          currentSearchId === latestSearchIdRef.current &&
+          !controller.signal.aborted
+        ) {
+          setLoading(false);
+        }
       }
-    } finally {
-      if (
-        currentSearchId === latestSearchIdRef.current &&
-        !controller.signal.aborted
-      ) {
-        setLoading(false);
-      }
-    }
+    }, 400);
   };
 
   return (
