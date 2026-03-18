@@ -54,6 +54,22 @@ type FormattedProduct = {
   status: string;
 };
 
+type ProductsCacheEntry = {
+  products: FormattedProduct[];
+  expiresAt: number;
+};
+
+const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __catalogProductsCache__: Map<string, ProductsCacheEntry> | undefined;
+}
+
+const productsCache =
+  global.__catalogProductsCache__ ??
+  (global.__catalogProductsCache__ = new Map<string, ProductsCacheEntry>());
+
 function normalizeText(value: string): string {
   return value.normalize("NFKC").trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -271,6 +287,53 @@ async function fetchAllProductsForSearch(
   return formatProducts(allEdges);
 }
 
+function getCachedProducts(shop: string): FormattedProduct[] | null {
+  const cached = productsCache.get(shop);
+  if (!cached) {
+    return null;
+  }
+
+  if (Date.now() > cached.expiresAt) {
+    productsCache.delete(shop);
+    return null;
+  }
+
+  return cached.products;
+}
+
+function setCachedProducts(shop: string, products: FormattedProduct[]) {
+  productsCache.set(shop, {
+    products,
+    expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+  });
+}
+
+function filterAndSortProducts(
+  products: FormattedProduct[],
+  rawQuery: string,
+): Omit<FormattedProduct, "status">[] {
+  return products
+    .filter((product) => {
+      if (!rawQuery) return true;
+
+      if (isNumericQuery(rawQuery)) {
+        return yearMatches(rawQuery, product.year);
+      }
+
+      return textMatches(rawQuery, product.title, product.artist);
+    })
+    .sort((a, b) => {
+      const rankDiff =
+        getSearchRank(rawQuery, a.title, a.artist) -
+        getSearchRank(rawQuery, b.title, b.artist);
+
+      if (rankDiff !== 0) return rankDiff;
+
+      return a.title.localeCompare(b.title, "ja");
+    })
+    .map(({ status, ...rest }) => rest);
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -307,31 +370,24 @@ export default async function handler(
 
     const hasSearchQuery = rawQuery.trim().length > 0;
 
-    const formatted = hasSearchQuery
-      ? await fetchAllProductsForSearch(client)
-      : await fetchInitialProducts(client);
+    if (!hasSearchQuery) {
+      const formatted = await fetchInitialProducts(client);
+      const products = filterAndSortProducts(formatted, rawQuery);
+      return res.status(200).json({ products });
+    }
 
-    const products = formatted
-      .filter((product) => {
-        if (!rawQuery) return true;
+    const cacheKey = session.shop;
+    const cachedProducts = getCachedProducts(cacheKey);
 
-        if (isNumericQuery(rawQuery)) {
-          return yearMatches(rawQuery, product.year);
-        }
+    if (cachedProducts) {
+      const products = filterAndSortProducts(cachedProducts, rawQuery);
+      return res.status(200).json({ products });
+    }
 
-        return textMatches(rawQuery, product.title, product.artist);
-      })
-      .sort((a, b) => {
-        const rankDiff =
-          getSearchRank(rawQuery, a.title, a.artist) -
-          getSearchRank(rawQuery, b.title, b.artist);
+    const formatted = await fetchAllProductsForSearch(client);
+    setCachedProducts(cacheKey, formatted);
 
-        if (rankDiff !== 0) return rankDiff;
-
-        return a.title.localeCompare(b.title, "ja");
-      })
-      .map(({ status, ...rest }) => rest);
-
+    const products = filterAndSortProducts(formatted, rawQuery);
     return res.status(200).json({ products });
   } catch (err: unknown) {
     const error = err as Error;
