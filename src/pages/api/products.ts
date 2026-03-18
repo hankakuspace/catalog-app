@@ -19,6 +19,12 @@ interface ProductNode {
   metafields: {
     edges: { node: { namespace: string; key: string; value: string } }[];
   };
+  artistMetafield: {
+    reference: {
+      displayName?: string | null;
+      fields?: { key: string; value: string | null }[];
+    } | null;
+  } | null;
 }
 
 interface ProductEdge {
@@ -105,6 +111,46 @@ function getSearchRank(raw: string, title: string, artist: string): number {
   return 99;
 }
 
+function pickArtistNameFromReference(
+  reference:
+    | {
+        displayName?: string | null;
+        fields?: { key: string; value: string | null }[];
+      }
+    | null
+    | undefined,
+  fallbackVendor: string,
+): string {
+  if (!reference) {
+    return fallbackVendor || "";
+  }
+
+  const displayName = reference.displayName?.trim();
+  if (displayName) {
+    return displayName;
+  }
+
+  const fields = reference.fields || [];
+  const preferredKeys = ["name", "title", "label", "artist_name", "jp_name"];
+
+  for (const key of preferredKeys) {
+    const matched = fields.find((field) => field.key === key);
+    const value = matched?.value?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  for (const field of fields) {
+    const value = field.value?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return fallbackVendor || "";
+}
+
 function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
   return edges.map((edge) => {
     const p = edge.node;
@@ -114,10 +160,15 @@ function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
       metafields[mf.node.key] = mf.node.value;
     });
 
+    const artist = pickArtistNameFromReference(
+      p.artistMetafield?.reference,
+      p.vendor,
+    );
+
     return {
       id: p.id,
       title: p.title,
-      artist: p.vendor,
+      artist,
       imageUrl: p.images.edges[0]?.node.originalSrc || null,
       price: p.variants?.edges[0]?.node?.price || "0.00",
       onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
@@ -165,6 +216,17 @@ async function fetchProductsPage(
                   namespace
                   key
                   value
+                }
+              }
+            }
+            artistMetafield: metafield(namespace: "artist", key: "name") {
+              reference {
+                ... on Metaobject {
+                  displayName
+                  fields {
+                    key
+                    value
+                  }
                 }
               }
             }
