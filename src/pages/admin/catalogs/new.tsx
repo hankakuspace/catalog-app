@@ -47,6 +47,50 @@ export interface CatalogProduct {
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
+function formatDateInput(date: Date | null): string {
+  if (!date) return "";
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}/${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function parseDateInput(value: string): Date | null {
+  const normalized = value.trim().replace(/-/g, "/");
+  const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day);
+  date.setHours(0, 0, 0, 0);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
 export default function NewCatalogPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -121,6 +165,7 @@ export default function NewCatalogPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
+  const [expiresDateInput, setExpiresDateInput] = useState("");
 
   const today = new Date();
   const [{ month, year }, setDate] = useState({
@@ -149,6 +194,40 @@ export default function NewCatalogPage() {
     "background",
     "align",
   ];
+
+  const handleExpiresDateInputChange = useCallback((value: string) => {
+    setExpiresDateInput(value);
+
+    if (value.trim() === "") {
+      setExpiresDate(null);
+      return;
+    }
+
+    const parsedDate = parseDateInput(value);
+    if (!parsedDate) {
+      return;
+    }
+
+    setExpiresDate(parsedDate);
+    setDate({
+      month: parsedDate.getMonth(),
+      year: parsedDate.getFullYear(),
+    });
+  }, []);
+
+  const handleExpiresDateSelect = useCallback(({ start }: { start: Date }) => {
+    const d = new Date(start);
+    d.setHours(0, 0, 0, 0);
+
+    setExpiresDate(d);
+    setExpiresDateInput(formatDateInput(d));
+    setDate({ month: d.getMonth(), year: d.getFullYear() });
+    setDatePickerActive(false);
+  }, []);
+
+  const handleMonthChange = useCallback((newMonth: number, newYear: number) => {
+    setDate({ month: newMonth, year: newYear });
+  }, []);
 
   // ⭐ 編集時ロード
   useEffect(() => {
@@ -180,7 +259,11 @@ export default function NewCatalogPage() {
             const d = new Date(data.catalog.expiresAt);
             d.setHours(0, 0, 0, 0);
             setExpiresDate(d);
+            setExpiresDateInput(formatDateInput(d));
             setDate({ month: d.getMonth(), year: d.getFullYear() });
+          } else {
+            setExpiresDate(null);
+            setExpiresDateInput("");
           }
         }
       } catch (err) {
@@ -528,18 +611,12 @@ export default function NewCatalogPage() {
                 activator={
                   <TextField
                     label="有効期限"
-                    value={
-                      expiresDate
-                        ? `${expiresDate.getFullYear()}/${String(expiresDate.getMonth() + 1).padStart(2, "0")}/${String(
-                            expiresDate.getDate(),
-                          ).padStart(2, "0")}`
-                        : ""
-                    }
+                    value={expiresDateInput}
                     prefix={<Icon source={CalendarIcon} />}
                     autoComplete="off"
                     placeholder="yyyy/mm/dd"
                     onFocus={() => setDatePickerActive(true)}
-                    onChange={() => {}}
+                    onChange={handleExpiresDateInputChange}
                   />
                 }
                 onClose={() => setDatePickerActive(false)}
@@ -548,13 +625,8 @@ export default function NewCatalogPage() {
                   month={month}
                   year={year}
                   selected={expiresDate || new Date()}
-                  onChange={({ start }) => {
-                    const d = new Date(start);
-                    d.setHours(0, 0, 0, 0);
-                    setExpiresDate(d);
-                    setDate({ month: d.getMonth(), year: d.getFullYear() });
-                    setDatePickerActive(false);
-                  }}
+                  onMonthChange={handleMonthChange}
+                  onChange={handleExpiresDateSelect}
                 />
               </Popover>
             </BlockStack>
