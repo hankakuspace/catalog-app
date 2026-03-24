@@ -47,6 +47,21 @@ export interface CatalogProduct {
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
+const MONTH_LABELS = [
+  "1月",
+  "2月",
+  "3月",
+  "4月",
+  "5月",
+  "6月",
+  "7月",
+  "8月",
+  "9月",
+  "10月",
+  "11月",
+  "12月",
+];
+
 function formatDateInput(date: Date | null): string {
   if (!date) return "";
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(
@@ -61,34 +76,34 @@ function parseDateInput(value: string): Date | null {
 
   if (!match) return null;
 
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
+  const parsedYear = Number(match[1]);
+  const parsedMonth = Number(match[2]);
+  const parsedDay = Number(match[3]);
 
   if (
-    Number.isNaN(year) ||
-    Number.isNaN(month) ||
-    Number.isNaN(day) ||
-    month < 1 ||
-    month > 12 ||
-    day < 1 ||
-    day > 31
+    Number.isNaN(parsedYear) ||
+    Number.isNaN(parsedMonth) ||
+    Number.isNaN(parsedDay) ||
+    parsedMonth < 1 ||
+    parsedMonth > 12 ||
+    parsedDay < 1 ||
+    parsedDay > 31
   ) {
     return null;
   }
 
-  const date = new Date(year, month - 1, day);
-  date.setHours(0, 0, 0, 0);
+  const parsedDate = new Date(parsedYear, parsedMonth - 1, parsedDay);
+  parsedDate.setHours(0, 0, 0, 0);
 
   if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
+    parsedDate.getFullYear() !== parsedYear ||
+    parsedDate.getMonth() !== parsedMonth - 1 ||
+    parsedDate.getDate() !== parsedDay
   ) {
     return null;
   }
 
-  return date;
+  return parsedDate;
 }
 
 export default function NewCatalogPage() {
@@ -216,18 +231,24 @@ export default function NewCatalogPage() {
   }, []);
 
   const handleExpiresDateSelect = useCallback(({ start }: { start: Date }) => {
-    const d = new Date(start);
-    d.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(start);
+    selectedDate.setHours(0, 0, 0, 0);
 
-    setExpiresDate(d);
-    setExpiresDateInput(formatDateInput(d));
-    setDate({ month: d.getMonth(), year: d.getFullYear() });
+    setExpiresDate(selectedDate);
+    setExpiresDateInput(formatDateInput(selectedDate));
+    setDate({
+      month: selectedDate.getMonth(),
+      year: selectedDate.getFullYear(),
+    });
     setDatePickerActive(false);
   }, []);
 
-  const handleMonthChange = useCallback((newMonth: number, newYear: number) => {
-    setDate({ month: newMonth, year: newYear });
-  }, []);
+  const handleMonthChange = useCallback(
+    (nextMonth: number, nextYear: number) => {
+      setDate({ month: nextMonth, year: nextYear });
+    },
+    [],
+  );
 
   // ⭐ 編集時ロード
   useEffect(() => {
@@ -256,11 +277,14 @@ export default function NewCatalogPage() {
           setPassword(data.catalog.password || "");
 
           if (data.catalog.expiresAt) {
-            const d = new Date(data.catalog.expiresAt);
-            d.setHours(0, 0, 0, 0);
-            setExpiresDate(d);
-            setExpiresDateInput(formatDateInput(d));
-            setDate({ month: d.getMonth(), year: d.getFullYear() });
+            const loadedDate = new Date(data.catalog.expiresAt);
+            loadedDate.setHours(0, 0, 0, 0);
+            setExpiresDate(loadedDate);
+            setExpiresDateInput(formatDateInput(loadedDate));
+            setDate({
+              month: loadedDate.getMonth(),
+              year: loadedDate.getFullYear(),
+            });
           } else {
             setExpiresDate(null);
             setExpiresDateInput("");
@@ -621,6 +645,12 @@ export default function NewCatalogPage() {
                 }
                 onClose={() => setDatePickerActive(false)}
               >
+                <div style={{ padding: "12px 16px 0 16px" }}>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">
+                    {`${year}年 ${MONTH_LABELS[month]}`}
+                  </Text>
+                </div>
+
                 <DatePicker
                   month={month}
                   year={year}
