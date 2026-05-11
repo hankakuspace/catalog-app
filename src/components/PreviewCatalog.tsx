@@ -314,6 +314,11 @@ export default function PreviewCatalog({
             width: 100%;
             object-fit: contain;
           }
+
+          .catalog-image button,
+          .catalog-image button img {
+            cursor: zoom-in;
+          }
         `}
       </style>
 
@@ -326,7 +331,7 @@ export default function PreviewCatalog({
             style={{
               position: "fixed",
               inset: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.92)",
+              backgroundColor: "rgba(245, 245, 245, 0.96)",
               zIndex: 9999,
               display: "flex",
               alignItems: "center",
@@ -356,7 +361,7 @@ export default function PreviewCatalog({
                   zIndex: 2,
                   background: "transparent",
                   border: "none",
-                  color: "#fff",
+                  color: "#666",
                   cursor: "pointer",
                   padding: "8px",
                 }}
@@ -622,7 +627,6 @@ export default function PreviewCatalog({
           © 2025 Clue Co.,Ltd. All rights reserved.
         </footer>
       </div>
-      </>
     </>
   );
 }
