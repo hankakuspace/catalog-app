@@ -357,14 +357,14 @@ export default function PreviewCatalog({
             <div
               onClick={(event) => event.stopPropagation()}
               style={{
-                width: "calc(100vw - 40px)",
-                height: "calc(100vh - 50px)",
-                margin: "25px 20px",
+                width: "calc(100vw - 48px)",
+                height: "calc(100vh - 48px)",
+                margin: "24px",
                 background: "#ffffff",
                 display: "grid",
-                gridTemplateColumns: "860px 320px",
-                justifyContent: "flex-end",
-                columnGap: "76px",
+                gridTemplateColumns: "820px 340px",
+                justifyContent: "center",
+                columnGap: "72px",
                 overflow: "hidden",
               }}
             >
@@ -372,8 +372,8 @@ export default function PreviewCatalog({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "flex-end",
-                  padding: "22px 0 34px 0",
+                  justifyContent: "center",
+                  padding: "32px 0",
                   background: "#ffffff",
                   minWidth: 0,
                 }}
@@ -382,10 +382,8 @@ export default function PreviewCatalog({
                   src={getProductImageUrls(lightboxProduct)[lightboxIndex]}
                   alt={lightboxProduct.title}
                   style={{
-                    maxWidth: "790px",
+                    maxWidth: "100%",
                     maxHeight: "calc(100vh - 120px)",
-                    width: "auto",
-                    height: "auto",
                     width: "auto",
                     height: "auto",
                     objectFit: "contain",
@@ -397,15 +395,15 @@ export default function PreviewCatalog({
                 style={{
                   background: "#ffffff",
                   color: "#444",
-                  padding: "0",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
                   alignItems: "flex-start",
                   minWidth: 0,
+                  position: "relative",
                 }}
               >
-                <div style={{ fontSize: "11px", lineHeight: 1.8, maxWidth: "240px" }}>
+                <div style={{ maxWidth: "240px" }}>
                   {lightboxProduct.artist && (
                     <Text as="p" variant="bodyMd" fontWeight="semibold">
                       {lightboxProduct.artist}
@@ -463,19 +461,28 @@ export default function PreviewCatalog({
                         : ""}
                     </Text>
                   )}
+
+                  <div
+                    style={{
+                      marginTop: "24px",
+                      width: "110px",
+                      borderTop: "1px solid #e5e5e5",
+                    }}
+                  />
                 </div>
 
                 <div
                   style={{
+                    position: "fixed",
+                    right: "40px",
+                    bottom: "20px",
                     display: "flex",
-                    justifyContent: "flex-end",
                     alignItems: "center",
-                    gap: "14px",
-                    fontSize: "9px",
+                    gap: "16px",
+                    fontSize: "10px",
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
                     color: "#666",
-                    marginTop: "4px",
                   }}
                 >
                   <button
@@ -487,7 +494,7 @@ export default function PreviewCatalog({
                       padding: 0,
                       cursor: "pointer",
                       color: "#666",
-                      fontSize: "9px",
+                      fontSize: "10px",
                       letterSpacing: "0.08em",
                       textTransform: "uppercase",
                     }}
