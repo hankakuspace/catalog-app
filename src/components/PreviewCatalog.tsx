@@ -460,29 +460,13 @@ export default function PreviewCatalog({
               >
                 <div style={{ maxWidth: "240px" }}>
                   {lightboxProduct.artist && (
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: "#000",
-                        lineHeight: 1.6,
-                        marginBottom: "4px",
-                      }}
-                    >
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#000", lineHeight: 1.6, marginBottom: "4px" }}>
                       {lightboxProduct.artist}
                     </div>
                   )}
 
                   {lightboxProduct.title && (
-                    <div
-                      style={{
-                        fontSize: "15px",
-                        fontWeight: 500,
-                        color: "#000",
-                        lineHeight: 1.6,
-                        marginBottom: "10px",
-                      }}
-                    >
+                    <div style={{ fontSize: "15px", fontWeight: 500, color: "#000", lineHeight: 1.6, marginBottom: "10px" }}>
                       {lightboxProduct.title}
                     </div>
                   )}
@@ -524,14 +508,7 @@ export default function PreviewCatalog({
                   )}
 
                   {(lightboxProduct.customPrice || lightboxProduct.price) && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "#666",
-                        lineHeight: 1.7,
-                        marginTop: "6px",
-                      }}
-                    >
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7, marginTop: "6px" }}>
                       {lightboxProduct.customPrice
                         ? `${formatPrice(lightboxProduct.customPrice)} 円（税込）`
                         : lightboxProduct.price
@@ -540,13 +517,7 @@ export default function PreviewCatalog({
                     </div>
                   )}
 
-                  <div
-                    style={{
-                      marginTop: "20px",
-                      width: "110px",
-                      borderTop: "1px solid #e5e5e5",
-                    }}
-                  />
+                  <div style={{ marginTop: "20px", width: "110px", borderTop: "1px solid #e5e5e5" }} />
                 </div>
 
                 <div
@@ -579,15 +550,8 @@ export default function PreviewCatalog({
                   >
                     CLOSE
                   </button>
-                  <span>HIDE INFO</span>
                   {products.length > 1 && (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <button
                         type="button"
                         onClick={showPrevProduct}
