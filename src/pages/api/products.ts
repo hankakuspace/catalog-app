@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { shopify, sessionStorage } from "@/lib/shopify";
 import { GraphQLClient, gql } from "graphql-request";
+import { dbAdmin } from "@/lib/firebaseAdmin";
 
 interface ProductNode {
   id: string;
@@ -380,6 +381,26 @@ function setCachedProducts(shop: string, products: FormattedProduct[]) {
   });
 }
 
+async function fetchIndexedProductsFromFirestore(
+  shop: string,
+): Promise<FormattedProduct[]> {
+  const snapshot = await dbAdmin
+    .collection("shopify_product_index")
+    .where("shop", "==", shop)
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data() as FormattedProduct;
+    return {
+      ...data,
+      onlineStoreUrl: data.onlineStoreUrl || undefined,
+      year: data.year || null,
+      size: data.size || "",
+      status: data.status || "",
+    };
+  });
+}
+
 function filterAndSortProducts(
   products: FormattedProduct[],
   rawQuery: string,
@@ -430,6 +451,43 @@ export default async function handler(
 
     if (!session) {
       return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const indexCacheKey = `firestore-index:${session.shop}`;
+    const cachedIndexedProducts = getCachedProducts(indexCacheKey);
+
+    if (cachedIndexedProducts) {
+      const products = filterAndSortProducts(cachedIndexedProducts, rawQuery);
+
+      if (shouldWarmCache) {
+        return res.status(200).json({
+          ok: true,
+          source: "firestore-index-cache",
+          cached: true,
+          count: cachedIndexedProducts.length,
+        });
+      }
+
+      return res.status(200).json({ products });
+    }
+
+    const indexedProducts = await fetchIndexedProductsFromFirestore(session.shop);
+
+    if (indexedProducts.length > 0) {
+      setCachedProducts(indexCacheKey, indexedProducts);
+
+      const products = filterAndSortProducts(indexedProducts, rawQuery);
+
+      if (shouldWarmCache) {
+        return res.status(200).json({
+          ok: true,
+          source: "firestore-index",
+          cached: false,
+          count: indexedProducts.length,
+        });
+      }
+
+      return res.status(200).json({ products });
     }
 
     const client = new GraphQLClient(

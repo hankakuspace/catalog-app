@@ -125,6 +125,7 @@ export default function NewCatalogPage() {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [syncingProducts, setSyncingProducts] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const [toastActive, setToastActive] = useState(false);
@@ -396,6 +397,46 @@ export default function NewCatalogPage() {
     });
   };
 
+  const handleSyncProducts = async () => {
+    const shop = localStorage.getItem("shopify_shop") || "";
+
+    if (!shop) {
+      setToastContent("Shopifyストア情報が見つかりません");
+      setToastColor("error");
+      setToastActive(true);
+      return;
+    }
+
+    setSyncingProducts(true);
+
+    try {
+      const res = await fetch(`/api/products/sync?shop=${encodeURIComponent(shop)}`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "商品データ同期に失敗しました");
+      }
+
+      setToastContent(`商品データを同期しました（${data.count || 0}件）`);
+      setToastColor("success");
+      setToastActive(true);
+
+      const params = new URLSearchParams({ warm: "1", shop });
+      fetch(`/api/products?${params.toString()}`).catch((err) => {
+        console.error("商品検索キャッシュの再生成に失敗しました:", err);
+      });
+    } catch (err) {
+      console.error(err);
+      setToastContent("商品データ同期に失敗しました");
+      setToastColor("error");
+      setToastActive(true);
+    } finally {
+      setSyncingProducts(false);
+    }
+  };
+
   // ⭐ 商品検索（onlineStoreUrl を保持）
   const handleSearch = async (query: string) => {
     const trimmedQuery = query.trim();
@@ -492,9 +533,14 @@ export default function NewCatalogPage() {
           }}
         >
           <AdminHeader />
-          <Button variant="primary" onClick={handleSave} loading={saving}>
-            {id ? "Update Record" : "New Record"}
-          </Button>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <Button onClick={handleSyncProducts} loading={syncingProducts}>
+              商品データ同期
+            </Button>
+            <Button variant="primary" onClick={handleSave} loading={saving}>
+              {id ? "Update Record" : "New Record"}
+            </Button>
+          </div>
         </div>
 
         <div
