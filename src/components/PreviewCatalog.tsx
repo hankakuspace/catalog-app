@@ -728,6 +728,7 @@ export default function PreviewCatalog({
                                 <img
                                   src={item.imageUrl}
                                   alt={item.title}
+                                  style={{ cursor: "zoom-in" }}
                                   // ★ 追加：画像ロード後に再計測
                                   onLoad={() => {
                                     requestAnimationFrame(applySameHeight);
