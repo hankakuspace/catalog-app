@@ -580,7 +580,7 @@ export default function PreviewCatalog({
                     CLOSE
                   </button>
                   <span>HIDE INFO</span>
-                  {getProductImageUrls(lightboxProduct).length > 1 && (
+                  {products.length > 1 && (
                     <div
                       style={{
                         display: "flex",
@@ -590,7 +590,7 @@ export default function PreviewCatalog({
                     >
                       <button
                         type="button"
-                        onClick={showPrevImage}
+                        onClick={showPrevProduct}
                         style={{
                           background: "none",
                           border: "none",
@@ -600,16 +600,16 @@ export default function PreviewCatalog({
                           fontSize: "14px",
                           lineHeight: 1,
                         }}
-                        aria-label="前の画像"
+                        aria-label="前の作品"
                       >
                         ‹
                       </button>
                       <span>
-                        {lightboxIndex + 1} of {getProductImageUrls(lightboxProduct).length}
+                        {lightboxProductIndex + 1} of {products.length}
                       </span>
                       <button
                         type="button"
-                        onClick={showNextImage}
+                        onClick={showNextProduct}
                         style={{
                           background: "none",
                           border: "none",
@@ -619,11 +619,13 @@ export default function PreviewCatalog({
                           fontSize: "14px",
                           lineHeight: 1,
                         }}
-                        aria-label="次の画像"
+                        aria-label="次の作品"
                       >
                         ›
                       </button>
                     </div>
+                  )}
+                </div>
                   )}
                 </div>
               </div>
