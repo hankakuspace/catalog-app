@@ -1,6 +1,157 @@
 // src/pages/api/catalogs.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { dbAdmin, FieldValue } from "@/lib/firebaseAdmin";
+import { sessionStorage } from "@/lib/shopify";
+import { GraphQLClient, gql } from "graphql-request";
+
+type CatalogProduct = {
+  id?: string;
+  availabilityStatus?: string;
+  [key: string]: unknown;
+};
+
+type ShopifyProductNode = {
+  id: string;
+  availabilityStatusMetafield?: {
+    value: string | null;
+  } | null;
+};
+
+type ShopifyAvailabilityResponse = {
+  nodes: (ShopifyProductNode | null)[];
+};
+
+function normalizeAvailabilityStatus(value?: string | null): string {
+  if (!value) return "";
+
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return String(parsed[0] || "").trim();
+    }
+    if (typeof parsed === "string") {
+      return parsed.trim();
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+}
+
+async function fetchLatestAvailabilityStatuses(
+  shop: string | undefined,
+  products: CatalogProduct[],
+): Promise<Map<string, string>> {
+  const statusMap = new Map<string, string>();
+
+  if (!shop || products.length === 0) {
+    return statusMap;
+  }
+
+  const ids = Array.from(
+    new Set(
+      products
+        .map((product) => product.id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  if (ids.length === 0) {
+    return statusMap;
+  }
+
+  const session = await sessionStorage.loadSession(`offline_${shop}`);
+
+  if (!session?.accessToken) {
+    console.warn("Shopify offline session not found:", shop);
+    return statusMap;
+  }
+
+  const client = new GraphQLClient(
+    `https://${session.shop}/admin/api/2025-01/graphql.json`,
+    {
+      headers: {
+        "X-Shopify-Access-Token": session.accessToken,
+      },
+    },
+  );
+
+  const query = gql`
+    query ProductAvailabilityStatuses($ids: [ID!]!) {
+      nodes(ids: $ids) {
+        ... on Product {
+          id
+          availabilityStatusMetafield: metafield(
+            namespace: "custom"
+            key: "availability_status"
+          ) {
+            value
+          }
+        }
+      }
+    }
+  `;
+
+  for (let i = 0; i < ids.length; i += 100) {
+    const chunk = ids.slice(i, i + 100);
+    const data = await client.request<ShopifyAvailabilityResponse>(query, {
+      ids: chunk,
+    });
+
+    data.nodes.forEach((node) => {
+      if (!node?.id) return;
+
+      statusMap.set(
+        node.id,
+        normalizeAvailabilityStatus(node.availabilityStatusMetafield?.value),
+      );
+    });
+  }
+
+  return statusMap;
+}
+
+async function applyLatestAvailabilityStatuses(data: FirebaseFirestore.DocumentData | undefined) {
+  const products = Array.isArray(data?.products)
+    ? (data.products as CatalogProduct[])
+    : [];
+
+  if (products.length === 0) {
+    return data;
+  }
+
+  try {
+    const statusMap = await fetchLatestAvailabilityStatuses(
+      typeof data?.shop === "string" ? data.shop : undefined,
+      products,
+    );
+
+    if (statusMap.size === 0) {
+      return data;
+    }
+
+    return {
+      ...data,
+      products: products.map((product) => {
+        if (!product.id || !statusMap.has(product.id)) {
+          return product;
+        }
+
+        return {
+          ...product,
+          availabilityStatus: statusMap.get(product.id) || "",
+        };
+      }),
+    };
+  } catch (err) {
+    console.error("❌ availability status refresh error:", err);
+    return data;
+  }
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -18,7 +169,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (!doc.exists) return res.status(404).json({ error: "Not found" });
 
-        const data = doc.data();
+        const data = await applyLatestAvailabilityStatuses(doc.data());
+
         return res.status(200).json({
           catalog: {
             id: doc.id,
