@@ -288,18 +288,35 @@ function getIndexDocId(shop: string, productId: string): string {
 }
 
 async function deleteExistingIndex(shop: string) {
-  const snapshot = await dbAdmin
+  const productSnapshot = await dbAdmin
     .collection("shopify_product_index")
     .where("shop", "==", shop)
     .get();
 
-  for (let i = 0; i < snapshot.docs.length; i += 400) {
+  for (let i = 0; i < productSnapshot.docs.length; i += 400) {
     const batch = dbAdmin.batch();
-    snapshot.docs.slice(i, i + 400).forEach((doc) => {
+    productSnapshot.docs.slice(i, i + 400).forEach((doc) => {
       batch.delete(doc.ref);
     });
     await batch.commit();
   }
+
+  const chunkSnapshot = await dbAdmin
+    .collection("shopify_product_index_chunks")
+    .where("shop", "==", shop)
+    .get();
+
+  for (let i = 0; i < chunkSnapshot.docs.length; i += 400) {
+    const batch = dbAdmin.batch();
+    chunkSnapshot.docs.slice(i, i + 400).forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+  }
+}
+
+function getChunkDocId(shop: string, chunkIndex: number): string {
+  return `${shop}__chunk_${String(chunkIndex).padStart(4, "0")}`;
 }
 
 async function saveProductIndex(shop: string, products: IndexedProduct[]) {
@@ -321,6 +338,23 @@ async function saveProductIndex(shop: string, products: IndexedProduct[]) {
     });
 
     await batch.commit();
+  }
+
+  const chunkSize = 80;
+
+  for (let i = 0; i < products.length; i += chunkSize) {
+    const chunkIndex = Math.floor(i / chunkSize);
+    const ref = dbAdmin
+      .collection("shopify_product_index_chunks")
+      .doc(getChunkDocId(shop, chunkIndex));
+
+    await ref.set({
+      shop,
+      chunkIndex,
+      products: products.slice(i, i + chunkSize),
+      count: products.slice(i, i + chunkSize).length,
+      syncedAt: FieldValue.serverTimestamp(),
+    });
   }
 
   global.__catalogProductsCache__?.delete(`firestore-index:${shop}`);

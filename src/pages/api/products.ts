@@ -384,6 +384,29 @@ function setCachedProducts(shop: string, products: FormattedProduct[]) {
 async function fetchIndexedProductsFromFirestore(
   shop: string,
 ): Promise<FormattedProduct[]> {
+  const chunkSnapshot = await dbAdmin
+    .collection("shopify_product_index_chunks")
+    .where("shop", "==", shop)
+    .orderBy("chunkIndex", "asc")
+    .get();
+
+  if (!chunkSnapshot.empty) {
+    return chunkSnapshot.docs.flatMap((doc) => {
+      const data = doc.data();
+      const products = Array.isArray(data.products)
+        ? (data.products as FormattedProduct[])
+        : [];
+
+      return products.map((product) => ({
+        ...product,
+        onlineStoreUrl: product.onlineStoreUrl || undefined,
+        year: product.year || null,
+        size: product.size || "",
+        status: product.status || "",
+      }));
+    });
+  }
+
   const snapshot = await dbAdmin
     .collection("shopify_product_index")
     .where("shop", "==", shop)
