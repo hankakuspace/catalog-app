@@ -47,6 +47,7 @@ export interface Product {
   certificate?: string;
   onlineStoreUrl?: string;
   availabilityStatus?: string;
+  editionTotal?: string;
 }
 
 interface Props {
@@ -549,6 +550,12 @@ export default function PreviewCatalog({
                   </div>
                 )}
 
+                {lightboxProduct.editionTotal && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    Edition of {lightboxProduct.editionTotal}
+                  </div>
+                )}
+
                 <AvailabilityDot status={lightboxProduct.availabilityStatus} />
 
                 {!isSoldStatus(lightboxProduct.availabilityStatus) &&
@@ -833,6 +840,9 @@ export default function PreviewCatalog({
                           {item.certificate && <Text as="p">{item.certificate}</Text>}
                           {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                           {item.medium && <Text as="p">{item.medium}</Text>}
+                          {item.editionTotal && (
+                            <Text as="p">Edition of {item.editionTotal}</Text>
+                          )}
 
                           <AvailabilityDot status={item.availabilityStatus} />
 

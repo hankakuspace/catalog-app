@@ -14,7 +14,7 @@ interface ProductNode {
     edges: { node: { originalSrc: string } }[];
   };
   variants: {
-    edges: { node: { price: string } }[];
+    edges: { node: { title: string; price: string } }[];
   };
   metafields: {
     edges: { node: { namespace: string; key: string; value: string } }[];
@@ -62,6 +62,7 @@ type FormattedProduct = {
   certificate?: string;
   dimensions?: string;
   medium?: string;
+  editionTotal?: string;
   availabilityStatus?: string;
 };
 
@@ -199,6 +200,21 @@ function normalizeAvailabilityStatus(value?: string | null): string {
   return trimmed;
 }
 
+function pickEditionTotalFromVariants(
+  variants: { node: { title: string; price: string } }[],
+): string {
+  for (const variant of variants) {
+    const title = variant.node.title || "";
+    const match = title.match(/(?:ed(?:ition)?\s*:?\s*)?\d+\s*\/\s*(\d+)/i);
+
+    if (match?.[1]) {
+      return match[1].trim();
+    }
+  }
+
+  return "";
+}
+
 function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
   return edges.map((edge) => {
     const p = edge.node;
@@ -217,6 +233,8 @@ function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
       .map((imageEdge) => imageEdge.node.originalSrc)
       .filter(Boolean);
 
+    const editionTotal = pickEditionTotalFromVariants(p.variants?.edges || []);
+
     return {
       id: p.id,
       title: p.title,
@@ -233,6 +251,7 @@ function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
       certificate: metafields["certificate"] || "",
       dimensions: metafields["dimensions"] || "",
       medium: metafields["medium"] || "",
+      editionTotal,
       availabilityStatus: normalizeAvailabilityStatus(
         p.availabilityStatusMetafield?.value,
       ),
@@ -265,9 +284,10 @@ async function fetchProductsPage(
                 }
               }
             }
-            variants(first: 1) {
+            variants(first: 50) {
               edges {
                 node {
+                  title
                   price
                 }
               }

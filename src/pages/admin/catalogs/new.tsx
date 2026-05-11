@@ -45,6 +45,7 @@ export interface CatalogProduct {
   certificate?: string;
   onlineStoreUrl?: string; // ⭐ null 禁止（undefined OK）
   availabilityStatus?: string;
+  editionTotal?: string;
 }
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
