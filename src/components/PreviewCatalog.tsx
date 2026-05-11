@@ -171,6 +171,26 @@ export default function PreviewCatalog({
     setLightboxIndex(0);
   }, []);
 
+  const showPrevImage = useCallback(() => {
+    if (!lightboxProduct) return;
+
+    const imageUrls = getProductImageUrls(lightboxProduct);
+    if (imageUrls.length <= 1) return;
+
+    setLightboxIndex((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
+  }, [lightboxProduct]);
+
+  const showNextImage = useCallback(() => {
+    if (!lightboxProduct) return;
+
+    const imageUrls = getProductImageUrls(lightboxProduct);
+    if (imageUrls.length <= 1) return;
+
+    setLightboxIndex((prev) =>
+      prev === imageUrls.length - 1 ? 0 : prev + 1
+    );
+  }, [lightboxProduct]);
+
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
 
@@ -225,6 +245,16 @@ export default function PreviewCatalog({
     const handleLightboxKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeLightbox();
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        showPrevImage();
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        showNextImage();
       }
     };
 
@@ -233,7 +263,7 @@ export default function PreviewCatalog({
     return () => {
       window.removeEventListener("keydown", handleLightboxKeyDown);
     };
-  }, [lightboxProduct, closeLightbox]);
+  }, [lightboxProduct, closeLightbox, showPrevImage, showNextImage]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!onReorder) return;
@@ -526,9 +556,49 @@ export default function PreviewCatalog({
                   </button>
                   <span>HIDE INFO</span>
                   {getProductImageUrls(lightboxProduct).length > 1 && (
-                    <span>
-                      {lightboxIndex + 1} of {getProductImageUrls(lightboxProduct).length}
-                    </span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={showPrevImage}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          cursor: "pointer",
+                          color: "#666",
+                          fontSize: "14px",
+                          lineHeight: 1,
+                        }}
+                        aria-label="前の画像"
+                      >
+                        ‹
+                      </button>
+                      <span>
+                        {lightboxIndex + 1} of {getProductImageUrls(lightboxProduct).length}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={showNextImage}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          cursor: "pointer",
+                          color: "#666",
+                          fontSize: "14px",
+                          lineHeight: 1,
+                        }}
+                        aria-label="次の画像"
+                      >
+                        ›
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
