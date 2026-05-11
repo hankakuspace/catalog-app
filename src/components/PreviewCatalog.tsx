@@ -330,64 +330,154 @@ export default function PreviewCatalog({
             style={{
               position: "fixed",
               inset: 0,
-              backgroundColor: "rgba(245, 245, 245, 0.96)",
+              backgroundColor: "#ffffff",
               zIndex: 9999,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "24px",
             }}
           >
+            <button
+              type="button"
+              onClick={closeLightbox}
+              style={{
+                position: "fixed",
+                top: "24px",
+                right: "24px",
+                zIndex: 10001,
+                background: "none",
+                border: "none",
+                color: "#777",
+                cursor: "pointer",
+                padding: "8px",
+                lineHeight: 1,
+              }}
+              aria-label="閉じる"
+            >
+              <Icon source={XIcon} />
+            </button>
+
             <div
               onClick={(event) => event.stopPropagation()}
               style={{
-                position: "relative",
-                width: "100%",
-                maxWidth: "1100px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "16px",
+                width: "calc(100vw - 60px)",
+                height: "calc(100vh - 60px)",
+                margin: "30px",
+                border: "1px solid #cfcfcf",
+                background: "#ffffff",
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) 320px",
+                overflow: "hidden",
               }}
             >
-              <button
-                type="button"
-                onClick={closeLightbox}
+              <div
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  zIndex: 2,
-                  background: "transparent",
-                  border: "none",
-                  color: "#666",
-                  cursor: "pointer",
-                  padding: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "22px",
+                  background: "#ffffff",
                 }}
-                aria-label="閉じる"
               >
-                <Icon source={XIcon} />
-              </button>
+                <img
+                  src={getProductImageUrls(lightboxProduct)[lightboxIndex]}
+                  alt={lightboxProduct.title}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              </div>
 
-              <img
-                src={getProductImageUrls(lightboxProduct)[lightboxIndex]}
-                alt={lightboxProduct.title}
+              <div
                 style={{
-                  maxWidth: "100%",
-                  maxHeight: "80vh",
-                  objectFit: "contain",
+                  borderLeft: "1px solid #e3e3e3",
+                  background: "#ffffff",
+                  color: "#444",
+                  padding: "120px 20px 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
                 }}
-              />
+              >
+                <div style={{ fontSize: "12px", lineHeight: 1.8 }}>
+                  {lightboxProduct.artist && (
+                    <Text as="p" variant="bodyMd" fontWeight="semibold">
+                      {lightboxProduct.artist}
+                    </Text>
+                  )}
 
-              <div style={{ textAlign: "center" }}>
-                <Text as="p" variant="bodyMd" fontWeight="semibold">
-                  {lightboxProduct.title}
-                </Text>
-                {getProductImageUrls(lightboxProduct).length > 1 && (
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {lightboxIndex + 1} / {getProductImageUrls(lightboxProduct).length}
-                  </Text>
-                )}
+                  {lightboxProduct.title && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {lightboxProduct.title}
+                    </Text>
+                  )}
+
+                  {lightboxProduct.year && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {lightboxProduct.year}
+                    </Text>
+                  )}
+
+                  {lightboxProduct.material && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {lightboxProduct.material}
+                    </Text>
+                  )}
+
+                  {lightboxProduct.size && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {lightboxProduct.size}
+                    </Text>
+                  )}
+
+                  {lightboxProduct.technique && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {formatTechnique(lightboxProduct.technique)}
+                    </Text>
+                  )}
+
+                  {lightboxProduct.dimensions && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {lightboxProduct.dimensions}
+                    </Text>
+                  )}
+
+                  {lightboxProduct.medium && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {lightboxProduct.medium}
+                    </Text>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "18px",
+                    fontSize: "10px",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "#666",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={closeLightbox}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      cursor: "pointer",
+                      color: "#666",
+                    }}
+                  >
+                    CLOSE
+                  </button>
+                  {getProductImageUrls(lightboxProduct).length > 1 && (
+                    <span>
+                      {lightboxIndex + 1} of {getProductImageUrls(lightboxProduct).length}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
