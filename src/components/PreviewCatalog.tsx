@@ -339,8 +339,8 @@ export default function PreviewCatalog({
               onClick={closeLightbox}
               style={{
                 position: "fixed",
-                top: "20px",
-                right: "20px",
+                top: "18px",
+                right: "18px",
                 zIndex: 10001,
                 background: "none",
                 border: "none",
@@ -360,10 +360,11 @@ export default function PreviewCatalog({
                 width: "calc(100vw - 40px)",
                 height: "calc(100vh - 50px)",
                 margin: "25px 20px",
-                border: "none",
                 background: "#ffffff",
                 display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) 240px",
+                gridTemplateColumns: "860px 320px",
+                justifyContent: "flex-end",
+                columnGap: "76px",
                 overflow: "hidden",
               }}
             >
@@ -371,8 +372,8 @@ export default function PreviewCatalog({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  padding: "26px 18px 26px 40px",
+                  justifyContent: "flex-end",
+                  padding: "22px 0 34px 0",
                   background: "#ffffff",
                   minWidth: 0,
                 }}
@@ -381,8 +382,12 @@ export default function PreviewCatalog({
                   src={getProductImageUrls(lightboxProduct)[lightboxIndex]}
                   alt={lightboxProduct.title}
                   style={{
-                    maxWidth: "100%",
+                    maxWidth: "790px",
                     maxHeight: "calc(100vh - 120px)",
+                    width: "auto",
+                    height: "auto",
+                    width: "auto",
+                    height: "auto",
                     objectFit: "contain",
                   }}
                 />
@@ -390,17 +395,17 @@ export default function PreviewCatalog({
 
               <div
                 style={{
-                  borderLeft: "1px solid #e3e3e3",
                   background: "#ffffff",
                   color: "#444",
-                  padding: "118px 18px 10px",
+                  padding: "0",
                   display: "flex",
                   flexDirection: "column",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
+                  alignItems: "flex-start",
                   minWidth: 0,
                 }}
               >
-                <div style={{ fontSize: "11px", lineHeight: 1.75 }}>
+                <div style={{ fontSize: "11px", lineHeight: 1.8, maxWidth: "240px" }}>
                   {lightboxProduct.artist && (
                     <Text as="p" variant="bodyMd" fontWeight="semibold">
                       {lightboxProduct.artist}
