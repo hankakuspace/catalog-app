@@ -362,9 +362,9 @@ export default function PreviewCatalog({
                 margin: "24px",
                 background: "#ffffff",
                 display: "grid",
-                gridTemplateColumns: "820px 340px",
+                gridTemplateColumns: "minmax(620px, 760px) 320px",
                 justifyContent: "center",
-                columnGap: "72px",
+                columnGap: "78px",
                 overflow: "hidden",
               }}
             >
@@ -372,8 +372,8 @@ export default function PreviewCatalog({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  padding: "32px 0",
+                  justifyContent: "flex-end",
+                  padding: "36px 0",
                   background: "#ffffff",
                   minWidth: 0,
                 }}
@@ -405,66 +405,89 @@ export default function PreviewCatalog({
               >
                 <div style={{ maxWidth: "240px" }}>
                   {lightboxProduct.artist && (
-                    <Text as="p" variant="bodyMd" fontWeight="semibold">
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "#000",
+                        lineHeight: 1.6,
+                        marginBottom: "4px",
+                      }}
+                    >
                       {lightboxProduct.artist}
-                    </Text>
+                    </div>
                   )}
 
                   {lightboxProduct.title && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: 500,
+                        color: "#000",
+                        lineHeight: 1.6,
+                        marginBottom: "10px",
+                      }}
+                    >
                       {lightboxProduct.title}
-                    </Text>
+                    </div>
                   )}
 
                   {lightboxProduct.year && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
                       {lightboxProduct.year}
-                    </Text>
+                    </div>
                   )}
 
                   {lightboxProduct.material && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
                       {lightboxProduct.material}
-                    </Text>
+                    </div>
                   )}
 
                   {lightboxProduct.size && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
                       {lightboxProduct.size}
-                    </Text>
+                    </div>
                   )}
 
                   {lightboxProduct.technique && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
                       {formatTechnique(lightboxProduct.technique)}
-                    </Text>
+                    </div>
                   )}
 
                   {lightboxProduct.dimensions && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
                       {lightboxProduct.dimensions}
-                    </Text>
+                    </div>
                   )}
 
                   {lightboxProduct.medium && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
                       {lightboxProduct.medium}
-                    </Text>
+                    </div>
                   )}
 
                   {(lightboxProduct.customPrice || lightboxProduct.price) && (
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#666",
+                        lineHeight: 1.7,
+                        marginTop: "6px",
+                      }}
+                    >
                       {lightboxProduct.customPrice
                         ? `${formatPrice(lightboxProduct.customPrice)} 円（税込）`
                         : lightboxProduct.price
                         ? `${formatPrice(lightboxProduct.price)} 円（税込）`
                         : ""}
-                    </Text>
+                    </div>
                   )}
 
                   <div
                     style={{
-                      marginTop: "24px",
+                      marginTop: "20px",
                       width: "110px",
                       borderTop: "1px solid #e5e5e5",
                     }}
