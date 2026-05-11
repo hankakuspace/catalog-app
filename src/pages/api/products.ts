@@ -53,6 +53,12 @@ type FormattedProduct = {
   year: string | null;
   size: string;
   status: string;
+  frame?: string;
+  material?: string;
+  technique?: string;
+  certificate?: string;
+  dimensions?: string;
+  medium?: string;
 };
 
 type ProductsCacheEntry = {
@@ -196,6 +202,12 @@ function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
       onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
       year: metafields["year"] || null,
       size: metafields["size"] || "",
+      frame: metafields["frame"] || "",
+      material: metafields["material"] || "",
+      technique: metafields["technique"] || "",
+      certificate: metafields["certificate"] || "",
+      dimensions: metafields["dimensions"] || "",
+      medium: metafields["medium"] || "",
       status: p.status,
     };
   });
