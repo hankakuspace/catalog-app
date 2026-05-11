@@ -25,6 +25,9 @@ interface ProductNode {
       fields?: { key: string; value: string | null }[];
     } | null;
   } | null;
+  availabilityStatusMetafield: {
+    value: string | null;
+  } | null;
 }
 
 interface ProductEdge {
@@ -59,6 +62,7 @@ type FormattedProduct = {
   certificate?: string;
   dimensions?: string;
   medium?: string;
+  availabilityStatus?: string;
 };
 
 type ProductsCacheEntry = {
@@ -208,6 +212,7 @@ function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
       certificate: metafields["certificate"] || "",
       dimensions: metafields["dimensions"] || "",
       medium: metafields["medium"] || "",
+      availabilityStatus: p.availabilityStatusMetafield?.value || "",
       status: p.status,
     };
   });
@@ -263,6 +268,12 @@ async function fetchProductsPage(
                   }
                 }
               }
+            }
+            availabilityStatusMetafield: metafield(
+              namespace: "custom"
+              key: "availability_status"
+            ) {
+              value
             }
           }
         }

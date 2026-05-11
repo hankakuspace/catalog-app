@@ -46,6 +46,7 @@ export interface Product {
   technique?: string;
   certificate?: string;
   onlineStoreUrl?: string;
+  availabilityStatus?: string;
 }
 
 interface Props {
@@ -82,6 +83,43 @@ const formatTechnique = (value?: string) => {
     return value;
   }
 };
+
+const isInNegotiationStatus = (value?: string) => value === "商談中";
+
+const isSoldStatus = (value?: string) => value === "ご成約済み";
+
+function AvailabilityDot({ status }: { status?: string }) {
+  if (!isInNegotiationStatus(status) && !isSoldStatus(status)) {
+    return null;
+  }
+
+  const color = isSoldStatus(status) ? "#d92d20" : "#f2c94c";
+  const label = isSoldStatus(status) ? "ご成約済み" : "商談中";
+
+  return (
+    <div
+      title={label}
+      aria-label={label}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        marginTop: "10px",
+        marginBottom: "4px",
+      }}
+    >
+      <span
+        style={{
+          width: "8px",
+          height: "8px",
+          borderRadius: "9999px",
+          backgroundColor: color,
+          display: "inline-block",
+        }}
+      />
+    </div>
+  );
+}
 
 function SortableItem({ id, isEditable, isReorderMode, children }: any) {
   const {
@@ -485,7 +523,10 @@ export default function PreviewCatalog({
                   </div>
                 )}
 
-                {(lightboxProduct.customPrice || lightboxProduct.price) && (
+                <AvailabilityDot status={lightboxProduct.availabilityStatus} />
+
+                {!isSoldStatus(lightboxProduct.availabilityStatus) &&
+                  (lightboxProduct.customPrice || lightboxProduct.price) && (
                   <div
                     style={{
                       fontSize: "12px",
@@ -765,15 +806,19 @@ export default function PreviewCatalog({
                           {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                           {item.medium && <Text as="p">{item.medium}</Text>}
 
-                          <div className="mt-5">
-                            <Text as="p" variant="bodyMd" fontWeight="medium">
-                              {item.customPrice
-                                ? `${formatPrice(item.customPrice)} 円（税込）`
-                                : item.price
-                                ? `${formatPrice(item.price)} 円（税込）`
-                                : ""}
-                            </Text>
-                          </div>
+                          <AvailabilityDot status={item.availabilityStatus} />
+
+                          {!isSoldStatus(item.availabilityStatus) && (
+                            <div className="mt-5">
+                              <Text as="p" variant="bodyMd" fontWeight="medium">
+                                {item.customPrice
+                                  ? `${formatPrice(item.customPrice)} 円（税込）`
+                                  : item.price
+                                  ? `${formatPrice(item.price)} 円（税込）`
+                                  : ""}
+                              </Text>
+                            </div>
+                          )}
 
                           {isEditable && (
                             <div className="mt-3 p-3 border border-gray-300 rounded w-full bg-gray-50 text-black">
