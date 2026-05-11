@@ -628,6 +628,8 @@ export default function PreviewCatalog({
                 </div>
                   )}
                 </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
