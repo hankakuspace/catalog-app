@@ -541,7 +541,6 @@ export default function PreviewCatalog({
                 >
                   CLOSE
                 </button>
-                <span>HIDE INFO</span>
                 {products.length > 1 && (
                   <div
                     style={{
