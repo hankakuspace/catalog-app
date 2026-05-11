@@ -47,6 +47,7 @@ type FormattedProduct = {
   title: string;
   artist: string;
   imageUrl: string | null;
+  imageUrls: string[];
   price: string;
   onlineStoreUrl?: string;
   year: string | null;
@@ -181,11 +182,16 @@ function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
       p.vendor,
     );
 
+    const imageUrls = p.images.edges
+      .map((imageEdge) => imageEdge.node.originalSrc)
+      .filter(Boolean);
+
     return {
       id: p.id,
       title: p.title,
       artist,
-      imageUrl: p.images.edges[0]?.node.originalSrc || null,
+      imageUrl: imageUrls[0] || null,
+      imageUrls,
       price: p.variants?.edges[0]?.node?.price || "0.00",
       onlineStoreUrl: p.onlineStorePreviewUrl || undefined,
       year: metafields["year"] || null,
@@ -212,7 +218,7 @@ async function fetchProductsPage(
             handle
             status
             onlineStorePreviewUrl
-            images(first: 1) {
+            images(first: 10) {
               edges {
                 node {
                   originalSrc

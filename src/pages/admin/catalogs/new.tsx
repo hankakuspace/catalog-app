@@ -33,6 +33,7 @@ export interface CatalogProduct {
   price?: string;
   customPrice?: string;
   imageUrl?: string;
+  imageUrls?: string[];
   artist?: string;
   year?: string;
   dimensions?: string;
