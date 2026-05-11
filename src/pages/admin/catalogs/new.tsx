@@ -119,6 +119,7 @@ export default function NewCatalogPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CatalogProduct[]>([]);
+  const [allSearchProducts, setAllSearchProducts] = useState<CatalogProduct[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<CatalogProduct[]>(
     [],
   );
@@ -160,6 +161,106 @@ export default function NewCatalogPage() {
     return shop;
   }, [shopQuery]);
 
+  const normalizeSearchText = useCallback((value: string) => {
+    return value.normalize("NFKC").trim().toLowerCase().replace(/\s+/g, " ");
+  }, []);
+
+  const isNumericSearchQuery = useCallback((value: string) => {
+    return /^\d+$/.test(value.trim());
+  }, []);
+
+  const yearMatchesSearchQuery = useCallback((raw: string, yearValue?: string) => {
+    const q = raw.trim();
+    if (!isNumericSearchQuery(q)) return true;
+    if (!yearValue) return false;
+
+    const yearNumber = Number(yearValue);
+    if (Number.isNaN(yearNumber)) return false;
+
+    if (q.length === 1) {
+      const start = Number(q) * 1000;
+      return yearNumber >= start && yearNumber <= start + 999;
+    }
+    if (q.length === 2) {
+      const start = Number(q) * 100;
+      return yearNumber >= start && yearNumber <= start + 99;
+    }
+    if (q.length === 3) {
+      const start = Number(q) * 10;
+      return yearNumber >= start && yearNumber <= start + 9;
+    }
+    if (q.length === 4) {
+      return yearNumber === Number(q);
+    }
+
+    return false;
+  }, [isNumericSearchQuery]);
+
+  const getSearchRank = useCallback((raw: string, product: CatalogProduct) => {
+    const q = normalizeSearchText(raw);
+    if (!q) return 0;
+
+    const title = normalizeSearchText(product.title || "");
+    const artist = normalizeSearchText(product.artist || "");
+
+    if (title.startsWith(q)) return 1;
+    if (artist.startsWith(q)) return 2;
+
+    return 99;
+  }, [normalizeSearchText]);
+
+  const filterCatalogProducts = useCallback((products: CatalogProduct[], raw: string) => {
+    const query = normalizeSearchText(raw);
+    if (!query) return [];
+
+    return products
+      .filter((product) => {
+        if (isNumericSearchQuery(raw)) {
+          return yearMatchesSearchQuery(raw, product.year);
+        }
+
+        const title = normalizeSearchText(product.title || "");
+        const artist = normalizeSearchText(product.artist || "");
+
+        return title.startsWith(query) || artist.startsWith(query);
+      })
+      .sort((a, b) => {
+        const rankDiff = getSearchRank(raw, a) - getSearchRank(raw, b);
+        if (rankDiff !== 0) return rankDiff;
+
+        return (a.title || "").localeCompare(b.title || "", "ja");
+      });
+  }, [
+    getSearchRank,
+    isNumericSearchQuery,
+    normalizeSearchText,
+    yearMatchesSearchQuery,
+  ]);
+
+  const fetchAllSearchProducts = useCallback(async () => {
+    if (allSearchProducts.length > 0) {
+      return allSearchProducts;
+    }
+
+    const shop = getShopDomain();
+    const params = new URLSearchParams({ shop, query: "" });
+
+    const res = await fetch(`/api/products?${params.toString()}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "商品データ取得に失敗しました");
+    }
+
+    const fixed = (data.products || []).map((p: CatalogProduct) => ({
+      ...p,
+      onlineStoreUrl: p.onlineStoreUrl ?? undefined,
+    }));
+
+    setAllSearchProducts(fixed);
+    return fixed;
+  }, [allSearchProducts, getShopDomain]);
+
   useEffect(() => {
     if (toastActive) {
       const interval = setInterval(() => {
@@ -190,8 +291,8 @@ export default function NewCatalogPage() {
       params.set("shop", shop);
     }
 
-    fetch(`/api/products?${params.toString()}`).catch((err) => {
-      console.error("商品検索キャッシュの事前生成に失敗しました:", err);
+    fetchAllSearchProducts().catch((err) => {
+      console.error("商品検索用データの事前取得に失敗しました:", err);
     });
 
     return () => {
@@ -202,7 +303,7 @@ export default function NewCatalogPage() {
         searchAbortRef.current.abort();
       }
     };
-  }, [getShopDomain]);
+  }, [fetchAllSearchProducts]);
 
   const toastMarkup = toastActive ? (
     <Toast
@@ -483,57 +584,29 @@ export default function NewCatalogPage() {
     setLoading(true);
 
     searchDebounceTimerRef.current = setTimeout(async () => {
-      if (searchAbortRef.current) {
-        searchAbortRef.current.abort();
-      }
-
-      const controller = new AbortController();
-      searchAbortRef.current = controller;
-
       const currentSearchId = latestSearchIdRef.current + 1;
       latestSearchIdRef.current = currentSearchId;
 
       try {
-        const shop = getShopDomain();
-        const params = new URLSearchParams({ shop, query: trimmedQuery });
-
-        const res = await fetch(`/api/products?${params.toString()}`, {
-          signal: controller.signal,
-        });
-        const data = await res.json();
-
-        if (controller.signal.aborted) {
-          return;
-        }
+        const products = await fetchAllSearchProducts();
 
         if (currentSearchId !== latestSearchIdRef.current) {
           return;
         }
 
-        const fixed = (data.products || []).map((p: CatalogProduct) => ({
-          ...p,
-          onlineStoreUrl: p.onlineStoreUrl ?? undefined,
-        }));
-
-        setSearchResults(fixed);
-      } catch (err: any) {
-        if (err?.name === "AbortError") {
-          return;
-        }
+        setSearchResults(filterCatalogProducts(products, trimmedQuery));
+      } catch (err) {
         console.error("商品検索エラー:", err);
 
         if (currentSearchId === latestSearchIdRef.current) {
           setSearchResults([]);
         }
       } finally {
-        if (
-          currentSearchId === latestSearchIdRef.current &&
-          !controller.signal.aborted
-        ) {
+        if (currentSearchId === latestSearchIdRef.current) {
           setLoading(false);
         }
       }
-    }, 400);
+    }, 150);
   };
 
   return (
