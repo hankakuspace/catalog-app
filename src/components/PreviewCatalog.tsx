@@ -141,6 +141,35 @@ export default function PreviewCatalog({
 
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
+  const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
+  const [lightboxProductIndex, setLightboxProductIndex] = useState(0);
+
+  const openLightbox = useCallback((product: Product, productIndex: number) => {
+    if (!product.imageUrl) return;
+    setLightboxProduct(product);
+    setLightboxProductIndex(productIndex);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxProduct(null);
+    setLightboxProductIndex(0);
+  }, []);
+
+  const showPrevProduct = useCallback(() => {
+    if (!products.length) return;
+    const prevIndex =
+      lightboxProductIndex === 0 ? products.length - 1 : lightboxProductIndex - 1;
+    setLightboxProduct(products[prevIndex]);
+    setLightboxProductIndex(prevIndex);
+  }, [products, lightboxProductIndex]);
+
+  const showNextProduct = useCallback(() => {
+    if (!products.length) return;
+    const nextIndex =
+      lightboxProductIndex === products.length - 1 ? 0 : lightboxProductIndex + 1;
+    setLightboxProduct(products[nextIndex]);
+    setLightboxProductIndex(nextIndex);
+  }, [products, lightboxProductIndex]);
 
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
@@ -189,6 +218,31 @@ export default function PreviewCatalog({
     };
   }, [products, columnCount, applySameHeight]);
   /* ================================ */
+
+  useEffect(() => {
+    if (!lightboxProduct) return;
+
+    const handleLightboxKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeLightbox();
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        showPrevProduct();
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        showNextProduct();
+      }
+    };
+
+    window.addEventListener("keydown", handleLightboxKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleLightboxKeyDown);
+    };
+  }, [lightboxProduct, closeLightbox, showPrevProduct, showNextProduct]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!onReorder) return;
@@ -269,8 +323,248 @@ export default function PreviewCatalog({
             width: 100%;
             object-fit: contain;
           }
+
+          .catalog-image,
+          .catalog-image *,
+          .catalog-image button,
+          .catalog-image button img,
+          .catalog-image img {
+            cursor: zoom-in !important;
+          }
         `}
       </style>
+
+      {lightboxProduct && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={closeLightbox}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "#ffffff",
+            zIndex: 9999,
+          }}
+        >
+          <button
+            type="button"
+            onClick={closeLightbox}
+            style={{
+              position: "fixed",
+              top: "18px",
+              right: "18px",
+              zIndex: 10001,
+              background: "none",
+              border: "none",
+              color: "#777",
+              cursor: "pointer",
+              padding: "8px",
+              lineHeight: 1,
+              fontSize: "24px",
+            }}
+            aria-label="閉じる"
+          >
+            ×
+          </button>
+
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: "calc(100vw - 48px)",
+              height: "calc(100vh - 48px)",
+              margin: "24px",
+              background: "#ffffff",
+              display: "grid",
+              gridTemplateColumns: "minmax(620px, 760px) 320px",
+              justifyContent: "center",
+              columnGap: "78px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                padding: "36px 0",
+                background: "#ffffff",
+                minWidth: 0,
+              }}
+            >
+              <img
+                src={lightboxProduct.imageUrl}
+                alt={lightboxProduct.title}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "calc(100vh - 120px)",
+                  width: "auto",
+                  height: "auto",
+                  objectFit: "contain",
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                background: "#ffffff",
+                color: "#444",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+                minWidth: 0,
+                position: "relative",
+              }}
+            >
+              <div style={{ maxWidth: "240px" }}>
+                {lightboxProduct.artist && (
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#000", lineHeight: 1.6, marginBottom: "4px" }}>
+                    {lightboxProduct.artist}
+                  </div>
+                )}
+
+                {lightboxProduct.title && (
+                  <div style={{ fontSize: "15px", fontWeight: 500, color: "#000", lineHeight: 1.6, marginBottom: "10px" }}>
+                    {lightboxProduct.title}
+                  </div>
+                )}
+
+                {lightboxProduct.year && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {lightboxProduct.year}
+                  </div>
+                )}
+
+                {lightboxProduct.frame && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {lightboxProduct.frame}
+                  </div>
+                )}
+
+                {lightboxProduct.material && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {lightboxProduct.material}
+                  </div>
+                )}
+
+                {lightboxProduct.size && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {lightboxProduct.size}
+                  </div>
+                )}
+
+                {lightboxProduct.technique && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {formatTechnique(lightboxProduct.technique)}
+                  </div>
+                )}
+
+                {lightboxProduct.certificate && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {lightboxProduct.certificate}
+                  </div>
+                )}
+
+                {lightboxProduct.dimensions && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {lightboxProduct.dimensions}
+                  </div>
+                )}
+
+                {lightboxProduct.medium && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7 }}>
+                    {lightboxProduct.medium}
+                  </div>
+                )}
+
+                {(lightboxProduct.customPrice || lightboxProduct.price) && (
+                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7, marginTop: "6px" }}>
+                    {lightboxProduct.customPrice
+                      ? `${formatPrice(lightboxProduct.customPrice)} 円（税込）`
+                      : lightboxProduct.price
+                      ? `${formatPrice(lightboxProduct.price)} 円（税込）`
+                      : ""}
+                  </div>
+                )}
+
+                <div style={{ marginTop: "20px", width: "110px", borderTop: "1px solid #e5e5e5" }} />
+              </div>
+
+              <div
+                style={{
+                  position: "fixed",
+                  right: "40px",
+                  bottom: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                  fontSize: "10px",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "#666",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={closeLightbox}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    color: "#666",
+                    fontSize: "10px",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  CLOSE
+                </button>
+                <span>HIDE INFO</span>
+                {products.length > 1 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <button
+                      type="button"
+                      onClick={showPrevProduct}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                        color: "#666",
+                        fontSize: "14px",
+                        lineHeight: 1,
+                      }}
+                      aria-label="前の作品"
+                    >
+                      ‹
+                    </button>
+                    <span>
+                      {lightboxProductIndex + 1} of {products.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={showNextProduct}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                        color: "#666",
+                        fontSize: "14px",
+                        lineHeight: 1,
+                      }}
+                      aria-label="次の作品"
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="min-h-screen bg-black text-white flex flex-col">
         <header className="text-center py-8 border-b border-gray-700">
@@ -390,14 +684,28 @@ export default function PreviewCatalog({
                                 />
                               </a>
                             ) : (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.title}
-                                // ★ 追加：画像ロード後に再計測
-                                onLoad={() => {
-                                  requestAnimationFrame(applySameHeight);
+                              <button
+                                type="button"
+                                onClick={() => openLightbox(item, index)}
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  background: "none",
+                                  border: "none",
+                                  padding: 0,
+                                  cursor: "zoom-in",
                                 }}
-                              />
+                              >
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.title}
+                                  style={{ cursor: "zoom-in" }}
+                                  // ★ 追加：画像ロード後に再計測
+                                  onLoad={() => {
+                                    requestAnimationFrame(applySameHeight);
+                                  }}
+                                />
+                              </button>
                             ))}
                         </div>
 
