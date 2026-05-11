@@ -322,7 +322,6 @@ export default function PreviewCatalog({
         `}
       </style>
 
-      <>
         {lightboxProduct && (
           <div
             role="dialog"
