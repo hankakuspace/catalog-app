@@ -360,10 +360,10 @@ export default function PreviewCatalog({
                 width: "calc(100vw - 40px)",
                 height: "calc(100vh - 50px)",
                 margin: "25px 20px",
-                border: "1px solid #cfcfcf",
+                border: "none",
                 background: "#ffffff",
                 display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) 300px",
+                gridTemplateColumns: "minmax(0, 1fr) 240px",
                 overflow: "hidden",
               }}
             >
@@ -372,7 +372,7 @@ export default function PreviewCatalog({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  padding: "26px 34px",
+                  padding: "26px 18px 26px 40px",
                   background: "#ffffff",
                   minWidth: 0,
                 }}
@@ -400,7 +400,7 @@ export default function PreviewCatalog({
                   minWidth: 0,
                 }}
               >
-                <div style={{ fontSize: "11px", lineHeight: 1.7 }}>
+                <div style={{ fontSize: "11px", lineHeight: 1.75 }}>
                   {lightboxProduct.artist && (
                     <Text as="p" variant="bodyMd" fontWeight="semibold">
                       {lightboxProduct.artist}
@@ -448,6 +448,16 @@ export default function PreviewCatalog({
                       {lightboxProduct.medium}
                     </Text>
                   )}
+
+                  {(lightboxProduct.customPrice || lightboxProduct.price) && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {lightboxProduct.customPrice
+                        ? `${formatPrice(lightboxProduct.customPrice)} 円（税込）`
+                        : lightboxProduct.price
+                        ? `${formatPrice(lightboxProduct.price)} 円（税込）`
+                        : ""}
+                    </Text>
+                  )}
                 </div>
 
                 <div
@@ -455,11 +465,12 @@ export default function PreviewCatalog({
                     display: "flex",
                     justifyContent: "flex-end",
                     alignItems: "center",
-                    gap: "16px",
+                    gap: "14px",
                     fontSize: "9px",
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
                     color: "#666",
+                    marginTop: "4px",
                   }}
                 >
                   <button
