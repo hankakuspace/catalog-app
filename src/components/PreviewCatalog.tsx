@@ -607,7 +607,8 @@ export default function PreviewCatalog({
           )}
         </header>
 
-        <main className="flex-grow max-w-7xl mx-auto px-6 py-12">
+        <main className="flex-grow bg-white text-black px-6 py-12">
+          <div className="max-w-7xl mx-auto">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -728,7 +729,7 @@ export default function PreviewCatalog({
                             ))}
                         </div>
 
-                        <div className="text-white mt-3 px-2 w-full">
+                        <div className="text-black mt-3 px-2 w-full">
                           {item.artist && <Text as="p">{item.artist}</Text>}
                           {item.title && <Text as="p">{item.title}</Text>}
                           {item.year && <Text as="p">{item.year}</Text>}
@@ -751,7 +752,7 @@ export default function PreviewCatalog({
                           </Text>
 
                           {isEditable && (
-                            <div className="mt-3 p-3 border border-gray-700 rounded w-full bg-black/40">
+                            <div className="mt-3 p-3 border border-gray-300 rounded w-full bg-gray-50 text-black">
                               <Checkbox
                                 label="価格を変更する"
                                 checked={checkedItems[item.id] || false}
@@ -799,6 +800,7 @@ export default function PreviewCatalog({
               </div>
             </SortableContext>
           </DndContext>
+          </div>
         </main>
 
         <footer className="text-center py-6 border-t border-gray-700 text-sm text-gray-400">
