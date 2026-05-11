@@ -161,6 +161,17 @@ export default function NewCatalogPage() {
   }, [toastActive, toastColor]);
 
   useEffect(() => {
+    const shop = localStorage.getItem("shopify_shop") || "";
+    const params = new URLSearchParams({ warm: "1" });
+
+    if (shop) {
+      params.set("shop", shop);
+    }
+
+    fetch(`/api/products?${params.toString()}`).catch((err) => {
+      console.error("商品検索キャッシュの事前生成に失敗しました:", err);
+    });
+
     return () => {
       if (searchDebounceTimerRef.current) {
         clearTimeout(searchDebounceTimerRef.current);

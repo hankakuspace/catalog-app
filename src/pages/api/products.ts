@@ -71,7 +71,7 @@ type ProductsCacheEntry = {
   expiresAt: number;
 };
 
-const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
+const SEARCH_CACHE_TTL_MS = 60 * 60 * 1000;
 
 declare global {
   // eslint-disable-next-line no-var
@@ -413,6 +413,7 @@ export default async function handler(
   try {
     const shop = req.query.shop as string | undefined;
     const rawQuery = (req.query.query as string) || "";
+    const shouldWarmCache = req.query.warm === "1";
 
     let session = shop
       ? await sessionStorage.loadSession(`offline_${shop}`)
@@ -439,6 +440,28 @@ export default async function handler(
         },
       },
     );
+
+    if (shouldWarmCache) {
+      const cacheKey = session.shop;
+      const cachedProducts = getCachedProducts(cacheKey);
+
+      if (cachedProducts) {
+        return res.status(200).json({
+          ok: true,
+          cached: true,
+          count: cachedProducts.length,
+        });
+      }
+
+      const formatted = await fetchAllProductsForSearch(client);
+      setCachedProducts(cacheKey, formatted);
+
+      return res.status(200).json({
+        ok: true,
+        cached: false,
+        count: formatted.length,
+      });
+    }
 
     const hasSearchQuery = rawQuery.trim().length > 0;
 
