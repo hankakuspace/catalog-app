@@ -568,9 +568,18 @@ export default function PreviewCatalog({
                       }}
                       aria-label="前の作品"
                     >
-                      ‹
+                      &lt;
                     </button>
-                    <span>{lightboxProductIndex + 1} of {products.length}</span>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        height: "18px",
+                        lineHeight: "18px",
+                      }}
+                    >
+                      {lightboxProductIndex + 1} of {products.length}
+                    </span>
                     <button
                       type="button"
                       onClick={showNextProduct}
@@ -590,7 +599,7 @@ export default function PreviewCatalog({
                       }}
                       aria-label="次の作品"
                     >
-                      ›
+                      &gt;
                     </button>
                   </div>
                 )}
