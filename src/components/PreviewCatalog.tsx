@@ -730,7 +730,11 @@ export default function PreviewCatalog({
                         </div>
 
                         <div className="text-black mt-3 px-2 w-full">
-                          {item.artist && <Text as="p">{item.artist}</Text>}
+                          {item.artist && (
+                            <Text as="p" fontWeight="bold">
+                              {item.artist}
+                            </Text>
+                          )}
                           {item.title && <Text as="p">{item.title}</Text>}
                           {item.year && <Text as="p">{item.year}</Text>}
                           {item.frame && <Text as="p">{item.frame}</Text>}
@@ -743,13 +747,15 @@ export default function PreviewCatalog({
                           {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                           {item.medium && <Text as="p">{item.medium}</Text>}
 
-                          <Text as="p" variant="bodyMd" fontWeight="medium">
-                            {item.customPrice
-                              ? `${formatPrice(item.customPrice)} 円（税込）`
-                              : item.price
-                              ? `${formatPrice(item.price)} 円（税込）`
-                              : ""}
-                          </Text>
+                          <div className="mt-5">
+                            <Text as="p" variant="bodyMd" fontWeight="medium">
+                              {item.customPrice
+                                ? `${formatPrice(item.customPrice)} 円（税込）`
+                                : item.price
+                                ? `${formatPrice(item.price)} 円（税込）`
+                                : ""}
+                            </Text>
+                          </div>
 
                           {isEditable && (
                             <div className="mt-3 p-3 border border-gray-300 rounded w-full bg-gray-50 text-black">
