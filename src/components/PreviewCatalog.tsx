@@ -156,20 +156,45 @@ export default function PreviewCatalog({
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
   const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
+  const [lightboxProductIndex, setLightboxProductIndex] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const openLightbox = (product: Product, index = 0) => {
+  const openLightbox = (product: Product, productIndex = 0) => {
     const imageUrls = getProductImageUrls(product);
     if (imageUrls.length === 0) return;
 
     setLightboxProduct(product);
-    setLightboxIndex(index);
+    setLightboxProductIndex(productIndex);
+    setLightboxIndex(0);
   };
 
   const closeLightbox = useCallback(() => {
     setLightboxProduct(null);
+    setLightboxProductIndex(0);
     setLightboxIndex(0);
   }, []);
+
+  const showPrevProduct = useCallback(() => {
+    if (!products.length) return;
+
+    const prevIndex =
+      lightboxProductIndex === 0 ? products.length - 1 : lightboxProductIndex - 1;
+
+    setLightboxProduct(products[prevIndex]);
+    setLightboxProductIndex(prevIndex);
+    setLightboxIndex(0);
+  }, [products, lightboxProductIndex]);
+
+  const showNextProduct = useCallback(() => {
+    if (!products.length) return;
+
+    const nextIndex =
+      lightboxProductIndex === products.length - 1 ? 0 : lightboxProductIndex + 1;
+
+    setLightboxProduct(products[nextIndex]);
+    setLightboxProductIndex(nextIndex);
+    setLightboxIndex(0);
+  }, [products, lightboxProductIndex]);
 
   const showPrevImage = useCallback(() => {
     if (!lightboxProduct) return;
@@ -249,12 +274,12 @@ export default function PreviewCatalog({
       }
 
       if (event.key === "ArrowLeft") {
-        showPrevImage();
+        showPrevProduct();
         return;
       }
 
       if (event.key === "ArrowRight") {
-        showNextImage();
+        showNextProduct();
       }
     };
 
@@ -263,7 +288,7 @@ export default function PreviewCatalog({
     return () => {
       window.removeEventListener("keydown", handleLightboxKeyDown);
     };
-  }, [lightboxProduct, closeLightbox, showPrevImage, showNextImage]);
+  }, [lightboxProduct, closeLightbox, showPrevProduct, showNextProduct]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!onReorder) return;
@@ -726,7 +751,7 @@ export default function PreviewCatalog({
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => openLightbox(item, 0)}
+                                onClick={() => openLightbox(item, index)}
                                 style={{
                                   display: "block",
                                   width: "100%",
