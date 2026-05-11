@@ -178,6 +178,27 @@ function pickArtistNameFromReference(
   return fallbackVendor || "";
 }
 
+function normalizeAvailabilityStatus(value?: string | null): string {
+  if (!value) return "";
+
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return String(parsed[0] || "").trim();
+    }
+    if (typeof parsed === "string") {
+      return parsed.trim();
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+}
+
 function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
   return edges.map((edge) => {
     const p = edge.node;
@@ -212,7 +233,9 @@ function formatProducts(edges: ProductEdge[]): FormattedProduct[] {
       certificate: metafields["certificate"] || "",
       dimensions: metafields["dimensions"] || "",
       medium: metafields["medium"] || "",
-      availabilityStatus: p.availabilityStatusMetafield?.value || "",
+      availabilityStatus: normalizeAvailabilityStatus(
+        p.availabilityStatusMetafield?.value,
+      ),
       status: p.status,
     };
   });

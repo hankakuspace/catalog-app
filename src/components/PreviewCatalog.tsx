@@ -84,9 +84,32 @@ const formatTechnique = (value?: string) => {
   }
 };
 
-const isInNegotiationStatus = (value?: string) => value === "商談中";
+const normalizeAvailabilityStatus = (value?: string) => {
+  if (!value) return "";
 
-const isSoldStatus = (value?: string) => value === "ご成約済み";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return String(parsed[0] || "").trim();
+    }
+    if (typeof parsed === "string") {
+      return parsed.trim();
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+};
+
+const isInNegotiationStatus = (value?: string) =>
+  normalizeAvailabilityStatus(value) === "商談中";
+
+const isSoldStatus = (value?: string) =>
+  normalizeAvailabilityStatus(value) === "ご成約済み";
 
 function AvailabilityDot({ status }: { status?: string }) {
   if (!isInNegotiationStatus(status) && !isSoldStatus(status)) {
