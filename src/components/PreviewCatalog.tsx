@@ -111,8 +111,11 @@ const isInNegotiationStatus = (value?: string) =>
 const isSoldStatus = (value?: string) =>
   normalizeAvailabilityStatus(value) === "ご成約済み";
 
+const hasAvailabilityStatus = (value?: string) =>
+  isInNegotiationStatus(value) || isSoldStatus(value);
+
 function AvailabilityDot({ status }: { status?: string }) {
-  if (!isInNegotiationStatus(status) && !isSoldStatus(status)) {
+  if (!hasAvailabilityStatus(status)) {
     return null;
   }
 
@@ -127,8 +130,8 @@ function AvailabilityDot({ status }: { status?: string }) {
         display: "flex",
         alignItems: "center",
         gap: "6px",
-        marginTop: "10px",
-        marginBottom: "4px",
+        marginTop: "20px",
+        marginBottom: 0,
       }}
     >
       <span
@@ -555,7 +558,9 @@ export default function PreviewCatalog({
                       fontSize: "12px",
                       color: "#666",
                       lineHeight: 1.7,
-                      marginTop: "6px",
+                      marginTop: hasAvailabilityStatus(lightboxProduct.availabilityStatus)
+                        ? 0
+                        : "6px",
                     }}
                   >
                     {lightboxProduct.customPrice
@@ -832,7 +837,13 @@ export default function PreviewCatalog({
                           <AvailabilityDot status={item.availabilityStatus} />
 
                           {!isSoldStatus(item.availabilityStatus) && (
-                            <div className="mt-5">
+                            <div
+                              className={
+                                hasAvailabilityStatus(item.availabilityStatus)
+                                  ? "mt-0"
+                                  : "mt-5"
+                              }
+                            >
                               <Text as="p" variant="bodyMd" fontWeight="medium">
                                 {item.customPrice
                                   ? `${formatPrice(item.customPrice)} 円（税込）`
