@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react"; // ★ useCallback 追加
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -141,6 +141,7 @@ export default function PreviewCatalog({
 
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
+
   const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
   const [lightboxProductIndex, setLightboxProductIndex] = useState(0);
 
@@ -174,12 +175,8 @@ export default function PreviewCatalog({
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
 
-  /* ================================
-   * ★ catalog-image 高さ揃え
-   * ================================ */
   const imageRefs = useRef<HTMLDivElement[]>([]);
 
-  // ★ 追加：高さ計測関数を useCallback 化（既存ロジックは変更なし）
   const applySameHeight = useCallback(() => {
     if (!imageRefs.current.length) return;
 
@@ -210,14 +207,12 @@ export default function PreviewCatalog({
       if (el) observer.observe(el);
     });
 
-    // 初回実行
     window.requestAnimationFrame(applySameHeight);
 
     return () => {
       observer.disconnect();
     };
   }, [products, columnCount, applySameHeight]);
-  /* ================================ */
 
   useEffect(() => {
     if (!lightboxProduct) return;
@@ -239,6 +234,7 @@ export default function PreviewCatalog({
     };
 
     window.addEventListener("keydown", handleLightboxKeyDown);
+
     return () => {
       window.removeEventListener("keydown", handleLightboxKeyDown);
     };
@@ -264,11 +260,7 @@ export default function PreviewCatalog({
     const newPrice = tempPrices[id]?.trim();
     if (!newPrice) return;
 
-    onReorder?.(
-      products.map((p) =>
-        p.id === id ? { ...p, customPrice: newPrice } : p
-      )
-    );
+    onReorder?.(products.map((p) => (p.id === id ? { ...p, customPrice: newPrice } : p)));
   };
 
   const handleResetToDefault = (id: string) => {
@@ -418,13 +410,29 @@ export default function PreviewCatalog({
             >
               <div style={{ maxWidth: "240px" }}>
                 {lightboxProduct.artist && (
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#000", lineHeight: 1.6, marginBottom: "4px" }}>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#000",
+                      lineHeight: 1.6,
+                      marginBottom: "4px",
+                    }}
+                  >
                     {lightboxProduct.artist}
                   </div>
                 )}
 
                 {lightboxProduct.title && (
-                  <div style={{ fontSize: "15px", fontWeight: 500, color: "#000", lineHeight: 1.6, marginBottom: "10px" }}>
+                  <div
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 500,
+                      color: "#000",
+                      lineHeight: 1.6,
+                      marginBottom: "10px",
+                    }}
+                  >
                     {lightboxProduct.title}
                   </div>
                 )}
@@ -478,7 +486,14 @@ export default function PreviewCatalog({
                 )}
 
                 {(lightboxProduct.customPrice || lightboxProduct.price) && (
-                  <div style={{ fontSize: "12px", color: "#666", lineHeight: 1.7, marginTop: "6px" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      lineHeight: 1.7,
+                      marginTop: "6px",
+                    }}
+                  >
                     {lightboxProduct.customPrice
                       ? `${formatPrice(lightboxProduct.customPrice)} 円（税込）`
                       : lightboxProduct.price
@@ -487,7 +502,13 @@ export default function PreviewCatalog({
                   </div>
                 )}
 
-                <div style={{ marginTop: "20px", width: "110px", borderTop: "1px solid #e5e5e5" }} />
+                <div
+                  style={{
+                    marginTop: "20px",
+                    width: "110px",
+                    borderTop: "1px solid #e5e5e5",
+                  }}
+                />
               </div>
 
               <div
@@ -522,7 +543,13 @@ export default function PreviewCatalog({
                 </button>
                 <span>HIDE INFO</span>
                 {products.length > 1 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={showPrevProduct}
@@ -539,9 +566,7 @@ export default function PreviewCatalog({
                     >
                       ‹
                     </button>
-                    <span>
-                      {lightboxProductIndex + 1} of {products.length}
-                    </span>
+                    <span>{lightboxProductIndex + 1} of {products.length}</span>
                     <button
                       type="button"
                       onClick={showNextProduct}
@@ -619,9 +644,7 @@ export default function PreviewCatalog({
                                 icon={MenuHorizontalIcon}
                                 onClick={() =>
                                   setActivePopoverId(
-                                    activePopoverId === item.id
-                                      ? null
-                                      : item.id
+                                    activePopoverId === item.id ? null : item.id
                                   )
                                 }
                               />
@@ -631,9 +654,7 @@ export default function PreviewCatalog({
                             <ActionList
                               items={[
                                 {
-                                  content: isReorderMode
-                                    ? "移動を完了"
-                                    : "移動",
+                                  content: isReorderMode ? "移動を完了" : "移動",
                                   onAction: () => {
                                     setIsReorderMode(!isReorderMode);
                                     setActivePopoverId(null);
@@ -677,7 +698,6 @@ export default function PreviewCatalog({
                                 <img
                                   src={item.imageUrl}
                                   alt={item.title}
-                                  // ★ 追加：画像ロード後に再計測
                                   onLoad={() => {
                                     requestAnimationFrame(applySameHeight);
                                   }}
@@ -700,7 +720,6 @@ export default function PreviewCatalog({
                                   src={item.imageUrl}
                                   alt={item.title}
                                   style={{ cursor: "zoom-in" }}
-                                  // ★ 追加：画像ロード後に再計測
                                   onLoad={() => {
                                     requestAnimationFrame(applySameHeight);
                                   }}
@@ -714,28 +733,18 @@ export default function PreviewCatalog({
                           {item.title && <Text as="p">{item.title}</Text>}
                           {item.year && <Text as="p">{item.year}</Text>}
                           {item.frame && <Text as="p">{item.frame}</Text>}
-                          {item.material && (
-                            <Text as="p">{item.material}</Text>
-                          )}
+                          {item.material && <Text as="p">{item.material}</Text>}
                           {item.size && <Text as="p">{item.size}</Text>}
                           {item.technique && (
-                            <Text as="p">
-                              {formatTechnique(item.technique)}
-                            </Text>
+                            <Text as="p">{formatTechnique(item.technique)}</Text>
                           )}
-                          {item.certificate && (
-                            <Text as="p">{item.certificate}</Text>
-                          )}
-                          {item.dimensions && (
-                            <Text as="p">{item.dimensions}</Text>
-                          )}
+                          {item.certificate && <Text as="p">{item.certificate}</Text>}
+                          {item.dimensions && <Text as="p">{item.dimensions}</Text>}
                           {item.medium && <Text as="p">{item.medium}</Text>}
 
                           <Text as="p" variant="bodyMd" fontWeight="medium">
                             {item.customPrice
-                              ? `${formatPrice(
-                                  item.customPrice
-                                )} 円（税込）`
+                              ? `${formatPrice(item.customPrice)} 円（税込）`
                               : item.price
                               ? `${formatPrice(item.price)} 円（税込）`
                               : ""}
@@ -767,18 +776,14 @@ export default function PreviewCatalog({
 
                                   <Button
                                     variant="primary"
-                                    onClick={() =>
-                                      handleSetCustomPrice(item.id)
-                                    }
+                                    onClick={() => handleSetCustomPrice(item.id)}
                                   >
                                     変更する
                                   </Button>
 
                                   <Button
                                     variant="monochromePlain"
-                                    onClick={() =>
-                                      handleResetToDefault(item.id)
-                                    }
+                                    onClick={() => handleResetToDefault(item.id)}
                                   >
                                     元の価格に戻す
                                   </Button>
