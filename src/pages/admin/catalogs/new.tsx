@@ -111,7 +111,7 @@ function parseDateInput(value: string): Date | null {
 
 export default function NewCatalogPage() {
   const router = useRouter();
-  const { id } = router.query;
+  const { id, shop: shopQuery } = router.query;
 
   const [title, setTitle] = useState("");
   const [label, setLabel] = useState("");
@@ -139,6 +139,27 @@ export default function NewCatalogPage() {
     null,
   );
 
+  const getShopDomain = useCallback(() => {
+    const queryShop = Array.isArray(shopQuery)
+      ? shopQuery[0]
+      : typeof shopQuery === "string"
+      ? shopQuery
+      : "";
+
+    const storedShop =
+      typeof window !== "undefined"
+        ? localStorage.getItem("shopify_shop") || ""
+        : "";
+
+    const shop = queryShop || storedShop || "and-collection-a.myshopify.com";
+
+    if (typeof window !== "undefined" && shop) {
+      localStorage.setItem("shopify_shop", shop);
+    }
+
+    return shop;
+  }, [shopQuery]);
+
   useEffect(() => {
     if (toastActive) {
       const interval = setInterval(() => {
@@ -162,7 +183,7 @@ export default function NewCatalogPage() {
   }, [toastActive, toastColor]);
 
   useEffect(() => {
-    const shop = localStorage.getItem("shopify_shop") || "";
+    const shop = getShopDomain();
     const params = new URLSearchParams({ warm: "1" });
 
     if (shop) {
@@ -181,7 +202,7 @@ export default function NewCatalogPage() {
         searchAbortRef.current.abort();
       }
     };
-  }, []);
+  }, [getShopDomain]);
 
   const toastMarkup = toastActive ? (
     <Toast
@@ -315,7 +336,7 @@ export default function NewCatalogPage() {
 
   // ⭐ 保存処理
   const handleSave = async () => {
-    const shop = localStorage.getItem("shopify_shop") || "";
+    const shop = getShopDomain();
 
     if (!title.trim() || selectedProducts.length === 0) {
       setToastContent("タイトルと商品は必須です");
@@ -375,7 +396,7 @@ export default function NewCatalogPage() {
 
     if (!id) return;
 
-    const shop = localStorage.getItem("shopify_shop") || "";
+    const shop = getShopDomain();
 
     fetch("/api/catalogs", {
       method: "PUT",
@@ -398,7 +419,7 @@ export default function NewCatalogPage() {
   };
 
   const handleSyncProducts = async () => {
-    const shop = localStorage.getItem("shopify_shop") || "";
+    const shop = getShopDomain();
 
     if (!shop) {
       setToastContent("Shopifyストア情報が見つかりません");
@@ -473,7 +494,7 @@ export default function NewCatalogPage() {
       latestSearchIdRef.current = currentSearchId;
 
       try {
-        const shop = localStorage.getItem("shopify_shop") || "";
+        const shop = getShopDomain();
         const params = new URLSearchParams({ shop, query: trimmedQuery });
 
         const res = await fetch(`/api/products?${params.toString()}`, {
