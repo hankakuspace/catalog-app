@@ -560,6 +560,11 @@ export default function PreviewCatalog({
                         color: "#666",
                         fontSize: "16px",
                         lineHeight: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "18px",
+                        height: "18px",
                       }}
                       aria-label="前の作品"
                     >
@@ -577,6 +582,11 @@ export default function PreviewCatalog({
                         color: "#666",
                         fontSize: "16px",
                         lineHeight: 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "18px",
+                        height: "18px",
                       }}
                       aria-label="次の作品"
                     >
