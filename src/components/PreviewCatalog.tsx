@@ -321,7 +321,7 @@ export default function PreviewCatalog({
           .catalog-image button,
           .catalog-image button img,
           .catalog-image img {
-            cursor: zoom-in !important;
+            cursor: pointer !important;
           }
         `}
       </style>
@@ -713,13 +713,13 @@ export default function PreviewCatalog({
                                   background: "none",
                                   border: "none",
                                   padding: 0,
-                                  cursor: "zoom-in",
+                                  cursor: "pointer",
                                 }}
                               >
                                 <img
                                   src={item.imageUrl}
                                   alt={item.title}
-                                  style={{ cursor: "zoom-in" }}
+                                  style={{ cursor: "pointer" }}
                                   onLoad={() => {
                                     requestAnimationFrame(applySameHeight);
                                   }}
