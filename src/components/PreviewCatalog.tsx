@@ -26,8 +26,9 @@ import {
   Button,
   TextField,
   Checkbox,
+  Icon,
 } from "@shopify/polaris";
-import { MenuHorizontalIcon } from "@shopify/polaris-icons";
+import { MenuHorizontalIcon, XIcon } from "@shopify/polaris-icons";
 import styles from "@/pages/admin/catalogs/new.module.css";
 
 export interface Product {
@@ -36,6 +37,7 @@ export interface Product {
   price?: string;
   customPrice?: string;
   imageUrl?: string;
+  imageUrls?: string[];
   artist?: string;
   year?: string;
   dimensions?: string;
@@ -81,6 +83,18 @@ const formatTechnique = (value?: string) => {
   } catch {
     return value;
   }
+};
+
+const getProductImageUrls = (product: Product) => {
+  if (product.imageUrls && product.imageUrls.length > 0) {
+    return product.imageUrls.filter(Boolean);
+  }
+
+  if (product.imageUrl) {
+    return [product.imageUrl];
+  }
+
+  return [];
 };
 
 function SortableItem({ id, isEditable, isReorderMode, children }: any) {
@@ -141,6 +155,21 @@ export default function PreviewCatalog({
 
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
+  const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const openLightbox = (product: Product, index = 0) => {
+    const imageUrls = getProductImageUrls(product);
+    if (imageUrls.length === 0) return;
+
+    setLightboxProduct(product);
+    setLightboxIndex(index);
+  };
+
+  const closeLightbox = useCallback(() => {
+    setLightboxProduct(null);
+    setLightboxIndex(0);
+  }, []);
 
   const formatPrice = (value?: string) =>
     value ? Number(value).toLocaleString("ja-JP") : "";
@@ -189,6 +218,22 @@ export default function PreviewCatalog({
     };
   }, [products, columnCount, applySameHeight]);
   /* ================================ */
+
+  useEffect(() => {
+    if (!lightboxProduct) return;
+
+    const handleLightboxKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeLightbox();
+      }
+    };
+
+    window.addEventListener("keydown", handleLightboxKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleLightboxKeyDown);
+    };
+  }, [lightboxProduct, closeLightbox]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!onReorder) return;
@@ -271,6 +316,78 @@ export default function PreviewCatalog({
           }
         `}
       </style>
+
+      <>
+        {lightboxProduct && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={closeLightbox}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.92)",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "24px",
+            }}
+          >
+            <div
+              onClick={(event) => event.stopPropagation()}
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: "1100px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "16px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={closeLightbox}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  zIndex: 2,
+                  background: "transparent",
+                  border: "none",
+                  color: "#fff",
+                  cursor: "pointer",
+                  padding: "8px",
+                }}
+                aria-label="閉じる"
+              >
+                <Icon source={XIcon} />
+              </button>
+
+              <img
+                src={getProductImageUrls(lightboxProduct)[lightboxIndex]}
+                alt={lightboxProduct.title}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "80vh",
+                  objectFit: "contain",
+                }}
+              />
+
+              <div style={{ textAlign: "center" }}>
+                <Text as="p" variant="bodyMd" fontWeight="semibold">
+                  {lightboxProduct.title}
+                </Text>
+                {getProductImageUrls(lightboxProduct).length > 1 && (
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {lightboxIndex + 1} / {getProductImageUrls(lightboxProduct).length}
+                  </Text>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
       <div className="min-h-screen bg-black text-white flex flex-col">
         <header className="text-center py-8 border-b border-gray-700">
@@ -390,14 +507,27 @@ export default function PreviewCatalog({
                                 />
                               </a>
                             ) : (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.title}
-                                // ★ 追加：画像ロード後に再計測
-                                onLoad={() => {
-                                  requestAnimationFrame(applySameHeight);
+                              <button
+                                type="button"
+                                onClick={() => openLightbox(item, 0)}
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  background: "none",
+                                  border: "none",
+                                  padding: 0,
+                                  cursor: "zoom-in",
                                 }}
-                              />
+                              >
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.title}
+                                  // ★ 追加：画像ロード後に再計測
+                                  onLoad={() => {
+                                    requestAnimationFrame(applySameHeight);
+                                  }}
+                                />
+                              </button>
                             ))}
                         </div>
 
@@ -492,6 +622,7 @@ export default function PreviewCatalog({
           © 2025 Clue Co.,Ltd. All rights reserved.
         </footer>
       </div>
+      </>
     </>
   );
 }
