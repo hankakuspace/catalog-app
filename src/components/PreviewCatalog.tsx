@@ -370,9 +370,12 @@ export default function PreviewCatalog({
             object-fit: contain;
           }
 
+          .catalog-image,
+          .catalog-image *,
           .catalog-image button,
-          .catalog-image button img {
-            cursor: zoom-in;
+          .catalog-image button img,
+          .catalog-image img {
+            cursor: zoom-in !important;
           }
         `}
       </style>
