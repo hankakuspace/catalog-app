@@ -352,7 +352,7 @@ export default function PreviewCatalog({
               cursor: "pointer",
               padding: "8px",
               lineHeight: 1,
-              fontSize: "24px",
+              fontSize: "28px",
             }}
             aria-label="閉じる"
           >
@@ -519,7 +519,7 @@ export default function PreviewCatalog({
                   display: "flex",
                   alignItems: "center",
                   gap: "16px",
-                  fontSize: "10px",
+                  fontSize: "11px",
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
                   color: "#666",
@@ -534,7 +534,7 @@ export default function PreviewCatalog({
                     padding: 0,
                     cursor: "pointer",
                     color: "#666",
-                    fontSize: "10px",
+                    fontSize: "11px",
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
                   }}
@@ -559,7 +559,7 @@ export default function PreviewCatalog({
                         padding: 0,
                         cursor: "pointer",
                         color: "#666",
-                        fontSize: "14px",
+                        fontSize: "16px",
                         lineHeight: 1,
                       }}
                       aria-label="前の作品"
@@ -576,7 +576,7 @@ export default function PreviewCatalog({
                         padding: 0,
                         cursor: "pointer",
                         color: "#666",
-                        fontSize: "14px",
+                        fontSize: "16px",
                         lineHeight: 1,
                       }}
                       aria-label="次の作品"
