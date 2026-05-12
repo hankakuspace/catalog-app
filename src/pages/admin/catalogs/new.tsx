@@ -588,18 +588,18 @@ export default function NewCatalogPage() {
       latestSearchIdRef.current = currentSearchId;
 
       try {
-        if (allSearchProducts.length > 0) {
-          if (currentSearchId !== latestSearchIdRef.current) {
-            return;
-          }
-
-          setSearchResults(filterCatalogProducts(allSearchProducts, trimmedQuery));
-          return;
+        if (searchAbortRef.current) {
+          searchAbortRef.current.abort();
         }
+
+        const controller = new AbortController();
+        searchAbortRef.current = controller;
 
         const shop = getShopDomain();
         const params = new URLSearchParams({ shop, query: trimmedQuery });
-        const res = await fetch(`/api/products?${params.toString()}`);
+        const res = await fetch(`/api/products?${params.toString()}`, {
+          signal: controller.signal,
+        });
         const data = await res.json();
 
         if (!res.ok) {
@@ -617,6 +617,10 @@ export default function NewCatalogPage() {
 
         setSearchResults(fixed);
       } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+
         console.error("商品検索エラー:", err);
 
         if (currentSearchId === latestSearchIdRef.current) {
