@@ -335,13 +335,6 @@ async function fetchProductsPage(
   });
 }
 
-async function fetchInitialProducts(
-  client: GraphQLClient,
-): Promise<FormattedProduct[]> {
-  const data = await fetchProductsPage(client, 100);
-  return formatProducts(data.products.edges);
-}
-
 async function fetchAllProductsForSearch(
   client: GraphQLClient,
 ): Promise<FormattedProduct[]> {
@@ -555,7 +548,17 @@ export default async function handler(
     const hasSearchQuery = rawQuery.trim().length > 0;
 
     if (!hasSearchQuery) {
-      const formatted = await fetchInitialProducts(client);
+      const cacheKey = session.shop;
+      const cachedProducts = getCachedProducts(cacheKey);
+
+      if (cachedProducts) {
+        const products = filterAndSortProducts(cachedProducts, rawQuery);
+        return res.status(200).json({ products });
+      }
+
+      const formatted = await fetchAllProductsForSearch(client);
+      setCachedProducts(cacheKey, formatted);
+
       const products = filterAndSortProducts(formatted, rawQuery);
       return res.status(200).json({ products });
     }
