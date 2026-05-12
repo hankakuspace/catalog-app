@@ -1,12 +1,20 @@
 // src/pages/api/webhooks/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
-import { syncProductIndex } from "@/lib/productIndexSync";
+import {
+  deleteSingleProductIndex,
+  syncSingleProductIndex,
+} from "@/lib/productIndexSync";
 
 export const config = {
   api: {
     bodyParser: false,
   },
+};
+
+type ShopifyProductWebhookPayload = {
+  id?: number | string;
+  admin_graphql_api_id?: string;
 };
 
 function getRawBody(req: NextApiRequest): Promise<Buffer> {
@@ -60,6 +68,25 @@ function verifyShopifyWebhook(rawBody: Buffer, hmacHeader: string | undefined) {
   return crypto.timingSafeEqual(digestBuffer, hmacBuffer);
 }
 
+function getProductGid(payload: ShopifyProductWebhookPayload): string {
+  if (
+    typeof payload.admin_graphql_api_id === "string" &&
+    payload.admin_graphql_api_id.trim()
+  ) {
+    return payload.admin_graphql_api_id.trim();
+  }
+
+  if (typeof payload.id === "number" || typeof payload.id === "string") {
+    const id = String(payload.id).trim();
+
+    if (id) {
+      return `gid://shopify/Product/${id}`;
+    }
+  }
+
+  return "";
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "POST") {
@@ -91,12 +118,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ ok: true, ignored: true });
     }
 
-    const result = await syncProductIndex(shopDomain);
+    const payload = JSON.parse(
+      rawBody.toString("utf8"),
+    ) as ShopifyProductWebhookPayload;
+    const productId = getProductGid(payload);
+
+    if (!productId) {
+      return res.status(400).json({
+        error: "Missing product id",
+        topic: topicHeader,
+        shop: shopDomain,
+      });
+    }
+
+    if (topicHeader === "products/delete") {
+      const result = await deleteSingleProductIndex(shopDomain, productId);
+
+      return res.status(200).json({
+        ok: true,
+        topic: topicHeader,
+        shop: shopDomain,
+        action: "deleted",
+        productId: result.productId,
+        count: result.count,
+      });
+    }
+
+    const result = await syncSingleProductIndex(shopDomain, productId);
 
     return res.status(200).json({
       ok: true,
       topic: topicHeader,
       shop: shopDomain,
+      action: "updated",
+      productId: result.productId,
       count: result.count,
     });
   } catch (err) {

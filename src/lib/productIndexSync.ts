@@ -386,6 +386,213 @@ async function saveProductIndex(shop: string, products: IndexedProduct[]) {
   global.__catalogProductsCache__?.delete(shop);
 }
 
+async function fetchProductById(
+  client: GraphQLClient,
+  productId: string,
+): Promise<IndexedProduct | null> {
+  const gqlQuery = gql`
+    query Product($id: ID!) {
+      product: node(id: $id) {
+        ... on Product {
+          id
+          title
+          vendor
+          handle
+          status
+          onlineStorePreviewUrl
+          images(first: 10) {
+            edges {
+              node {
+                originalSrc
+              }
+            }
+          }
+          variants(first: 50) {
+            edges {
+              node {
+                title
+                price
+              }
+            }
+          }
+          metafields(namespace: "product", first: 50) {
+            edges {
+              node {
+                namespace
+                key
+                value
+              }
+            }
+          }
+          artistMetafield: metafield(namespace: "artist", key: "name") {
+            reference {
+              ... on Metaobject {
+                displayName
+                fields {
+                  key
+                  value
+                }
+              }
+            }
+          }
+          availabilityStatusMetafield: metafield(
+            namespace: "custom"
+            key: "availability_status"
+          ) {
+            value
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await client.request<{ product: ProductNode | null }>(gqlQuery, {
+    id: productId,
+  });
+
+  if (!data.product) {
+    return null;
+  }
+
+  return formatProducts([
+    {
+      cursor: "",
+      node: data.product,
+    },
+  ])[0];
+}
+
+async function rebuildProductIndexChunksFromIndex(shop: string): Promise<{
+  count: number;
+}> {
+  const snapshot = await dbAdmin
+    .collection("shopify_product_index")
+    .where("shop", "==", shop)
+    .get();
+
+  const products = snapshot.docs
+    .map((doc) => {
+      const data = doc.data() as IndexedProduct & {
+        shop?: string;
+        syncedAt?: unknown;
+      };
+
+      const { shop: _shop, syncedAt: _syncedAt, ...product } = data;
+
+      return {
+        ...product,
+        onlineStoreUrl: product.onlineStoreUrl || undefined,
+        year: product.year || null,
+        size: product.size || "",
+        status: product.status || "",
+      };
+    })
+    .sort((a, b) => {
+      return (a.title || "").localeCompare(b.title || "", "ja");
+    });
+
+  await deleteCollectionByShop("shopify_product_index_chunks", shop);
+
+  const chunkSize = 20;
+
+  for (let i = 0; i < products.length; i += chunkSize) {
+    const chunkIndex = Math.floor(i / chunkSize);
+    const chunkProducts = products.slice(i, i + chunkSize);
+    const ref = dbAdmin
+      .collection("shopify_product_index_chunks")
+      .doc(getChunkDocId(shop, chunkIndex));
+
+    const batch = dbAdmin.batch();
+
+    batch.set(ref, {
+      shop,
+      chunkIndex,
+      products: chunkProducts,
+      count: chunkProducts.length,
+      syncedAt: FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
+  global.__catalogProductsCache__?.delete(`firestore-index:${shop}`);
+  global.__catalogProductsCache__?.delete(shop);
+
+  return {
+    count: products.length,
+  };
+}
+
+export async function syncSingleProductIndex(
+  shop: string,
+  productId: string,
+): Promise<{
+  productId: string;
+  count: number;
+}> {
+  const session = await sessionStorage.loadSession(`offline_${shop}`);
+
+  if (!session?.accessToken) {
+    throw new Error("Unauthorized");
+  }
+
+  const client = new GraphQLClient(
+    `https://${session.shop}/admin/api/2025-01/graphql.json`,
+    {
+      headers: {
+        "X-Shopify-Access-Token": session.accessToken,
+      },
+    },
+  );
+
+  const product = await fetchProductById(client, productId);
+
+  if (!product) {
+    return deleteSingleProductIndex(session.shop, productId);
+  }
+
+  const ref = dbAdmin
+    .collection("shopify_product_index")
+    .doc(getIndexDocId(session.shop, product.id));
+
+  await ref.set({
+    ...product,
+    shop: session.shop,
+    syncedAt: FieldValue.serverTimestamp(),
+  });
+
+  const result = await rebuildProductIndexChunksFromIndex(session.shop);
+
+  return {
+    productId: product.id,
+    count: result.count,
+  };
+}
+
+export async function deleteSingleProductIndex(
+  shop: string,
+  productId: string,
+): Promise<{
+  productId: string;
+  count: number;
+}> {
+  const session = await sessionStorage.loadSession(`offline_${shop}`);
+  const normalizedShop = session?.shop || shop;
+
+  const ref = dbAdmin
+    .collection("shopify_product_index")
+    .doc(getIndexDocId(normalizedShop, productId));
+
+  await ref.delete();
+
+  const result = await rebuildProductIndexChunksFromIndex(normalizedShop);
+
+  return {
+    productId,
+    count: result.count,
+  };
+}
+
 export async function syncProductIndex(shop: string): Promise<{
   count: number;
 }> {
