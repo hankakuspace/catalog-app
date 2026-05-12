@@ -293,10 +293,16 @@ function getChunkDocId(shop: string, chunkIndex: number): string {
 }
 
 async function deleteCollectionByShop(collectionName: string, shop: string) {
+  console.log(`[productIndexSync] delete start: ${collectionName} shop=${shop}`);
+
   const snapshot = await dbAdmin
     .collection(collectionName)
     .where("shop", "==", shop)
     .get();
+
+  console.log(
+    `[productIndexSync] delete snapshot: ${collectionName} count=${snapshot.docs.length}`,
+  );
 
   for (let i = 0; i < snapshot.docs.length; i += 400) {
     const batch = dbAdmin.batch();
@@ -306,7 +312,12 @@ async function deleteCollectionByShop(collectionName: string, shop: string) {
     });
 
     await batch.commit();
+    console.log(
+      `[productIndexSync] delete batch committed: ${collectionName} from=${i} count=${snapshot.docs.slice(i, i + 400).length}`,
+    );
   }
+
+  console.log(`[productIndexSync] delete done: ${collectionName}`);
 }
 
 async function deleteExistingIndex(shop: string) {
@@ -315,7 +326,11 @@ async function deleteExistingIndex(shop: string) {
 }
 
 async function saveProductIndex(shop: string, products: IndexedProduct[]) {
+  console.log(`[productIndexSync] save start: shop=${shop} count=${products.length}`);
+
   await deleteExistingIndex(shop);
+
+  console.log(`[productIndexSync] deleteExistingIndex done: shop=${shop}`);
 
   for (let i = 0; i < products.length; i += 300) {
     const batch = dbAdmin.batch();
@@ -333,7 +348,12 @@ async function saveProductIndex(shop: string, products: IndexedProduct[]) {
     });
 
     await batch.commit();
+    console.log(
+      `[productIndexSync] product batch committed: from=${i} count=${products.slice(i, i + 300).length}`,
+    );
   }
+
+  console.log(`[productIndexSync] product index save done: shop=${shop}`);
 
   const chunkSize = 20;
 
@@ -355,7 +375,12 @@ async function saveProductIndex(shop: string, products: IndexedProduct[]) {
     });
 
     await batch.commit();
+    console.log(
+      `[productIndexSync] chunk committed: index=${chunkIndex} count=${chunkProducts.length}`,
+    );
   }
+
+  console.log(`[productIndexSync] chunk save done: shop=${shop}`);
 
   global.__catalogProductsCache__?.delete(`firestore-index:${shop}`);
   global.__catalogProductsCache__?.delete(shop);
@@ -379,8 +404,17 @@ export async function syncProductIndex(shop: string): Promise<{
     },
   );
 
+  console.log(`[productIndexSync] fetchAllProducts start: shop=${session.shop}`);
+
   const products = await fetchAllProducts(client);
+
+  console.log(
+    `[productIndexSync] fetchAllProducts done: shop=${session.shop} count=${products.length}`,
+  );
+
   await saveProductIndex(session.shop, products);
+
+  console.log(`[productIndexSync] sync done: shop=${session.shop} count=${products.length}`);
 
   return {
     count: products.length,
