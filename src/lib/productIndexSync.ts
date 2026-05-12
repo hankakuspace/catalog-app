@@ -338,23 +338,20 @@ async function saveProductIndex(shop: string, products: IndexedProduct[]) {
   const chunkSize = 20;
 
   for (let i = 0; i < products.length; i += chunkSize) {
+    const chunkIndex = Math.floor(i / chunkSize);
+    const chunkProducts = products.slice(i, i + chunkSize);
+    const ref = dbAdmin
+      .collection("shopify_product_index_chunks")
+      .doc(getChunkDocId(shop, chunkIndex));
+
     const batch = dbAdmin.batch();
 
-    products.slice(i, i + chunkSize).forEach((_, localIndex) => {
-      const chunkIndex = Math.floor((i + localIndex) / chunkSize);
-      const chunkStart = chunkIndex * chunkSize;
-      const chunkProducts = products.slice(chunkStart, chunkStart + chunkSize);
-      const ref = dbAdmin
-        .collection("shopify_product_index_chunks")
-        .doc(getChunkDocId(shop, chunkIndex));
-
-      batch.set(ref, {
-        shop,
-        chunkIndex,
-        products: chunkProducts,
-        count: chunkProducts.length,
-        syncedAt: FieldValue.serverTimestamp(),
-      });
+    batch.set(ref, {
+      shop,
+      chunkIndex,
+      products: chunkProducts,
+      count: chunkProducts.length,
+      syncedAt: FieldValue.serverTimestamp(),
     });
 
     await batch.commit();
