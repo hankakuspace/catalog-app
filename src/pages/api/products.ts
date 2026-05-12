@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { shopify, sessionStorage } from "@/lib/shopify";
 import { GraphQLClient, gql } from "graphql-request";
 import { dbAdmin } from "@/lib/firebaseAdmin";
+import { saveProductIndex } from "@/lib/productIndexSync";
 
 interface ProductNode {
   id: string;
@@ -432,6 +433,24 @@ async function fetchIndexedProductsFromFirestore(
   });
 }
 
+async function rebuildIndexedProductsFromShopify(
+  shop: string,
+  client: GraphQLClient,
+): Promise<FormattedProduct[]> {
+  const formatted = await fetchAllProductsForSearch(client);
+
+  setCachedProducts(`firestore-index:${shop}`, formatted);
+  setCachedProducts(shop, formatted);
+
+  try {
+    await saveProductIndex(shop, formatted);
+  } catch (err) {
+    console.error("Firestore商品インデックス復旧保存エラー:", err);
+  }
+
+  return formatted;
+}
+
 function filterAndSortProducts(
   products: FormattedProduct[],
   rawQuery: string,
@@ -555,9 +574,12 @@ export default async function handler(
     const hasSearchQuery = rawQuery.trim().length > 0;
 
     if (!hasSearchQuery) {
-      const formatted = await fetchInitialProducts(client);
+      const formatted = await rebuildIndexedProductsFromShopify(session.shop, client);
       const products = filterAndSortProducts(formatted, rawQuery);
-      return res.status(200).json({ products });
+      return res.status(200).json({
+        products,
+        source: "shopify-rebuilt-index",
+      });
     }
 
     const cacheKey = session.shop;
@@ -568,11 +590,12 @@ export default async function handler(
       return res.status(200).json({ products });
     }
 
-    const formatted = await fetchAllProductsForSearch(client);
-    setCachedProducts(cacheKey, formatted);
-
+    const formatted = await rebuildIndexedProductsFromShopify(session.shop, client);
     const products = filterAndSortProducts(formatted, rawQuery);
-    return res.status(200).json({ products });
+    return res.status(200).json({
+      products,
+      source: "shopify-rebuilt-index",
+    });
   } catch (err: unknown) {
     const error = err as Error;
     return res.status(500).json({ error: error.message });

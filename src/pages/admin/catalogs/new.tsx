@@ -588,6 +588,28 @@ export default function NewCatalogPage() {
       latestSearchIdRef.current = currentSearchId;
 
       try {
+        if (allSearchProducts.length > 0) {
+          if (currentSearchId !== latestSearchIdRef.current) {
+            return;
+          }
+
+          setSearchResults(filterCatalogProducts(allSearchProducts, trimmedQuery));
+          return;
+        }
+
+        const products = await fetchAllSearchProducts();
+
+        if (currentSearchId !== latestSearchIdRef.current) {
+          return;
+        }
+
+        const localResults = filterCatalogProducts(products, trimmedQuery);
+
+        if (localResults.length > 0) {
+          setSearchResults(localResults);
+          return;
+        }
+
         if (searchAbortRef.current) {
           searchAbortRef.current.abort();
         }

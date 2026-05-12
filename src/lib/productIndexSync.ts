@@ -293,53 +293,45 @@ function getChunkDocId(shop: string, chunkIndex: number): string {
 }
 
 async function deleteExistingIndex(shop: string) {
+  const writer = dbAdmin.bulkWriter();
+
   const productSnapshot = await dbAdmin
     .collection("shopify_product_index")
     .where("shop", "==", shop)
     .get();
 
-  for (let i = 0; i < productSnapshot.docs.length; i += 400) {
-    const batch = dbAdmin.batch();
-    productSnapshot.docs.slice(i, i + 400).forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
-  }
+  productSnapshot.docs.forEach((doc) => {
+    writer.delete(doc.ref);
+  });
 
   const chunkSnapshot = await dbAdmin
     .collection("shopify_product_index_chunks")
     .where("shop", "==", shop)
     .get();
 
-  for (let i = 0; i < chunkSnapshot.docs.length; i += 400) {
-    const batch = dbAdmin.batch();
-    chunkSnapshot.docs.slice(i, i + 400).forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
-  }
+  chunkSnapshot.docs.forEach((doc) => {
+    writer.delete(doc.ref);
+  });
+
+  await writer.close();
 }
 
-async function saveProductIndex(shop: string, products: IndexedProduct[]) {
+export async function saveProductIndex(shop: string, products: IndexedProduct[]) {
   await deleteExistingIndex(shop);
 
-  for (let i = 0; i < products.length; i += 400) {
-    const batch = dbAdmin.batch();
+  const writer = dbAdmin.bulkWriter();
 
-    products.slice(i, i + 400).forEach((product) => {
-      const ref = dbAdmin
-        .collection("shopify_product_index")
-        .doc(getIndexDocId(shop, product.id));
+  products.forEach((product) => {
+    const ref = dbAdmin
+      .collection("shopify_product_index")
+      .doc(getIndexDocId(shop, product.id));
 
-      batch.set(ref, {
-        ...product,
-        shop,
-        syncedAt: FieldValue.serverTimestamp(),
-      });
+    writer.set(ref, {
+      ...product,
+      shop,
+      syncedAt: FieldValue.serverTimestamp(),
     });
-
-    await batch.commit();
-  }
+  });
 
   const chunkSize = 80;
 
@@ -350,7 +342,7 @@ async function saveProductIndex(shop: string, products: IndexedProduct[]) {
       .collection("shopify_product_index_chunks")
       .doc(getChunkDocId(shop, chunkIndex));
 
-    await ref.set({
+    writer.set(ref, {
       shop,
       chunkIndex,
       products: chunkProducts,
@@ -359,7 +351,10 @@ async function saveProductIndex(shop: string, products: IndexedProduct[]) {
     });
   }
 
+  await writer.close();
+
   global.__catalogProductsCache__?.delete(`firestore-index:${shop}`);
+  global.__catalogProductsCache__?.delete(shop);
 }
 
 export async function syncProductIndex(shop: string): Promise<{
