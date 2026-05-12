@@ -292,66 +292,73 @@ function getChunkDocId(shop: string, chunkIndex: number): string {
   return `${shop}__chunk_${String(chunkIndex).padStart(4, "0")}`;
 }
 
+async function deleteCollectionByShop(collectionName: string, shop: string) {
+  const snapshot = await dbAdmin
+    .collection(collectionName)
+    .where("shop", "==", shop)
+    .get();
+
+  for (let i = 0; i < snapshot.docs.length; i += 400) {
+    const batch = dbAdmin.batch();
+
+    snapshot.docs.slice(i, i + 400).forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+  }
+}
+
 async function deleteExistingIndex(shop: string) {
-  const writer = dbAdmin.bulkWriter();
-
-  const productSnapshot = await dbAdmin
-    .collection("shopify_product_index")
-    .where("shop", "==", shop)
-    .get();
-
-  productSnapshot.docs.forEach((doc) => {
-    writer.delete(doc.ref);
-  });
-
-  const chunkSnapshot = await dbAdmin
-    .collection("shopify_product_index_chunks")
-    .where("shop", "==", shop)
-    .get();
-
-  chunkSnapshot.docs.forEach((doc) => {
-    writer.delete(doc.ref);
-  });
-
-  await writer.close();
+  await deleteCollectionByShop("shopify_product_index_chunks", shop);
+  await deleteCollectionByShop("shopify_product_index", shop);
 }
 
 async function saveProductIndex(shop: string, products: IndexedProduct[]) {
   await deleteExistingIndex(shop);
 
-  const writer = dbAdmin.bulkWriter();
+  for (let i = 0; i < products.length; i += 300) {
+    const batch = dbAdmin.batch();
 
-  products.forEach((product) => {
-    const ref = dbAdmin
-      .collection("shopify_product_index")
-      .doc(getIndexDocId(shop, product.id));
+    products.slice(i, i + 300).forEach((product) => {
+      const ref = dbAdmin
+        .collection("shopify_product_index")
+        .doc(getIndexDocId(shop, product.id));
 
-    writer.set(ref, {
-      ...product,
-      shop,
-      syncedAt: FieldValue.serverTimestamp(),
+      batch.set(ref, {
+        ...product,
+        shop,
+        syncedAt: FieldValue.serverTimestamp(),
+      });
     });
-  });
 
-  const chunkSize = 80;
-
-  for (let i = 0; i < products.length; i += chunkSize) {
-    const chunkIndex = Math.floor(i / chunkSize);
-    const chunkProducts = products.slice(i, i + chunkSize);
-    const ref = dbAdmin
-      .collection("shopify_product_index_chunks")
-      .doc(getChunkDocId(shop, chunkIndex));
-
-    writer.set(ref, {
-      shop,
-      chunkIndex,
-      products: chunkProducts,
-      count: chunkProducts.length,
-      syncedAt: FieldValue.serverTimestamp(),
-    });
+    await batch.commit();
   }
 
-  await writer.close();
+  const chunkSize = 20;
+
+  for (let i = 0; i < products.length; i += chunkSize) {
+    const batch = dbAdmin.batch();
+
+    products.slice(i, i + chunkSize).forEach((_, localIndex) => {
+      const chunkIndex = Math.floor((i + localIndex) / chunkSize);
+      const chunkStart = chunkIndex * chunkSize;
+      const chunkProducts = products.slice(chunkStart, chunkStart + chunkSize);
+      const ref = dbAdmin
+        .collection("shopify_product_index_chunks")
+        .doc(getChunkDocId(shop, chunkIndex));
+
+      batch.set(ref, {
+        shop,
+        chunkIndex,
+        products: chunkProducts,
+        count: chunkProducts.length,
+        syncedAt: FieldValue.serverTimestamp(),
+      });
+    });
+
+    await batch.commit();
+  }
 
   global.__catalogProductsCache__?.delete(`firestore-index:${shop}`);
   global.__catalogProductsCache__?.delete(shop);
