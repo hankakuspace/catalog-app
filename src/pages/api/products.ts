@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { shopify, sessionStorage } from "@/lib/shopify";
 import { GraphQLClient, gql } from "graphql-request";
 import { dbAdmin } from "@/lib/firebaseAdmin";
+import { saveProductIndex } from "@/lib/productIndexSync";
 
 interface ProductNode {
   id: string;
@@ -558,6 +559,12 @@ export default async function handler(
 
       const formatted = await fetchAllProductsForSearch(client);
       setCachedProducts(cacheKey, formatted);
+
+      try {
+        await saveProductIndex(session.shop, formatted);
+      } catch (indexError) {
+        console.error("Firestore商品インデックス保存エラー:", indexError);
+      }
 
       const products = filterAndSortProducts(formatted, rawQuery);
       return res.status(200).json({ products });
