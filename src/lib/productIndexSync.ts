@@ -320,7 +320,7 @@ async function deleteExistingIndex(shop: string) {
   }
 }
 
-export async function saveProductIndex(shop: string, products: IndexedProduct[]) {
+async function saveProductIndex(shop: string, products: IndexedProduct[]) {
   await deleteExistingIndex(shop);
 
   for (let i = 0; i < products.length; i += 400) {

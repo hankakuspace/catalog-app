@@ -3,7 +3,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { shopify, sessionStorage } from "@/lib/shopify";
 import { GraphQLClient, gql } from "graphql-request";
 import { dbAdmin } from "@/lib/firebaseAdmin";
-import { saveProductIndex } from "@/lib/productIndexSync";
 
 interface ProductNode {
   id: string;
@@ -336,6 +335,13 @@ async function fetchProductsPage(
   });
 }
 
+async function fetchInitialProducts(
+  client: GraphQLClient,
+): Promise<FormattedProduct[]> {
+  const data = await fetchProductsPage(client, 100);
+  return formatProducts(data.products.edges);
+}
+
 async function fetchAllProductsForSearch(
   client: GraphQLClient,
 ): Promise<FormattedProduct[]> {
@@ -549,23 +555,7 @@ export default async function handler(
     const hasSearchQuery = rawQuery.trim().length > 0;
 
     if (!hasSearchQuery) {
-      const cacheKey = session.shop;
-      const cachedProducts = getCachedProducts(cacheKey);
-
-      if (cachedProducts) {
-        const products = filterAndSortProducts(cachedProducts, rawQuery);
-        return res.status(200).json({ products });
-      }
-
-      const formatted = await fetchAllProductsForSearch(client);
-      setCachedProducts(cacheKey, formatted);
-
-      try {
-        await saveProductIndex(session.shop, formatted);
-      } catch (indexError) {
-        console.error("Firestore商品インデックス保存エラー:", indexError);
-      }
-
+      const formatted = await fetchInitialProducts(client);
       const products = filterAndSortProducts(formatted, rawQuery);
       return res.status(200).json({ products });
     }

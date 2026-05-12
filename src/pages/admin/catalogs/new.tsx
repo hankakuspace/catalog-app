@@ -588,13 +588,34 @@ export default function NewCatalogPage() {
       latestSearchIdRef.current = currentSearchId;
 
       try {
-        const products = await fetchAllSearchProducts();
+        if (allSearchProducts.length > 0) {
+          if (currentSearchId !== latestSearchIdRef.current) {
+            return;
+          }
+
+          setSearchResults(filterCatalogProducts(allSearchProducts, trimmedQuery));
+          return;
+        }
+
+        const shop = getShopDomain();
+        const params = new URLSearchParams({ shop, query: trimmedQuery });
+        const res = await fetch(`/api/products?${params.toString()}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "商品検索に失敗しました");
+        }
 
         if (currentSearchId !== latestSearchIdRef.current) {
           return;
         }
 
-        setSearchResults(filterCatalogProducts(products, trimmedQuery));
+        const fixed = (data.products || []).map((p: CatalogProduct) => ({
+          ...p,
+          onlineStoreUrl: p.onlineStoreUrl ?? undefined,
+        }));
+
+        setSearchResults(fixed);
       } catch (err) {
         console.error("商品検索エラー:", err);
 
