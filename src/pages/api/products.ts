@@ -556,16 +556,17 @@ export default async function handler(
       if (cachedProducts) {
         return res.status(200).json({
           ok: true,
+          source: "shopify-cache",
           cached: true,
           count: cachedProducts.length,
         });
       }
 
-      const formatted = await fetchAllProductsForSearch(client);
-      setCachedProducts(cacheKey, formatted);
+      const formatted = await rebuildIndexedProductsFromShopify(session.shop, client);
 
       return res.status(200).json({
         ok: true,
+        source: "shopify-rebuilt-index",
         cached: false,
         count: formatted.length,
       });
