@@ -316,7 +316,7 @@ async function deleteExistingIndex(shop: string) {
   await writer.close();
 }
 
-export async function saveProductIndex(shop: string, products: IndexedProduct[]) {
+async function saveProductIndex(shop: string, products: IndexedProduct[]) {
   await deleteExistingIndex(shop);
 
   const writer = dbAdmin.bulkWriter();
