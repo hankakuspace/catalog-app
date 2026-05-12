@@ -1,13 +1,17 @@
 // scripts/sync-product-index-local.mjs
+console.log("[local-sync] script loaded");
+
 import { config } from "dotenv";
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { GraphQLClient, gql } from "graphql-request";
+import crypto from "crypto";
 
 config({ path: ".env.local" });
 config({ path: ".env" });
 
 const SHOP = process.argv[2] || "and-collection-a.myshopify.com";
+const PROJECT_ID = requiredEnv("FIREBASE_PROJECT_ID");
+const CLIENT_EMAIL = requiredEnv("FIREBASE_CLIENT_EMAIL");
+const PRIVATE_KEY = requiredEnv("FIREBASE_PRIVATE_KEY").replace(/\\n/g, "\n");
+
 const SESSION_COLLECTION = "shopify_sessions_catalog_app";
 const PRODUCT_INDEX_COLLECTION = "shopify_product_index";
 const PRODUCT_CHUNKS_COLLECTION = "shopify_product_index_chunks";
@@ -23,18 +27,333 @@ function requiredEnv(name) {
   return value;
 }
 
-function initializeFirebaseAdmin() {
-  if (getApps().length > 0) {
-    return;
-  }
+function base64url(input) {
+  return Buffer.from(input)
+    .toString("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
 
-  initializeApp({
-    credential: cert({
-      projectId: requiredEnv("FIREBASE_PROJECT_ID"),
-      clientEmail: requiredEnv("FIREBASE_CLIENT_EMAIL"),
-      privateKey: requiredEnv("FIREBASE_PRIVATE_KEY").replace(/\\n/g, "\n"),
+async function getGoogleAccessToken() {
+  console.log("[local-sync] getGoogleAccessToken start");
+
+  const now = Math.floor(Date.now() / 1000);
+  const header = {
+    alg: "RS256",
+    typ: "JWT",
+  };
+  const claim = {
+    iss: CLIENT_EMAIL,
+    scope: "https://www.googleapis.com/auth/datastore",
+    aud: "https://oauth2.googleapis.com/token",
+    exp: now + 3600,
+    iat: now,
+  };
+
+  const unsignedJwt = `${base64url(JSON.stringify(header))}.${base64url(
+    JSON.stringify(claim),
+  )}`;
+
+  const signer = crypto.createSign("RSA-SHA256");
+  signer.update(unsignedJwt);
+  signer.end();
+
+  const signature = signer
+    .sign(PRIVATE_KEY, "base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+
+  const jwt = `${unsignedJwt}.${signature}`;
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt,
     }),
   });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(`Google token error: ${JSON.stringify(data)}`);
+  }
+
+  console.log("[local-sync] getGoogleAccessToken done");
+
+  return data.access_token;
+}
+
+function firestoreBaseUrl() {
+  return `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+}
+
+function firestoreDocumentBaseName() {
+  return `projects/${PROJECT_ID}/databases/(default)/documents`;
+}
+
+function documentUrl(collectionName, docId) {
+  return `${firestoreBaseUrl()}/${collectionName}/${encodeURIComponent(docId)}`;
+}
+
+function toFirestoreValue(value) {
+  if (value === undefined) {
+    return { nullValue: null };
+  }
+
+  if (value === null) {
+    return { nullValue: null };
+  }
+
+  if (typeof value === "string") {
+    return { stringValue: value };
+  }
+
+  if (typeof value === "number") {
+    if (Number.isInteger(value)) {
+      return { integerValue: String(value) };
+    }
+
+    return { doubleValue: value };
+  }
+
+  if (typeof value === "boolean") {
+    return { booleanValue: value };
+  }
+
+  if (value instanceof Date) {
+    return { timestampValue: value.toISOString() };
+  }
+
+  if (Array.isArray(value)) {
+    return {
+      arrayValue: {
+        values: value.map((item) => toFirestoreValue(item)),
+      },
+    };
+  }
+
+  if (typeof value === "object") {
+    const fields = {};
+
+    Object.entries(value).forEach(([key, item]) => {
+      if (item !== undefined) {
+        fields[key] = toFirestoreValue(item);
+      }
+    });
+
+    return {
+      mapValue: {
+        fields,
+      },
+    };
+  }
+
+  return { stringValue: String(value) };
+}
+
+function toFirestoreFields(object) {
+  const fields = {};
+
+  Object.entries(object).forEach(([key, value]) => {
+    if (value !== undefined) {
+      fields[key] = toFirestoreValue(value);
+    }
+  });
+
+  return fields;
+}
+
+function fromFirestoreValue(value) {
+  if ("stringValue" in value) return value.stringValue;
+  if ("integerValue" in value) return Number(value.integerValue);
+  if ("doubleValue" in value) return value.doubleValue;
+  if ("booleanValue" in value) return value.booleanValue;
+  if ("nullValue" in value) return null;
+  if ("timestampValue" in value) return value.timestampValue;
+
+  if ("arrayValue" in value) {
+    return (value.arrayValue.values || []).map(fromFirestoreValue);
+  }
+
+  if ("mapValue" in value) {
+    return fromFirestoreFields(value.mapValue.fields || {});
+  }
+
+  return undefined;
+}
+
+function fromFirestoreFields(fields) {
+  const object = {};
+
+  Object.entries(fields || {}).forEach(([key, value]) => {
+    object[key] = fromFirestoreValue(value);
+  });
+
+  return object;
+}
+
+async function firestoreGetDocument(token, collectionName, docId) {
+  const res = await fetch(documentUrl(collectionName, docId), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(`Firestore get error: ${JSON.stringify(data)}`);
+  }
+
+  return data;
+}
+
+async function firestoreRunQueryByShop(token, collectionName, shop) {
+  const res = await fetch(`${firestoreBaseUrl()}:runQuery`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: collectionName }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "shop" },
+            op: "EQUAL",
+            value: { stringValue: shop },
+          },
+        },
+      },
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(`Firestore runQuery error: ${JSON.stringify(data)}`);
+  }
+
+  return data
+    .filter((row) => row.document)
+    .map((row) => row.document);
+}
+
+function timeoutSignal(ms) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+
+  return {
+    signal: controller.signal,
+    clear: () => clearTimeout(timeout),
+  };
+}
+
+async function fetchJsonWithTimeout(url, options = {}, label = "fetch", ms = 30000) {
+  const timeout = timeoutSignal(ms);
+
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: timeout.signal,
+    });
+
+    const data = await res.json();
+
+    return {
+      res,
+      data,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`${label} timed out after ${ms}ms`);
+    }
+
+    throw error;
+  } finally {
+    timeout.clear();
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function firestoreCommit(token, writes) {
+  if (writes.length === 0) return;
+
+  const commitSize = 5;
+
+  for (let i = 0; i < writes.length; i += commitSize) {
+    const chunk = writes.slice(i, i + commitSize);
+    let success = false;
+
+    for (let attempt = 1; attempt <= 8; attempt += 1) {
+      const { res, data } = await fetchJsonWithTimeout(
+        `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:commit`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            writes: chunk,
+          }),
+        },
+        "Firestore commit",
+        30000,
+      );
+
+      if (res.ok) {
+        success = true;
+        console.log(
+          `[local-sync] firestore commit done: from=${i} count=${chunk.length} attempt=${attempt}`,
+        );
+        break;
+      }
+
+      const message = JSON.stringify(data);
+
+      if (res.status === 429 || message.includes("RESOURCE_EXHAUSTED")) {
+        const waitMs = 10000 * attempt;
+
+        console.log(
+          `[local-sync] firestore quota wait: from=${i} count=${chunk.length} attempt=${attempt} wait=${waitMs}ms`,
+        );
+
+        await sleep(waitMs);
+        continue;
+      }
+
+      throw new Error(`Firestore commit error: ${message}`);
+    }
+
+    if (!success) {
+      throw new Error(`Firestore commit failed after retries: from=${i}`);
+    }
+
+    await sleep(1500);
+  }
+}
+
+function getIndexDocId(shop, productId) {
+  return `${shop}__${productId.replace(/\//g, "_")}`;
+}
+
+function getChunkDocId(shop, chunkIndex) {
+  return `${shop}__chunk_${String(chunkIndex).padStart(4, "0")}`;
 }
 
 function normalizeAvailabilityStatus(value) {
@@ -61,15 +380,11 @@ function normalizeAvailabilityStatus(value) {
 }
 
 function pickArtistNameFromReference(reference, fallbackVendor) {
-  if (!reference) {
-    return fallbackVendor || "";
-  }
+  if (!reference) return fallbackVendor || "";
 
   const displayName = reference.displayName?.trim();
 
-  if (displayName) {
-    return displayName;
-  }
+  if (displayName) return displayName;
 
   const fields = reference.fields || [];
   const preferredKeys = ["name", "title", "label", "artist_name", "jp_name"];
@@ -78,17 +393,13 @@ function pickArtistNameFromReference(reference, fallbackVendor) {
     const matched = fields.find((field) => field.key === key);
     const value = matched?.value?.trim();
 
-    if (value) {
-      return value;
-    }
+    if (value) return value;
   }
 
   for (const field of fields) {
     const value = field.value?.trim();
 
-    if (value) {
-      return value;
-    }
+    if (value) return value;
   }
 
   return fallbackVendor || "";
@@ -154,35 +465,54 @@ function formatProducts(edges) {
   });
 }
 
-function getIndexDocId(shop, productId) {
-  return `${shop}__${productId.replace(/\//g, "_")}`;
-}
+async function loadOfflineSession(token, shop) {
+  console.log(`[local-sync] loadOfflineSession start: offline_${shop}`);
 
-function getChunkDocId(shop, chunkIndex) {
-  return `${shop}__chunk_${String(chunkIndex).padStart(4, "0")}`;
-}
+  const doc = await firestoreGetDocument(
+    token,
+    SESSION_COLLECTION,
+    `offline_${shop}`,
+  );
 
-async function loadOfflineSession(db, shop) {
-  const sessionDoc = await db
-    .collection(SESSION_COLLECTION)
-    .doc(`offline_${shop}`)
-    .get();
-
-  if (!sessionDoc.exists) {
+  if (!doc?.fields) {
     throw new Error(`offline session not found: offline_${shop}`);
   }
 
-  const session = sessionDoc.data();
+  const session = fromFirestoreFields(doc.fields);
 
   if (!session?.accessToken) {
     throw new Error(`accessToken not found in offline session: offline_${shop}`);
   }
 
+  console.log(`[local-sync] loadOfflineSession done: shop=${session.shop}`);
+
   return session;
 }
 
-async function fetchProductsPage(client, first, after) {
-  const query = gql`
+async function shopifyGraphql(shop, accessToken, query, variables) {
+  const res = await fetch(`https://${shop}/admin/api/2025-01/graphql.json`, {
+    method: "POST",
+    headers: {
+      "X-Shopify-Access-Token": accessToken,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || data.errors) {
+    throw new Error(`Shopify GraphQL error: ${JSON.stringify(data)}`);
+  }
+
+  return data.data;
+}
+
+async function fetchProductsPage(shop, accessToken, first, after) {
+  const query = `
     query Products($first: Int!, $after: String) {
       products(first: $first, sortKey: TITLE, after: $after) {
         edges {
@@ -245,13 +575,13 @@ async function fetchProductsPage(client, first, after) {
     }
   `;
 
-  return client.request(query, {
+  return shopifyGraphql(shop, accessToken, query, {
     first,
     after: after ?? null,
   });
 }
 
-async function fetchAllProducts(client) {
+async function fetchAllProducts(shop, accessToken) {
   const allEdges = [];
   let hasNextPage = true;
   let after = undefined;
@@ -260,7 +590,7 @@ async function fetchAllProducts(client) {
   while (hasNextPage) {
     console.log(`[local-sync] fetch products page=${page}`);
 
-    const data = await fetchProductsPage(client, 100, after);
+    const data = await fetchProductsPage(shop, accessToken, 100, after);
 
     allEdges.push(...data.products.edges);
     hasNextPage = data.products.pageInfo.hasNextPage;
@@ -271,105 +601,86 @@ async function fetchAllProducts(client) {
   return formatProducts(allEdges);
 }
 
-async function deleteCollectionByShop(db, collectionName, shop) {
-  const snapshot = await db
-    .collection(collectionName)
-    .where("shop", "==", shop)
-    .get();
+async function deleteCollectionByShop(token, collectionName, shop) {
+  console.log(`[local-sync] delete ${collectionName} start`);
 
-  console.log(
-    `[local-sync] delete ${collectionName}: count=${snapshot.docs.length}`,
-  );
+  const docs = await firestoreRunQueryByShop(token, collectionName, shop);
 
-  for (let i = 0; i < snapshot.docs.length; i += 400) {
-    const batch = db.batch();
+  console.log(`[local-sync] delete ${collectionName}: count=${docs.length}`);
 
-    snapshot.docs.slice(i, i + 400).forEach((doc) => {
-      batch.delete(doc.ref);
-    });
+  const writes = docs.map((doc) => ({
+    delete: doc.name,
+  }));
 
-    await batch.commit();
-
-    console.log(
-      `[local-sync] delete batch ${collectionName}: from=${i} count=${snapshot.docs.slice(i, i + 400).length}`,
-    );
-  }
+  await firestoreCommit(token, writes);
 }
 
-async function saveProductIndex(db, shop, products) {
-  await deleteCollectionByShop(db, PRODUCT_CHUNKS_COLLECTION, shop);
-  await deleteCollectionByShop(db, PRODUCT_INDEX_COLLECTION, shop);
+async function saveProductIndex(token, shop, products) {
+  await deleteCollectionByShop(token, PRODUCT_CHUNKS_COLLECTION, shop);
+  await deleteCollectionByShop(token, PRODUCT_INDEX_COLLECTION, shop);
 
-  for (let i = 0; i < products.length; i += 300) {
-    const batch = db.batch();
-
-    products.slice(i, i + 300).forEach((product) => {
-      const ref = db
-        .collection(PRODUCT_INDEX_COLLECTION)
-        .doc(getIndexDocId(shop, product.id));
-
-      batch.set(ref, {
+  const indexWrites = products.map((product) => ({
+    update: {
+      name: `${firestoreDocumentBaseName()}/${PRODUCT_INDEX_COLLECTION}/${getIndexDocId(
+        shop,
+        product.id,
+      )}`,
+      fields: toFirestoreFields({
         ...product,
         shop,
-        syncedAt: FieldValue.serverTimestamp(),
-      });
-    });
+        syncedAt: new Date(),
+      }),
+    },
+  }));
 
-    await batch.commit();
+  console.log(`[local-sync] save product index count=${indexWrites.length}`);
+  await firestoreCommit(token, indexWrites);
 
-    console.log(
-      `[local-sync] product index batch: from=${i} count=${products.slice(i, i + 300).length}`,
-    );
-  }
+  const chunkWrites = [];
 
   for (let i = 0; i < products.length; i += CHUNK_SIZE) {
     const chunkIndex = Math.floor(i / CHUNK_SIZE);
     const chunkProducts = products.slice(i, i + CHUNK_SIZE);
-    const ref = db
-      .collection(PRODUCT_CHUNKS_COLLECTION)
-      .doc(getChunkDocId(shop, chunkIndex));
 
-    const batch = db.batch();
-
-    batch.set(ref, {
-      shop,
-      chunkIndex,
-      products: chunkProducts,
-      count: chunkProducts.length,
-      syncedAt: FieldValue.serverTimestamp(),
+    chunkWrites.push({
+      update: {
+        name: `${firestoreDocumentBaseName()}/${PRODUCT_CHUNKS_COLLECTION}/${getChunkDocId(
+          shop,
+          chunkIndex,
+        )}`,
+        fields: toFirestoreFields({
+          shop,
+          chunkIndex,
+          products: chunkProducts,
+          count: chunkProducts.length,
+          syncedAt: new Date(),
+        }),
+      },
     });
-
-    await batch.commit();
-
-    console.log(
-      `[local-sync] chunk batch: index=${chunkIndex} count=${chunkProducts.length}`,
-    );
   }
+
+  console.log(`[local-sync] save chunks count=${chunkWrites.length}`);
+  await firestoreCommit(token, chunkWrites);
 }
 
 async function main() {
-  initializeFirebaseAdmin();
+  console.log("[local-sync] env", {
+    project: PROJECT_ID,
+    client: CLIENT_EMAIL,
+    privateKeyLength: PRIVATE_KEY.length,
+  });
 
-  const db = getFirestore();
-  const session = await loadOfflineSession(db, SHOP);
+  const token = await getGoogleAccessToken();
+  const session = await loadOfflineSession(token, SHOP);
   const normalizedShop = session.shop || SHOP;
 
   console.log(`[local-sync] start shop=${normalizedShop}`);
 
-  const client = new GraphQLClient(
-    `https://${normalizedShop}/admin/api/2025-01/graphql.json`,
-    {
-      headers: {
-        "X-Shopify-Access-Token": session.accessToken,
-      },
-    },
-  );
-
-  const products = await fetchAllProducts(client);
+  const products = await fetchAllProducts(normalizedShop, session.accessToken);
 
   console.log(`[local-sync] fetched products count=${products.length}`);
 
-  await saveProductIndex(db, normalizedShop, products);
+  await saveProductIndex(token, normalizedShop, products);
 
   console.log(`[local-sync] done shop=${normalizedShop} count=${products.length}`);
 }
