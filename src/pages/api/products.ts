@@ -467,6 +467,47 @@ export default async function handler(
     const rawQuery = (req.query.query as string) || "";
     const shouldWarmCache = req.query.warm === "1";
 
+    if (shop) {
+      const indexCacheKey = `firestore-index:${shop}`;
+      const cachedIndexedProducts = getCachedProducts(indexCacheKey);
+
+      if (cachedIndexedProducts) {
+        const products = filterAndSortProducts(cachedIndexedProducts, rawQuery);
+
+        if (shouldWarmCache) {
+          return res.status(200).json({
+            ok: true,
+            source: "firestore-index-cache",
+            cached: true,
+            count: cachedIndexedProducts.length,
+          });
+        }
+
+        return res.status(200).json({ products });
+      }
+
+      const indexedProducts = await fetchIndexedProductsFromFirestore(shop);
+
+      if (indexedProducts.length > 0) {
+        setCachedProducts(indexCacheKey, indexedProducts);
+
+        const products = filterAndSortProducts(indexedProducts, rawQuery);
+
+        if (shouldWarmCache) {
+          return res.status(200).json({
+            ok: true,
+            source: "firestore-index",
+            cached: false,
+            count: indexedProducts.length,
+          });
+        }
+
+        return res.status(200).json({ products });
+      }
+
+      console.log(`Shopify offline session fallback required: ${shop}`);
+    }
+
     let session = shop
       ? await sessionStorage.loadSession(`offline_${shop}`)
       : null;
@@ -484,8 +525,8 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const indexCacheKey = `firestore-index:${session.shop}`;
-    const cachedIndexedProducts = getCachedProducts(indexCacheKey);
+    const sessionIndexCacheKey = `firestore-index:${session.shop}`;
+    const cachedIndexedProducts = getCachedProducts(sessionIndexCacheKey);
 
     if (cachedIndexedProducts) {
       const products = filterAndSortProducts(cachedIndexedProducts, rawQuery);
@@ -505,7 +546,7 @@ export default async function handler(
     const indexedProducts = await fetchIndexedProductsFromFirestore(session.shop);
 
     if (indexedProducts.length > 0) {
-      setCachedProducts(indexCacheKey, indexedProducts);
+      setCachedProducts(sessionIndexCacheKey, indexedProducts);
 
       const products = filterAndSortProducts(indexedProducts, rawQuery);
 
@@ -575,7 +616,7 @@ export default async function handler(
     }
 
     const formatted = await fetchAllProductsForSearch(client);
-      setCachedProducts(session.shop, formatted);
+    setCachedProducts(session.shop, formatted);
     const products = filterAndSortProducts(formatted, rawQuery);
     return res.status(200).json({
       products,
@@ -586,3 +627,4 @@ export default async function handler(
     return res.status(500).json({ error: error.message });
   }
 }
+
