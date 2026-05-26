@@ -205,6 +205,8 @@ export default function NewCatalogPage() {
 
     if (title.startsWith(q)) return 1;
     if (artist.startsWith(q)) return 2;
+    if (title.includes(q)) return 3;
+    if (artist.includes(q)) return 4;
 
     return 99;
   }, [normalizeSearchText]);
@@ -215,14 +217,23 @@ export default function NewCatalogPage() {
 
     return products
       .filter((product) => {
-        if (isNumericSearchQuery(raw)) {
-          return yearMatchesSearchQuery(raw, product.year);
-        }
-
         const title = normalizeSearchText(product.title || "");
         const artist = normalizeSearchText(product.artist || "");
 
-        return title.startsWith(query) || artist.startsWith(query);
+        if (isNumericSearchQuery(raw)) {
+          return (
+            yearMatchesSearchQuery(raw, product.year) ||
+            title.includes(query) ||
+            artist.includes(query)
+          );
+        }
+
+        return (
+          title.startsWith(query) ||
+          artist.startsWith(query) ||
+          title.includes(query) ||
+          artist.includes(query)
+        );
       })
       .sort((a, b) => {
         const rankDiff = getSearchRank(raw, a) - getSearchRank(raw, b);
