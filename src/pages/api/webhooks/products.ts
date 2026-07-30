@@ -1,6 +1,7 @@
 // src/pages/api/webhooks/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "crypto";
+import { waitUntil } from "@vercel/functions";
 import {
   deleteSingleProductIndex,
   syncSingleProductIndex,
@@ -16,6 +17,11 @@ type ShopifyProductWebhookPayload = {
   id?: number | string;
   admin_graphql_api_id?: string;
 };
+
+type ProductWebhookTopic =
+  | "products/create"
+  | "products/update"
+  | "products/delete";
 
 function getRawBody(req: NextApiRequest): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -47,7 +53,10 @@ function getWebhookSecret(): string {
   return secret;
 }
 
-function verifyShopifyWebhook(rawBody: Buffer, hmacHeader: string | undefined) {
+function verifyShopifyWebhook(
+  rawBody: Buffer,
+  hmacHeader: string | undefined,
+): boolean {
   if (!hmacHeader) {
     return false;
   }
@@ -87,7 +96,55 @@ function getProductGid(payload: ShopifyProductWebhookPayload): string {
   return "";
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+function isSupportedTopic(
+  topic: string | undefined,
+): topic is ProductWebhookTopic {
+  return (
+    topic === "products/create" ||
+    topic === "products/update" ||
+    topic === "products/delete"
+  );
+}
+
+async function processProductWebhook(
+  shopDomain: string,
+  topic: ProductWebhookTopic,
+  productId: string,
+): Promise<void> {
+  const startedAt = Date.now();
+
+  try {
+    console.log(
+      `[productWebhook] background start: topic=${topic} shop=${shopDomain} productId=${productId}`,
+    );
+
+    if (topic === "products/delete") {
+      const result = await deleteSingleProductIndex(shopDomain, productId);
+
+      console.log(
+        `[productWebhook] background success: topic=${topic} shop=${shopDomain} productId=${result.productId} count=${result.count} durationMs=${Date.now() - startedAt}`,
+      );
+
+      return;
+    }
+
+    const result = await syncSingleProductIndex(shopDomain, productId);
+
+    console.log(
+      `[productWebhook] background success: topic=${topic} shop=${shopDomain} productId=${result.productId} count=${result.count} durationMs=${Date.now() - startedAt}`,
+    );
+  } catch (error) {
+    console.error(
+      `[productWebhook] background failed: topic=${topic} shop=${shopDomain} productId=${productId} durationMs=${Date.now() - startedAt}`,
+      error,
+    );
+  }
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
@@ -110,17 +167,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Missing shop domain" });
     }
 
-    if (
-      topicHeader !== "products/create" &&
-      topicHeader !== "products/update" &&
-      topicHeader !== "products/delete"
-    ) {
-      return res.status(200).json({ ok: true, ignored: true });
+    if (!isSupportedTopic(topicHeader)) {
+      return res.status(200).json({
+        ok: true,
+        accepted: false,
+        ignored: true,
+        topic: topicHeader || null,
+        shop: shopDomain,
+      });
     }
 
-    const payload = JSON.parse(
-      rawBody.toString("utf8"),
-    ) as ShopifyProductWebhookPayload;
+    let payload: ShopifyProductWebhookPayload;
+
+    try {
+      payload = JSON.parse(
+        rawBody.toString("utf8"),
+      ) as ShopifyProductWebhookPayload;
+    } catch (error) {
+      console.error("❌ product webhook JSON parse error:", error);
+
+      return res.status(400).json({
+        error: "Invalid JSON payload",
+        topic: topicHeader,
+        shop: shopDomain,
+      });
+    }
+
     const productId = getProductGid(payload);
 
     if (!productId) {
@@ -131,28 +203,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    if (topicHeader === "products/delete") {
-      const result = await deleteSingleProductIndex(shopDomain, productId);
+    waitUntil(processProductWebhook(shopDomain, topicHeader, productId));
 
-      return res.status(200).json({
-        ok: true,
-        topic: topicHeader,
-        shop: shopDomain,
-        action: "deleted",
-        productId: result.productId,
-        count: result.count,
-      });
-    }
-
-    const result = await syncSingleProductIndex(shopDomain, productId);
+    console.log(
+      `[productWebhook] accepted: topic=${topicHeader} shop=${shopDomain} productId=${productId}`,
+    );
 
     return res.status(200).json({
       ok: true,
+      accepted: true,
       topic: topicHeader,
       shop: shopDomain,
-      action: "updated",
-      productId: result.productId,
-      count: result.count,
+      productId,
     });
   } catch (err) {
     console.error("❌ product webhook error:", err);
