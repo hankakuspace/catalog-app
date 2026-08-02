@@ -1,9 +1,8 @@
 // src/lib/AppBridgeProvider.tsx
 "use client";
 
-import { createContext, useContext, useEffect, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { createApp, type ClientApplication } from "@shopify/app-bridge";
-import { Redirect } from "@shopify/app-bridge/actions";
 
 interface AppBridgeContextType {
   app: ClientApplication | null;
@@ -21,7 +20,7 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
       ? new URLSearchParams(window.location.search).get("host") || ""
       : "";
 
-  // ✅ host と shop を localStorage に保存/復元
+  // host と shop をlocalStorageへ保存し、hostがURLにない場合は復元する
   if (typeof window !== "undefined") {
     const params = new URLSearchParams(window.location.search);
     const shop = params.get("shop");
@@ -44,24 +43,13 @@ export function AppBridgeProvider({ children }: { children: React.ReactNode }) {
       console.warn("⚠️ host または NEXT_PUBLIC_SHOPIFY_API_KEY が未設定");
       return null;
     }
+
     return createApp({
       apiKey,
       host,
       forceRedirect: true,
     });
   }, [host, apiKey]);
-
-  // ✅ 401 → Reauthorize のケースでもトップに飛ばせる
-  useEffect(() => {
-    if (!app) return;
-    const redirect = Redirect.create(app);
-    const shop = new URLSearchParams(window.location.search).get("shop");
-    if (window.top !== window.self && shop) {
-      const redirectUrl = `/api/auth?shop=${shop}`;
-      console.log("🔄 AppBridge redirect to:", redirectUrl);
-      redirect.dispatch(Redirect.Action.REMOTE, redirectUrl);
-    }
-  }, [app]);
 
   return (
     <AppBridgeReactContext.Provider value={{ app }}>
