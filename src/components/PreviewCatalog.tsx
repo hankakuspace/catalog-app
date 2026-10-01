@@ -391,6 +391,65 @@ export default function PreviewCatalog({
         `}
       </style>
 
+      <style>{`
+        @media (max-width: 600px) {
+          .catalog-lightbox-panel {
+            width: 100vw !important;
+            height: 100dvh !important;
+            margin: 0 !important;
+            display: block !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding:
+              calc(64px + env(safe-area-inset-top))
+              20px
+              calc(88px + env(safe-area-inset-bottom)) !important;
+            box-sizing: border-box !important;
+          }
+
+          .catalog-lightbox-image-pane {
+            width: 100% !important;
+            min-width: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+          }
+
+          .catalog-lightbox-image {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: 60dvh !important;
+            object-fit: contain !important;
+          }
+
+          .catalog-lightbox-info {
+            width: 100% !important;
+            min-width: 0 !important;
+            display: block !important;
+            padding-top: 24px !important;
+            box-sizing: border-box !important;
+          }
+
+          .catalog-lightbox-info-content {
+            width: 100% !important;
+            max-width: none !important;
+          }
+
+          .catalog-lightbox-controls {
+            left: 20px !important;
+            right: 20px !important;
+            bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+            justify-content: flex-end !important;
+            background: rgba(255, 255, 255, 0.96) !important;
+            padding: 8px 0 !important;
+            box-sizing: border-box !important;
+          }
+        }
+      `}</style>
+
       {lightboxProduct && (
         <div
           role="dialog"
@@ -425,6 +484,7 @@ export default function PreviewCatalog({
           </button>
 
           <div
+            className="catalog-lightbox-panel"
             onClick={(event) => event.stopPropagation()}
             style={{
               width: "calc(100vw - 48px)",
@@ -439,6 +499,7 @@ export default function PreviewCatalog({
             }}
           >
             <div
+              className="catalog-lightbox-image-pane"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -449,6 +510,7 @@ export default function PreviewCatalog({
               }}
             >
               <img
+                className="catalog-lightbox-image"
                 src={lightboxProduct.imageUrl}
                 alt={lightboxProduct.title}
                 style={{
@@ -462,6 +524,7 @@ export default function PreviewCatalog({
             </div>
 
             <div
+              className="catalog-lightbox-info"
               style={{
                 background: "#ffffff",
                 color: "#444",
@@ -473,7 +536,10 @@ export default function PreviewCatalog({
                 position: "relative",
               }}
             >
-              <div style={{ maxWidth: "240px" }}>
+              <div
+                className="catalog-lightbox-info-content"
+                style={{ maxWidth: "240px" }}
+              >
                 {lightboxProduct.artist && (
                   <div
                     style={{
@@ -588,6 +654,7 @@ export default function PreviewCatalog({
               </div>
 
               <div
+                className="catalog-lightbox-controls"
                 style={{
                   position: "fixed",
                   right: "40px",
