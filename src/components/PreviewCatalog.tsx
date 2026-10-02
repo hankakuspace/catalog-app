@@ -148,7 +148,13 @@ function AvailabilityDot({ status }: { status?: string }) {
   );
 }
 
-function SortableItem({ id, isEditable, isReorderMode, children }: any) {
+function SortableItem({
+  id,
+  isEditable,
+  isReorderMode,
+  isSelectedForMove,
+  children,
+}: any) {
   const {
     attributes,
     listeners,
@@ -163,6 +169,9 @@ function SortableItem({ id, isEditable, isReorderMode, children }: any) {
     transition,
     cursor: isEditable ? "grab" : "default",
     zIndex: isDragging ? 50 : "auto",
+    outline: isSelectedForMove ? "2px solid #2c6ecb" : "none",
+    outlineOffset: isSelectedForMove ? "4px" : "0",
+    borderRadius: isSelectedForMove ? "8px" : undefined,
   };
 
   return (
@@ -206,6 +215,9 @@ export default function PreviewCatalog({
 
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [tempPrices, setTempPrices] = useState<Record<string, string>>({});
+  const [selectedMoveItems, setSelectedMoveItems] = useState<
+    Record<string, boolean>
+  >({});
 
   const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
   const [lightboxProductIndex, setLightboxProductIndex] = useState(0);
@@ -280,6 +292,30 @@ export default function PreviewCatalog({
   }, [products, columnCount, applySameHeight]);
 
   useEffect(() => {
+    const productIds = new Set(products.map((product) => product.id));
+
+    setSelectedMoveItems((prev) => {
+      const next = Object.fromEntries(
+        Object.entries(prev).filter(
+          ([id, selected]) => selected && productIds.has(id)
+        )
+      );
+
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(next);
+
+      if (
+        prevKeys.length === nextKeys.length &&
+        nextKeys.every((id) => prev[id])
+      ) {
+        return prev;
+      }
+
+      return next;
+    });
+  }, [products]);
+
+  useEffect(() => {
     if (!lightboxProduct) return;
 
     const handleLightboxKeyDown = (event: KeyboardEvent) => {
@@ -311,12 +347,56 @@ export default function PreviewCatalog({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = products.findIndex((p) => p.id === active.id);
-    const newIndex = products.findIndex((p) => p.id === over.id);
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    const oldIndex = products.findIndex((p) => p.id === activeId);
+    const newIndex = products.findIndex((p) => p.id === overId);
 
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const newProducts = arrayMove(products, oldIndex, newIndex);
+    const selectedIds = products
+      .filter((product) => selectedMoveItems[product.id])
+      .map((product) => product.id);
+
+    const isActiveSelected = selectedMoveItems[activeId] === true;
+
+    if (!isActiveSelected || selectedIds.length <= 1) {
+      const newProducts = arrayMove(products, oldIndex, newIndex);
+      onReorder(newProducts);
+      return;
+    }
+
+    if (selectedMoveItems[overId]) {
+      return;
+    }
+
+    const selectedIdSet = new Set(selectedIds);
+
+    const selectedProducts = products.filter((product) =>
+      selectedIdSet.has(product.id)
+    );
+
+    const remainingProducts = products.filter(
+      (product) => !selectedIdSet.has(product.id)
+    );
+
+    const overIndexInRemaining = remainingProducts.findIndex(
+      (product) => product.id === overId
+    );
+
+    if (overIndexInRemaining === -1) return;
+
+    const isMovingForward = oldIndex < newIndex;
+    const insertIndex =
+      overIndexInRemaining + (isMovingForward ? 1 : 0);
+
+    const newProducts = [
+      ...remainingProducts.slice(0, insertIndex),
+      ...selectedProducts,
+      ...remainingProducts.slice(insertIndex),
+    ];
+
     onReorder(newProducts);
   };
 
@@ -352,6 +432,24 @@ export default function PreviewCatalog({
       setTempPrices((prev) => ({ ...prev, [id]: "" }));
     }
   };
+
+  const handleMoveSelectionChange = (id: string, checked: boolean) => {
+    if (!isEditable) return;
+
+    setSelectedMoveItems((prev) => {
+      if (checked) {
+        return { ...prev, [id]: true };
+      }
+
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const selectedMoveCount = products.filter(
+    (product) => selectedMoveItems[product.id]
+  ).length;
 
   return (
     <>
@@ -770,6 +868,34 @@ export default function PreviewCatalog({
 
         <main className="flex-grow bg-white text-black px-6 py-12">
           <div className="max-w-7xl mx-auto">
+          {isEditable && isReorderMode && selectedMoveCount > 0 && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+                marginBottom: "20px",
+                padding: "12px 14px",
+                border: "1px solid #c9cccf",
+                borderRadius: "8px",
+                background: "#f6f6f7",
+              }}
+            >
+              <Text as="p" variant="bodyMd" fontWeight="medium">
+                {selectedMoveCount}件を選択中。選択した作品をドラッグすると、
+                まとめて移動します。
+              </Text>
+
+              <Button
+                variant="plain"
+                onClick={() => setSelectedMoveItems({})}
+              >
+                選択を解除
+              </Button>
+            </div>
+          )}
+
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -794,10 +920,27 @@ export default function PreviewCatalog({
                     id={item.id}
                     isEditable={isEditable}
                     isReorderMode={isReorderMode}
+                    isSelectedForMove={
+                      isReorderMode && selectedMoveItems[item.id] === true
+                    }
                   >
                     <BlockStack gap="200">
                       {isEditable && (
-                        <div className="flex justify-end mb-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <div
+                            onPointerDown={(event) => event.stopPropagation()}
+                          >
+                            {isReorderMode && (
+                              <Checkbox
+                                label="移動対象"
+                                checked={selectedMoveItems[item.id] || false}
+                                onChange={(checked) =>
+                                  handleMoveSelectionChange(item.id, checked)
+                                }
+                              />
+                            )}
+                          </div>
+
                           <Popover
                             active={activePopoverId === item.id}
                             activator={
@@ -818,6 +961,9 @@ export default function PreviewCatalog({
                                 {
                                   content: isReorderMode ? "移動を完了" : "移動",
                                   onAction: () => {
+                                    if (isReorderMode) {
+                                      setSelectedMoveItems({});
+                                    }
                                     setIsReorderMode(!isReorderMode);
                                     setActivePopoverId(null);
                                   },
@@ -852,19 +998,36 @@ export default function PreviewCatalog({
                         >
                           {item.imageUrl &&
                             (isEditable ? (
-                              <a
-                                href={item.onlineStoreUrl ?? "#"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.title}
-                                  onLoad={() => {
-                                    requestAnimationFrame(applySameHeight);
+                              isReorderMode ? (
+                                <div
+                                  style={{
+                                    display: "block",
+                                    width: "100%",
                                   }}
-                                />
-                              </a>
+                                >
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.title}
+                                    onLoad={() => {
+                                      requestAnimationFrame(applySameHeight);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <a
+                                  href={item.onlineStoreUrl ?? "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.title}
+                                    onLoad={() => {
+                                      requestAnimationFrame(applySameHeight);
+                                    }}
+                                  />
+                                </a>
+                              )
                             ) : (
                               <button
                                 type="button"
