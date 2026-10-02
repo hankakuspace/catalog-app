@@ -667,6 +667,13 @@ export default function NewCatalogPage() {
     }, 150);
   };
 
+  const visibleSearchResults = searchResults.filter(
+    (searchProduct) =>
+      !selectedProducts.some(
+        (selectedProduct) => selectedProduct.id === searchProduct.id,
+      ),
+  );
+
   return (
     <Frame>
       <div style={{ width: "100%", padding: "20px", backgroundColor: "#fff" }}>
@@ -759,7 +766,8 @@ export default function NewCatalogPage() {
 
               {loading ? (
                 <Spinner accessibilityLabel="検索中" size="large" />
-              ) : searchQuery.trim() !== "" && searchResults.length === 0 ? (
+              ) : searchQuery.trim() !== "" &&
+                visibleSearchResults.length === 0 ? (
                 <div style={{ padding: "12px 0" }}>
                   <Text as="p" variant="bodySm" tone="subdued">
                     検索結果がありませんでした
@@ -768,7 +776,7 @@ export default function NewCatalogPage() {
               ) : (
                 <ResourceList
                   resourceName={{ singular: "product", plural: "products" }}
-                  items={searchResults}
+                  items={visibleSearchResults}
                   renderItem={(item) => (
                     <ResourceItem
                       id={item.id}
