@@ -24,6 +24,7 @@ import {
   DeleteIcon,
   ClipboardIcon,
 } from "@shopify/polaris-icons";
+import { useAdminFetch, useAppBridgeCustom } from "@/lib/AppBridgeProvider";
 import AdminHeader from "@/components/AdminHeader";
 
 interface Catalog {
@@ -35,6 +36,8 @@ interface Catalog {
 }
 
 export default function CatalogListPage() {
+  const adminFetch = useAdminFetch();
+  const app = useAppBridgeCustom();
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +50,11 @@ export default function CatalogListPage() {
     useIndexResourceState<{ id: string }>(resourceItems);
 
   useEffect(() => {
+    if (!app) return;
     const fetchCatalogs = async () => {
       try {
-        const res = await fetch("/api/catalogs");
+        const res = await adminFetch("/api/catalogs");
+        if (!res.ok) throw new Error("カタログ一覧の取得に失敗しました");
         const data = await res.json();
         setCatalogs(data.catalogs || []);
       } catch (err) {
@@ -60,7 +65,7 @@ export default function CatalogListPage() {
       }
     };
     fetchCatalogs();
-  }, []);
+  }, [app, adminFetch]);
 
   const handleDelete = async () => {
     if (selectedResources.length === 0) return;
@@ -70,7 +75,7 @@ export default function CatalogListPage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch("/api/catalogs", {
+      const res = await adminFetch("/api/catalogs", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: selectedResources }),

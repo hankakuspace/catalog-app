@@ -1,6 +1,6 @@
 // src/pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { shopify, sessionStorage } from "@/lib/shopify";
+import { shopify, requireAdminShop, sessionStorage } from "@/lib/shopify";
 import { GraphQLClient, gql } from "graphql-request";
 import { dbAdmin } from "@/lib/firebaseAdmin";
 
@@ -463,7 +463,9 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   try {
-    const shop = req.query.shop as string | undefined;
+    const shop = await requireAdminShop(req, res);
+    if (!shop) return;
+    if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
     const rawQuery = (req.query.query as string) || "";
     const shouldWarmCache = req.query.warm === "1";
 
@@ -508,10 +510,7 @@ export default async function handler(
       console.log(`Shopify offline session fallback required: ${shop}`);
     }
 
-    let session = shop
-      ? await sessionStorage.loadSession(`offline_${shop}`)
-      : null;
-
+    let session = await sessionStorage.loadSession(`offline_${shop}`);
     if (!session) {
       const sessionId = await shopify.session.getCurrentId({
         isOnline: true,
@@ -520,6 +519,7 @@ export default async function handler(
       });
       session = sessionId ? await sessionStorage.loadSession(sessionId) : null;
     }
+    if (session && session.shop !== shop) return res.status(403).json({ error: "Forbidden" });
 
     if (!session) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -623,8 +623,8 @@ export default async function handler(
       source: "shopify",
     });
   } catch (err: unknown) {
-    const error = err as Error;
-    return res.status(500).json({ error: error.message });
+    void err;
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
 

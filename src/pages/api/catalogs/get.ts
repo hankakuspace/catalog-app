@@ -1,8 +1,12 @@
 // src/pages/api/catalogs/get.ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import { requireAdminShop, ownsCatalog, managementCatalog } from "@/lib/shopify";
 import { dbAdmin } from "@/lib/firebaseAdmin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const shop = await requireAdminShop(req, res);
+  if (!shop) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
   const { id } = req.query;
 
   if (!id || typeof id !== "string") {
@@ -16,12 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "Not found" });
     }
 
+    if (!ownsCatalog(snap.data(), shop)) return res.status(403).json({ error: "Forbidden" });
     return res.status(200).json({
       id: snap.id,
-      ...snap.data(),
+      ...managementCatalog(snap.data()!),
     });
-  } catch (err) {
-    console.error("API error:", err);
+  } catch {
+    console.error("Catalog API failed");
     return res.status(500).json({ error: "Internal server error" });
   }
 }

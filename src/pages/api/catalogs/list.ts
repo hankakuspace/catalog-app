@@ -1,8 +1,11 @@
 // src/pages/api/catalogs/list.ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import { requireAdminShop } from "@/lib/shopify";
 import { dbAdmin } from "@/lib/firebaseAdmin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const shop = await requireAdminShop(req, res);
+  if (!shop) return;
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -10,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const snapshot = await dbAdmin
       .collection("shopify_catalogs_app")
-      .orderBy("createdAt", "desc")
+      .where("shop", "==", shop)
       .get();
 
     const catalogs = snapshot.docs.map((doc) => {
@@ -26,9 +29,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
+    catalogs.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
     return res.status(200).json({ catalogs });
-  } catch (error) {
-    console.error("❌ Error fetching catalogs:", error);
+  } catch {
+    console.error("Catalog API failed");
     return res.status(500).json({ error: "Failed to fetch catalogs" });
   }
 }

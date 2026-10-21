@@ -27,70 +27,100 @@ export default function ClientPreviewPage() {
 
   const shouldFetch = typeof id === "string" && id.length > 0;
 
-  const fetcher = (url: string) =>
-    fetch(url).then((res) => res.json());
+  const fetcher = async (url: string) => {
+    const token = sessionStorage.getItem(`catalog-auth-${id}`);
+    const res = await fetch(url, { headers: token ? { "X-Catalog-View-Token": token } : {} });
+    const result = await res.json();
+    if (res.status === 401) sessionStorage.removeItem(`catalog-auth-${id}`);
+    if (!res.ok && ![401, 404, 410].includes(res.status)) throw new Error("Preview unavailable");
+    return result;
+  };
 
-  const { data, error } = useSWR(
-    shouldFetch ? `/api/catalogs?id=${id}` : null,
-    fetcher
+  const { data, error, mutate } = useSWR(
+    hydrated && shouldFetch ? `/api/catalogs?preview=1&id=${encodeURIComponent(id as string)}` : null,
+    fetcher,
+    { refreshInterval: 60000, revalidateOnFocus: true }
   );
 
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
   const [inputUser, setInputUser] = useState("");
   const [inputPass, setInputPass] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [expiryClock, setExpiryClock] = useState(0);
+  const expiresAt = data?.catalog?.expiresAt;
 
   useEffect(() => {
-    if (!hydrated) return;
-    if (!shouldFetch) return;
-    if (!data?.catalog) return;
+    if (!expiresAt) return;
+    const deadline = new Date(expiresAt).getTime();
+    if (!Number.isFinite(deadline)) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const checkExpiry = () => {
+      if (timer) clearTimeout(timer);
+      const now = Date.now();
+      setExpiryClock(now);
+      // Re-arm long deadlines without overflowing the browser's timer range.
+      if (now <= deadline) timer = setTimeout(checkExpiry, Math.min(deadline - now + 1, 2147483647));
+    };
+    checkExpiry();
+    window.addEventListener("focus", checkExpiry);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", checkExpiry);
+    };
+  }, [expiresAt, id]);
 
-    const catalog = data.catalog;
+  useEffect(() => {
+    setInputUser("");
+    setInputPass("");
+    setLoginError("");
+    setReadyToRender(false);
+  }, [id]);
 
-    if (catalog.username && catalog.password) {
-      const saved = sessionStorage.getItem(`catalog-auth-${id}`);
-      if (saved === "ok") {
-        setIsAuthed(true);
+  useEffect(() => {
+    if (!data?.catalog) { setReadyToRender(false); return; }
+    const frame = requestAnimationFrame(() => setReadyToRender(true));
+    return () => cancelAnimationFrame(frame);
+  }, [data, id]);
+
+  const login = async () => {
+    const catalogId = id;
+    if (typeof catalogId !== "string" || loggingIn) return;
+    setLoggingIn(true);
+    try {
+      const res = await fetch(`/api/catalogs?preview=1&id=${encodeURIComponent(catalogId)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: inputUser, password: inputPass }),
+      });
+      const result = await res.json();
+      if (res.status === 410) { await mutate(result, false); return; }
+      if (!res.ok || !result.catalog || !result.token) {
+        setLoginError("ユーザー名またはパスワードが正しくありません");
+        return;
       }
-    } else {
-      setIsAuthed(true);
+      sessionStorage.setItem(`catalog-auth-${catalogId}`, result.token);
+      setInputPass("");
+      setLoginError("");
+      await mutate(result, false);
+    } catch {
+      setLoginError("認証に失敗しました。もう一度お試しください");
+    } finally {
+      setLoggingIn(false);
     }
+  };
 
-    setAuthChecked(true);
-
-    // ⭐ ここが肝：1フレーム遅らせて描画許可
-    requestAnimationFrame(() => {
-      setReadyToRender(true);
-    });
-  }, [hydrated, shouldFetch, data, id]);
-
-  if (!hydrated) return <div className="p-6">読み込み中...</div>;
-  if (!shouldFetch) return <div className="p-6">読み込み中...</div>;
-  if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
-  if (!data) return <div className="p-6">読み込み中...</div>;
-
+  if (!hydrated || !shouldFetch) return <div className="p-6">読み込み中...</div>;
+  if (!data) return error
+    ? <div className="p-6 text-red-600">エラーが発生しました</div>
+    : <div className="p-6">読み込み中...</div>;
   const catalog = data.catalog;
-  if (!catalog) {
-    return (
-      <div className="p-6 bg-red-100 text-red-700 rounded">
-        カタログが見つかりませんでした
-      </div>
-    );
+  const deadline = catalog?.expiresAt ? new Date(catalog.expiresAt).getTime() : null;
+  if (data.expired || (deadline !== null && (!Number.isFinite(deadline) || deadline < Math.max(Date.now(), expiryClock)))) {
+    return <div className="p-6 bg-red-100 text-red-700 rounded">このカタログの有効期限は終了しました</div>;
   }
+  if (error) return <div className="p-6 text-red-600">エラーが発生しました</div>;
 
-  if (catalog.expiresAt) {
-    const exp = new Date(catalog.expiresAt);
-    if (exp.getTime() < Date.now()) {
-      return (
-        <div className="p-6 bg-red-100 text-red-700 rounded">
-          このカタログの有効期限は終了しました
-        </div>
-      );
-    }
-  }
-
-  if (authChecked && !isAuthed) {
+  if (data.requiresAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <Head>
@@ -124,18 +154,8 @@ export default function ClientPreviewPage() {
           )}
 
           <button
-            onClick={() => {
-              if (
-                inputUser === catalog.username &&
-                inputPass === catalog.password
-              ) {
-                sessionStorage.setItem(`catalog-auth-${id}`, "ok");
-                setIsAuthed(true);
-                setLoginError("");
-              } else {
-                setLoginError("ユーザー名またはパスワードが正しくありません");
-              }
-            }}
+            onClick={login}
+            disabled={loggingIn}
             className="w-full bg-blue-600 text-white py-2 rounded"
           >
             ログイン
@@ -143,6 +163,10 @@ export default function ClientPreviewPage() {
         </div>
       </div>
     );
+  }
+
+  if (!catalog) {
+    return <div className="p-6 bg-red-100 text-red-700 rounded">カタログが見つかりませんでした</div>;
   }
 
   return (

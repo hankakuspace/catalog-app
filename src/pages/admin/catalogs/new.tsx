@@ -23,6 +23,7 @@ import {
   Toast,
 } from "@shopify/polaris";
 import { CalendarIcon, ViewIcon, HideIcon } from "@shopify/polaris-icons";
+import { useAdminFetch, useAppBridgeCustom } from "@/lib/AppBridgeProvider";
 import AdminHeader from "@/components/AdminHeader";
 import PreviewCatalog from "@/components/PreviewCatalog";
 
@@ -110,6 +111,8 @@ function parseDateInput(value: string): Date | null {
 }
 
 export default function NewCatalogPage() {
+  const adminFetch = useAdminFetch();
+  const app = useAppBridgeCustom();
   const router = useRouter();
   const { id, shop: shopQuery } = router.query;
 
@@ -126,6 +129,7 @@ export default function NewCatalogPage() {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadedCatalogId, setLoadedCatalogId] = useState<string | null>(null);
   const [syncingProducts, setSyncingProducts] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -249,6 +253,7 @@ export default function NewCatalogPage() {
   ]);
 
   const fetchAllSearchProducts = useCallback(async () => {
+    if (!app) throw new Error("認証準備中です");
     if (allSearchProducts.length > 0) {
       return allSearchProducts;
     }
@@ -256,7 +261,7 @@ export default function NewCatalogPage() {
     const shop = getShopDomain();
     const params = new URLSearchParams({ shop, query: "" });
 
-    const res = await fetch(`/api/products?${params.toString()}`);
+    const res = await adminFetch(`/api/products?${params.toString()}`);
     const data = await res.json();
 
     if (!res.ok) {
@@ -270,7 +275,7 @@ export default function NewCatalogPage() {
 
     setAllSearchProducts(fixed);
     return fixed;
-  }, [allSearchProducts, getShopDomain]);
+  }, [allSearchProducts, getShopDomain, app, adminFetch]);
 
   useEffect(() => {
     if (toastActive) {
@@ -295,6 +300,7 @@ export default function NewCatalogPage() {
   }, [toastActive, toastColor]);
 
   useEffect(() => {
+    if (!app) return;
     const shop = getShopDomain();
     const params = new URLSearchParams({ warm: "1" });
 
@@ -314,7 +320,7 @@ export default function NewCatalogPage() {
         searchAbortRef.current.abort();
       }
     };
-  }, [fetchAllSearchProducts]);
+  }, [fetchAllSearchProducts, app, getShopDomain]);
 
   const toastMarkup = toastActive ? (
     <Toast
@@ -327,6 +333,8 @@ export default function NewCatalogPage() {
   const [columnCount, setColumnCount] = useState(3);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [credentialsConfigured, setCredentialsConfigured] = useState({ username: false, password: false });
+  const [credentialsEdited, setCredentialsEdited] = useState({ username: false, password: false });
   const [expiresDate, setExpiresDate] = useState<Date | null>(null);
   const [expiresDateInput, setExpiresDateInput] = useState("");
 
@@ -400,14 +408,16 @@ export default function NewCatalogPage() {
 
   // ⭐ 編集時ロード
   useEffect(() => {
-    if (!id) return;
+    if (!id || !app) return;
 
     const fetchCatalog = async () => {
       try {
-        const res = await fetch(`/api/catalogs?id=${id}`);
+        const res = await adminFetch(`/api/catalogs?id=${id}`);
         const data = await res.json();
 
-        if (res.ok && data.catalog) {
+        if (!res.ok) throw new Error("カタログ取得失敗");
+        if (data.catalog) {
+          setLoadedCatalogId(String(id));
           setTitle(data.catalog.title || "");
           setLabel(data.catalog.label || "");
           setLeadText(data.catalog.leadText || "");
@@ -421,8 +431,10 @@ export default function NewCatalogPage() {
 
           setSelectedProducts(fixedProducts);
           setColumnCount(data.catalog.columnCount || 3);
-          setUsername(data.catalog.username || "");
-          setPassword(data.catalog.password || "");
+          setUsername("");
+          setPassword("");
+          setCredentialsConfigured({ username: data.catalog.usernameConfigured, password: data.catalog.passwordConfigured });
+          setCredentialsEdited({ username: false, password: false });
 
           if (data.catalog.expiresAt) {
             const loadedDate = new Date(data.catalog.expiresAt);
@@ -439,15 +451,40 @@ export default function NewCatalogPage() {
           }
         }
       } catch (err) {
-        console.error("カタログ取得エラー:", err);
+        void err;
+        setToastContent("カタログの取得に失敗しました");
+        setToastColor("error");
+        setToastActive(true);
       }
     };
 
     fetchCatalog();
-  }, [id]);
+  }, [id, app, adminFetch]);
+
+  // Use saved configuration flags as well as edited values; never clear saved protection implicitly.
+  const validateCredentialUpdate = () => {
+    const clearsSaved =
+      (credentialsConfigured.username && credentialsEdited.username && username === "") ||
+      (credentialsConfigured.password && credentialsEdited.password && password === "");
+    const finalUser = credentialsEdited.username || !id ? Boolean(username) : credentialsConfigured.username;
+    const finalPass = credentialsEdited.password || !id ? Boolean(password) : credentialsConfigured.password;
+    if (!clearsSaved && finalUser === finalPass) return true;
+    setToastContent(clearsSaved
+      ? "設定済みの認証情報は空欄で解除できません。変更する値を入力してください"
+      : "ユーザー名とパスワードは両方設定してください");
+    setToastColor("error");
+    setToastActive(true);
+    return false;
+  };
 
   // ⭐ 保存処理
   const handleSave = async () => {
+    if (id && loadedCatalogId !== id) {
+      setToastContent("カタログの読み込みが完了していません");
+      setToastColor("error");
+      setToastActive(true);
+      return;
+    }
     const shop = getShopDomain();
 
     if (!title.trim() || selectedProducts.length === 0) {
@@ -457,12 +494,7 @@ export default function NewCatalogPage() {
       return;
     }
 
-    if (username && !password) {
-      setToastContent("ユーザー名を入力した場合はパスワードも必須です");
-      setToastColor("error");
-      setToastActive(true);
-      return;
-    }
+    if (!validateCredentialUpdate()) return;
 
     setSaving(true);
 
@@ -474,13 +506,13 @@ export default function NewCatalogPage() {
         leadText,
         products: selectedProducts,
         columnCount,
-        username,
-        password,
+        ...(credentialsEdited.username || !id ? { username } : {}),
+        ...(credentialsEdited.password || !id ? { password } : {}),
         expiresAt: expiresDate ? expiresDate.toISOString() : null,
         shop,
       };
 
-      const res = await fetch("/api/catalogs", {
+      const res = await adminFetch("/api/catalogs", {
         method: id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -506,11 +538,12 @@ export default function NewCatalogPage() {
   const handleReorder = (products: CatalogProduct[]) => {
     setSelectedProducts(products);
 
-    if (!id) return;
+    if (!id || loadedCatalogId !== id) return;
+    if (!validateCredentialUpdate()) return;
 
     const shop = getShopDomain();
 
-    fetch("/api/catalogs", {
+    adminFetch("/api/catalogs", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -520,13 +553,17 @@ export default function NewCatalogPage() {
         leadText,
         products,
         columnCount,
-        username,
-        password,
+        ...(credentialsEdited.username || !id ? { username } : {}),
+        ...(credentialsEdited.password || !id ? { password } : {}),
         expiresAt: expiresDate ? expiresDate.toISOString() : null,
         shop,
       }),
-    }).catch((err) => {
-      console.error("並び替え保存失敗:", err);
+    }).then((res) => {
+      if (!res.ok) throw new Error("保存失敗");
+    }).catch(() => {
+      setToastContent("並び替えの保存に失敗しました");
+      setToastColor("error");
+      setToastActive(true);
     });
   };
 
@@ -543,7 +580,7 @@ export default function NewCatalogPage() {
     setSyncingProducts(true);
 
     try {
-      const res = await fetch(`/api/products/sync?shop=${encodeURIComponent(shop)}`, {
+      const res = await adminFetch(`/api/products/sync?shop=${encodeURIComponent(shop)}`, {
         method: "POST",
       });
       const data = await res.json();
@@ -557,7 +594,7 @@ export default function NewCatalogPage() {
       setToastActive(true);
 
       const params = new URLSearchParams({ warm: "1", shop });
-      fetch(`/api/products?${params.toString()}`).catch((err) => {
+      adminFetch(`/api/products?${params.toString()}`).catch((err) => {
         console.error("商品検索キャッシュの再生成に失敗しました:", err);
       });
     } catch (err) {
@@ -630,7 +667,7 @@ export default function NewCatalogPage() {
 
         const shop = getShopDomain();
         const params = new URLSearchParams({ shop, query: trimmedQuery });
-        const res = await fetch(`/api/products?${params.toString()}`, {
+        const res = await adminFetch(`/api/products?${params.toString()}`, {
           signal: controller.signal,
         });
         const data = await res.json();
@@ -821,7 +858,11 @@ export default function NewCatalogPage() {
               <TextField
                 label="ユーザー名"
                 value={username}
-                onChange={setUsername}
+                placeholder={credentialsConfigured.username ? "設定済み（変更する場合は入力）" : ""}
+                onChange={(value) => {
+                  setUsername(value);
+                  setCredentialsEdited((prev) => ({ ...prev, username: true }));
+                }}
                 autoComplete="off"
               />
 
@@ -829,9 +870,12 @@ export default function NewCatalogPage() {
                 label="パスワード"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={setPassword}
+                placeholder={credentialsConfigured.password ? "設定済み（変更する場合は入力）" : ""}
+                onChange={(value) => {
+                  setPassword(value);
+                  setCredentialsEdited((prev) => ({ ...prev, password: true }));
+                }}
                 autoComplete="off"
-                placeholder="パスワード"
                 suffix={
                   <button
                     type="button"

@@ -1,7 +1,7 @@
 // src/pages/api/webhooks/register-products.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { GraphQLClient, gql } from "graphql-request";
-import { sessionStorage } from "@/lib/shopify";
+import { sessionStorage, requireAdminShop } from "@/lib/shopify";
 
 type WebhookTopic = "PRODUCTS_CREATE" | "PRODUCTS_UPDATE" | "PRODUCTS_DELETE";
 
@@ -39,7 +39,6 @@ type WebhookSubscriptionCreateResponse = {
   };
 };
 
-const SHOP_DOMAIN = "and-collection-a.myshopify.com";
 const CALLBACK_URL =
   "https://catalog-app-swart.vercel.app/api/webhooks/products";
 
@@ -49,11 +48,16 @@ const WEBHOOK_TOPICS: WebhookTopic[] = [
   "PRODUCTS_DELETE",
 ];
 
-async function getClient(shop: string) {
+async function getClient(shop: string, res: NextApiResponse) {
   const session = await sessionStorage.loadSession(`offline_${shop}`);
 
   if (!session?.accessToken) {
-    throw new Error("Offline session not found");
+    res.status(401).json({ error: "Unauthorized" });
+    return null;
+  }
+  if (session.shop !== shop) {
+    res.status(403).json({ error: "Forbidden" });
+    return null;
   }
 
   return new GraphQLClient(
@@ -165,11 +169,14 @@ async function createWebhookSubscription(
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    const shop = await requireAdminShop(req, res);
+    if (!shop) return;
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const client = await getClient(SHOP_DOMAIN);
+    const client = await getClient(shop, res);
+    if (!client) return;
     const existingSubscriptions = await getExistingSubscriptions(client);
 
     const results = [];
@@ -191,17 +198,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({
       ok: true,
-      shop: SHOP_DOMAIN,
+      shop,
       callbackUrl: CALLBACK_URL,
       results,
     });
-  } catch (err) {
-    console.error("❌ product webhook register error:", err);
-
-    if (err instanceof Error) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    return res.status(500).json({ error: String(err) });
+  } catch {
+    console.error("Product webhook registration failed");
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
