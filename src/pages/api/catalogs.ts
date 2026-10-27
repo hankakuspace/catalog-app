@@ -1,5 +1,6 @@
 // src/pages/api/catalogs.ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import { sanitizeRichText } from "@/lib/richText";
 import { randomBytes } from "node:crypto";
 import { isIP } from "node:net";
 import { dbAdmin, FieldValue } from "@/lib/firebaseAdmin";
@@ -355,7 +356,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await docRef.set({
         title,
         label: label || "", // ← ★Firestoreに保存
-        leadText: leadText || "",
+        leadText: sanitizeRichText(leadText),
         products,
         shop,
         columnCount: columnCount || 3,
@@ -400,7 +401,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         transaction.update(ref, {
           title,
           label: label || "", // ← ★Firestoreに保存
-          leadText: leadText || "",
+          leadText: sanitizeRichText(leadText),
           products,
           columnCount: columnCount || 3,
           passwordEnabled: passwordEnabled || false,

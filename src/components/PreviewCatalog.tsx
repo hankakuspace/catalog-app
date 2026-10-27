@@ -2,7 +2,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { sanitizeRichText } from "@/lib/richText";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -200,6 +201,7 @@ export default function PreviewCatalog({
   onRemove,
   columnCount = 3,
 }: Props) {
+  const safeLeadText = useMemo(() => sanitizeRichText(leadText), [leadText]);
   const isPreviewPage =
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/preview/");
@@ -858,10 +860,10 @@ export default function PreviewCatalog({
             className="mx-auto h-12 filter invert"
           />
 
-          {leadText && (
+          {safeLeadText && (
             <div
               className="max-w-3xl mx-auto text-center mt-10 mb-5 leadtext-wrapper"
-              dangerouslySetInnerHTML={{ __html: leadText }}
+              dangerouslySetInnerHTML={{ __html: safeLeadText }}
             />
           )}
         </header>

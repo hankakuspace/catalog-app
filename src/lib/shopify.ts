@@ -1,6 +1,7 @@
 // src/lib/shopify.ts
 
 import "@shopify/shopify-api/adapters/node";
+import { sanitizeRichText } from "./richText";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
@@ -159,6 +160,7 @@ export function ownsCatalog(data: FirebaseFirestore.DocumentData | undefined, sh
 export function managementCatalog(data: FirebaseFirestore.DocumentData) {
   const fields = ["title", "label", "leadText", "products", "shop", "columnCount", "passwordEnabled", "expiresAt", "createdAt", "updatedAt", "previewUrl"];
   const safe = Object.fromEntries(fields.filter((key) => Object.hasOwn(data, key)).map((key) => [key, data[key]]));
+  if (Object.hasOwn(safe, "leadText")) safe.leadText = sanitizeRichText(safe.leadText);
   return { ...safe, usernameConfigured: Boolean(data.username), passwordConfigured: Boolean(data.password) };
 }
 
@@ -222,7 +224,7 @@ export function previewCredentialsMatch(data: FirebaseFirestore.DocumentData, us
 export function publicCatalog(id: string, data: FirebaseFirestore.DocumentData) {
   const productFields = ["id", "title", "price", "customPrice", "imageUrl", "imageUrls", "artist", "year", "dimensions", "medium", "frame", "material", "size", "technique", "certificate", "onlineStoreUrl", "availabilityStatus", "editionTotal"];
   return {
-    id, title: data.title || "", leadText: data.leadText || "", columnCount: data.columnCount || 3,
+    id, title: data.title || "", leadText: sanitizeRichText(data.leadText), columnCount: data.columnCount || 3,
     expiresAt: data.expiresAt?.toDate ? data.expiresAt.toDate().toISOString() : data.expiresAt || null,
     products: (Array.isArray(data.products) ? data.products : []).map((product: Record<string, unknown>) =>
       Object.fromEntries(productFields.filter((key) => Object.hasOwn(product, key)).map((key) => [key, product[key]]))),
